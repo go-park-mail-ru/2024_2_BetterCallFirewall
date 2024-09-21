@@ -9,8 +9,8 @@ import (
 )
 
 type DB interface {
-	Create(user models.User) error
-	GetByEmail(email string) (models.User, error)
+	Create(user *models.User) error
+	GetByEmail(email string) (*models.User, error)
 }
 
 type AuthServiceImpl struct {
@@ -28,16 +28,12 @@ func (a *AuthServiceImpl) Register(user models.User) error {
 	if err != nil {
 		return fmt.Errorf("registration: %w", err)
 	}
-	emptyUser := models.User{}
-	if u != emptyUser {
-		return fmt.Errorf("registration: user with email %v already exists", user.Email)
-	}
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("registration: %w", err)
 	}
 	u.Password = string(hashPassword)
-	return a.db.Create(user)
+	return a.db.Create(&user)
 }
 
 func (a *AuthServiceImpl) Auth(user models.User) error {
