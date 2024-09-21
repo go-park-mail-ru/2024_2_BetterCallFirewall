@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/2024_2_BetterCallFirewall/internal/custom_error"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type SampleDBImpl struct {
@@ -19,11 +19,11 @@ func NewSampleDB() *SampleDBImpl {
 
 func (s *SampleDBImpl) Create(user *models.User) error {
 	_, err := s.GetByEmail(user.Email)
-	if err != custom_error.ErrUserNotFound {
+	if err != myErr.ErrUserNotFound {
 		if err != nil {
 			return err
 		}
-		return custom_error.ErrUserAlreadyExists
+		return myErr.ErrUserAlreadyExists
 	}
 	s.counter++
 	user.ID = s.counter
@@ -34,7 +34,7 @@ func (s *SampleDBImpl) Create(user *models.User) error {
 func (s *SampleDBImpl) GetByEmail(email string) (*models.User, error) {
 	u, ok := s.repo[email]
 	if !ok {
-		return nil, custom_error.ErrUserNotFound
+		return nil, myErr.ErrUserNotFound
 	}
 	return u, nil
 }
