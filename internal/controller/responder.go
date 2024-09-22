@@ -9,7 +9,7 @@ import (
 )
 
 type Message struct {
-	msg string
+	Msg string `json:"msg"`
 }
 
 type Responder interface {

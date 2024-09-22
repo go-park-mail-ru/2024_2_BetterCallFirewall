@@ -2,10 +2,12 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type AuthService interface {
@@ -31,10 +33,16 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+		return
 	}
 	err = c.serviceAuth.Register(user)
+	if errors.Is(err, myErr.ErrUserAlreadyExists) {
+		c.responder.ErrorBadRequest(w, err)
+		return
+	}
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
+		return
 	}
-	c.responder.OutputJSON(w, Message{msg: "user create successful"})
+	c.responder.OutputJSON(w, Message{Msg: "user create successful"})
 }
