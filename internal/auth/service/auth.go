@@ -9,16 +9,16 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 )
 
-type DB interface {
+type UserRepo interface {
 	Create(user *models.User) error
 	GetByEmail(email string) (*models.User, error)
 }
 
 type AuthServiceImpl struct {
-	db DB
+	db UserRepo
 }
 
-func NewAuthServiceImpl(db DB) *AuthServiceImpl {
+func NewAuthServiceImpl(db UserRepo) *AuthServiceImpl {
 	return &AuthServiceImpl{
 		db: db,
 	}

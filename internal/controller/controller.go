@@ -14,21 +14,23 @@ type AuthService interface {
 	Register(user models.User) error
 }
 
-type SessionService interface {
-	CreateSession(firstName string) error
+type SessionManager interface {
+	Check(r *http.Request) (*models.Session, error)                       //TODO сделать через контексты
+	Create(w http.ResponseWriter, userID uint32) (*models.Session, error) //TODO сделаь без w
+	Destroy(w http.ResponseWriter, r *http.Request) error
 }
 
 type AuthController struct {
 	responder      Responder
 	serviceAuth    AuthService
-	sessionService SessionService
+	sessionManager SessionManager
 }
 
-func NewAuthController(responder Responder, serviceAuth AuthService, sessionService SessionService) *AuthController {
+func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager SessionManager) *AuthController {
 	return &AuthController{
 		responder:      responder,
 		serviceAuth:    serviceAuth,
-		sessionService: sessionService,
+		sessionManager: sessionManager,
 	}
 }
 
@@ -49,7 +51,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.sessionService.CreateSession(user.FirstName)
+	_, err = c.sessionManager.Create(w, user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
 	}
