@@ -1,11 +1,14 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
+
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type DB interface {
@@ -24,24 +27,19 @@ func NewAuthServiceImpl(db DB) *AuthServiceImpl {
 }
 
 func (a *AuthServiceImpl) Register(user models.User) error {
-	u, err := a.db.GetByEmail(user.Email)
-	if err != nil {
+	_, err := a.db.GetByEmail(user.Email)
+	if err != nil && !errors.Is(err, myErr.ErrUserNotFound) {
 		return fmt.Errorf("registration: %w", err)
 	}
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("registration: %w", err)
 	}
-	u.Password = string(hashPassword)
-	return a.db.Create(&user)
-}
+	user.Password = string(hashPassword)
+	err = a.db.Create(&user)
+	if err != nil {
+		return fmt.Errorf("registration: %w", err)
+	}
 
-func (a *AuthServiceImpl) Auth(user models.User) error {
-	//TODO implement this method
-	return nil
-}
-
-func (a *AuthServiceImpl) VerifyToken(token string) error {
-	//TODO implement this method
 	return nil
 }
