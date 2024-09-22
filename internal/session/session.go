@@ -1,3 +1,5 @@
 package session
 
-func NewSession() {}
+func NewSession() error {
+	return nil
+}
