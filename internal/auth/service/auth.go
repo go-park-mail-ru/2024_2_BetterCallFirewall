@@ -6,7 +6,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
+
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
@@ -35,15 +36,10 @@ func (a *AuthServiceImpl) Register(user models.User) error {
 		return fmt.Errorf("registration: %w", err)
 	}
 	user.Password = string(hashPassword)
-	return a.db.Create(&user)
-}
+	err = a.db.Create(&user)
+	if err != nil {
+		return fmt.Errorf("registration: %w", err)
+	}
 
-func (a *AuthServiceImpl) Auth(user models.User) error {
-	//TODO implement this method
-	return nil
-}
-
-func (a *AuthServiceImpl) VerifyToken(token string) error {
-	//TODO implement this method
 	return nil
 }

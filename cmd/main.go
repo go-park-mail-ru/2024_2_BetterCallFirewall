@@ -9,9 +9,9 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
+	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
 	"github.com/2024_2_BetterCallFirewall/internal/controller"
-	"github.com/2024_2_BetterCallFirewall/internal/repository/postgres"
-	"github.com/2024_2_BetterCallFirewall/internal/service"
 )
 
 func main() {
@@ -42,6 +42,7 @@ func main() {
 	authServ := service.NewAuthServiceImpl(repo)
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	responder := controller.NewResponder(logger)
+	//TODO добавить сессию сюда
 	control := controller.NewAuthController(responder, authServ)
 	router := controller.NewAuthRouter(control)
 	server := http.Server{
