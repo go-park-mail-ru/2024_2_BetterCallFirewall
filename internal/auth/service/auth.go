@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -42,4 +43,9 @@ func (a *AuthServiceImpl) Register(user models.User) error {
 	}
 
 	return nil
+}
+
+func (a *AuthServiceImpl) validateEmail(email string) bool {
+	emailRegex := regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
+	return emailRegex.MatchString(email)
 }
