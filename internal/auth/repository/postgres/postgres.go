@@ -14,7 +14,7 @@ import (
 const (
 	CreateUserTable       = `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL);`
 	CreateUser            = `INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
-	GetUserByEmail        = `SELECT first_name, last_name, email, password FROM users WHERE email = $1;`
+	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM users WHERE email = $1;`
 	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS sessions (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL);`
 	CreateSession         = `INSERT INTO sessions (sess_id, user_id) VALUES ($1, $2);`
 	FindSession           = `SELECT sess_id, user_id FROM sessions WHERE sess_id = $1;`
@@ -53,7 +53,7 @@ func (a *Adapter) GetByEmail(email string) (*models.User, error) {
 	row := a.db.QueryRow(GetUserByEmail, email)
 
 	var user models.User
-	err := row.Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("postgres get user: %w", myErr.ErrUserNotFound)
@@ -92,7 +92,7 @@ func (a *Adapter) CreateSession(sess *models.Session) error {
 		return fmt.Errorf("postgres create session rows affected: %w", err)
 	}
 	if rows == 0 {
-		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionNotFound) //TODO че с этой ошибкой не так?
+		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionAlreadyExists)
 	}
 
 	return nil
@@ -103,6 +103,9 @@ func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
 	var sess models.Session
 	err := res.Scan(&sess.ID, &sess.UserID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("postgres find session: %w", myErr.ErrSessionNotFound)
+		}
 		return nil, fmt.Errorf("postgres find session table: %w", err)
 	}
 
