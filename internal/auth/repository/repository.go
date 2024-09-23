@@ -26,8 +26,9 @@ func (s *SampleDBImpl) Create(user *models.User) error {
 		return myErr.ErrUserAlreadyExists
 	}
 	s.counter++
-	user.ID = s.counter
+	user.ID = uint32(s.counter)
 	s.repo[user.Email] = user
+
 	return nil
 }
 
@@ -36,5 +37,6 @@ func (s *SampleDBImpl) GetByEmail(email string) (*models.User, error) {
 	if !ok {
 		return nil, myErr.ErrUserNotFound
 	}
+
 	return u, nil
 }
