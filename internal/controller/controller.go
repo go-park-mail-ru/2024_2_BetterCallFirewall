@@ -12,6 +12,7 @@ import (
 
 type AuthService interface {
 	Register(user models.User) error
+	Auth(user models.User) error
 }
 
 type SessionManager interface {
@@ -35,17 +36,23 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
+	}
+
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
 		return
 	}
+
 	err = c.serviceAuth.Register(user)
 	if errors.Is(err, myErr.ErrUserAlreadyExists) {
 		c.responder.ErrorBadRequest(w, err)
 		return
 	}
+
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
 		return
@@ -57,4 +64,34 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.responder.OutputJSON(w, Message{Msg: "user create successful"})
+}
+
+func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
+	}
+
+	user := models.User{}
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+		return
+	}
+
+	err = c.serviceAuth.Auth(user)
+
+	if errors.Is(err, myErr.ErrWrongEmailOrPassword) {
+		c.responder.ErrorBadRequest(w, fmt.Errorf("controller auth: %w", err))
+	}
+
+	if err != nil {
+		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+	}
+
+	_, err = c.sessionManager.Create(w, user.ID)
+	if err != nil {
+		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+	}
+
+	c.responder.OutputJSON(w, Message{Msg: "user auth"})
 }
