@@ -42,8 +42,8 @@ func main() {
 	authServ := service.NewAuthServiceImpl(repo)
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	responder := controller.NewResponder(logger)
-	//TODO добавить сессию сюда
-	control := controller.NewAuthController(responder, authServ)
+	sessionManager := service.NewSessionManager(repo)
+	control := controller.NewAuthController(responder, authServ, sessionManager)
 	router := controller.NewAuthRouter(control)
 	server := http.Server{
 		Addr:         ":8080",
