@@ -29,7 +29,6 @@ func (a *AuthServiceImpl) Register(user models.User) error {
 	if err != nil {
 		return fmt.Errorf("registration: %w", err)
 	}
-	bcrypt.CompareHashAndPassword(hashPassword, []byte(user.Password))
 	user.Password = string(hashPassword)
 	err = a.db.Create(&user)
 	if err != nil {

@@ -48,10 +48,11 @@ func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*mod
 	}
 
 	cookie := &http.Cookie{
-		Name:    "session_id",
-		Value:   sess.ID,
-		Path:    "/",
-		Expires: time.Now().Add(24 * time.Second),
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(24 * time.Second),
 	}
 	http.SetCookie(w, cookie)
 	return sess, nil

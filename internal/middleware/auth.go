@@ -7,8 +7,8 @@ import (
 )
 
 var noAuthUrls = map[string]struct{}{
-	"/login":  struct{}{},
-	"/signup": struct{}{},
+	"/login":  {},
+	"/signup": {},
 }
 
 func Auth(sm auth.SessionManager, next http.Handler) http.Handler {

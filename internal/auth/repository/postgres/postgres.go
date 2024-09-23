@@ -11,6 +11,8 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
+const ()
+
 type Adapter struct {
 	db *sql.DB
 }
@@ -74,6 +76,24 @@ func (a *Adapter) CreateNewUserTable() error {
 		return fmt.Errorf("postgres create user table: %w", err)
 	}
 
+	return nil
+}
+
+func (a *Adapter) CreateNewSessionTable() error {
+
+}
+
+func (a *Adapter) CreateSession(sess *models.Session) error {
+	//TODO
+	return nil
+}
+
+func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
+	//TODO
+	return nil, nil
+}
+
+func (a *Adapter) DeleteSession(sessID string) error {
 	return nil
 }
 
