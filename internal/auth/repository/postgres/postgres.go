@@ -11,7 +11,17 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
-const ()
+const (
+	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS sessions (
+    id SERIAL PRIMARY KEY,
+    sess_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    
+)`
+	CreateSession = `INSERT INTO sessions (sess_id, user_id) VALUES ($1, $2)`
+	FindSession   = `SELECT sess_id, user_id FROM sessions WHERE sess_id = $1`
+	DeleteSession = `DELETE FROM sessions WHERE sess_id = $1`
+)
 
 type Adapter struct {
 	db *sql.DB
@@ -65,10 +75,10 @@ func (a *Adapter) GetByEmail(email string) (*models.User, error) {
 func (a *Adapter) CreateNewUserTable() error {
 	newTableString := `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
-		first_name VARCHAR(100) NOT NULL,
-		last_name VARCHAR(100) NOT NULL,
-		email VARCHAR(100) NOT NULL UNIQUE ,
-		password VARCHAR(100) NOT NULL
+		first_name TEXT NOT NULL,
+		last_name TEXT NOT NULL,
+		email TEXT NOT NULL UNIQUE ,
+		password TEXT NOT NULL
 	);`
 
 	_, err := a.db.Exec(newTableString)
@@ -80,20 +90,46 @@ func (a *Adapter) CreateNewUserTable() error {
 }
 
 func (a *Adapter) CreateNewSessionTable() error {
-
+	_, err := a.db.Exec(CreateNewSessionTable)
+	if err != nil {
+		return fmt.Errorf("postgres create session table: %w", err)
+	}
+	return nil
 }
 
 func (a *Adapter) CreateSession(sess *models.Session) error {
-	//TODO
+	res, err := a.db.Exec(CreateSession, sess.ID, sess.UserID)
+	if err != nil {
+		return fmt.Errorf("postgres create session table: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres create session rows affected: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionNotFound)
+	}
+
 	return nil
 }
 
 func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
-	//TODO
-	return nil, nil
+	res := a.db.QueryRow(FindSession, sessID)
+	var sess models.Session
+	err := res.Scan(&sess.ID, &sess.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("postgres find session table: %w", err)
+	}
+
+	return &sess, nil
 }
 
 func (a *Adapter) DeleteSession(sessID string) error {
+	_, err := a.db.Exec(DeleteSession, sessID)
+	if err != nil {
+		return fmt.Errorf("postgres delete session table: %w", err)
+	}
 	return nil
 }
 
