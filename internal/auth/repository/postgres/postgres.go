@@ -12,15 +12,13 @@ import (
 )
 
 const (
-	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS sessions (
-    id SERIAL PRIMARY KEY,
-    sess_id TEXT NOT NULL,
-    user_id INTEGER NOT NULL,
-    
-)`
-	CreateSession = `INSERT INTO sessions (sess_id, user_id) VALUES ($1, $2)`
-	FindSession   = `SELECT sess_id, user_id FROM sessions WHERE sess_id = $1`
-	DeleteSession = `DELETE FROM sessions WHERE sess_id = $1`
+	CreateUserTable       = `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL);`
+	CreateUser            = `INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
+	GetUserByEmail        = `SELECT first_name, last_name, email, password FROM users WHERE email = $1;`
+	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS sessions (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL);`
+	CreateSession         = `INSERT INTO sessions (sess_id, user_id) VALUES ($1, $2);`
+	FindSession           = `SELECT sess_id, user_id FROM sessions WHERE sess_id = $1;`
+	DeleteSession         = `DELETE FROM sessions WHERE sess_id = $1;`
 )
 
 type Adapter struct {
@@ -34,12 +32,7 @@ func NewAdapter(db *sql.DB) *Adapter {
 }
 
 func (a *Adapter) Create(user *models.User) error {
-	query := `
-		INSERT INTO users (first_name, last_name, email, password)
-		VALUES ($1, $2, $3, $4) 
-		ON CONFLICT (email) DO NOTHING;
-`
-	res, err := a.db.Exec(query, user.FirstName, user.LastName, user.Email, user.Password)
+	res, err := a.db.Exec(CreateUser, user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		return fmt.Errorf("postgres create user: %w", err)
 	}
@@ -57,8 +50,7 @@ func (a *Adapter) Create(user *models.User) error {
 }
 
 func (a *Adapter) GetByEmail(email string) (*models.User, error) {
-	query := `SELECT first_name, last_name, email, password FROM users WHERE email = $1`
-	row := a.db.QueryRow(query, email)
+	row := a.db.QueryRow(GetUserByEmail, email)
 
 	var user models.User
 	err := row.Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password)
@@ -73,15 +65,7 @@ func (a *Adapter) GetByEmail(email string) (*models.User, error) {
 }
 
 func (a *Adapter) CreateNewUserTable() error {
-	newTableString := `CREATE TABLE IF NOT EXISTS users (
-		id SERIAL PRIMARY KEY,
-		first_name TEXT NOT NULL,
-		last_name TEXT NOT NULL,
-		email TEXT NOT NULL UNIQUE ,
-		password TEXT NOT NULL
-	);`
-
-	_, err := a.db.Exec(newTableString)
+	_, err := a.db.Exec(CreateUserTable)
 	if err != nil {
 		return fmt.Errorf("postgres create user table: %w", err)
 	}
@@ -108,7 +92,7 @@ func (a *Adapter) CreateSession(sess *models.Session) error {
 		return fmt.Errorf("postgres create session rows affected: %w", err)
 	}
 	if rows == 0 {
-		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionNotFound)
+		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionNotFound) //TODO че с этой ошибкой не так?
 	}
 
 	return nil
