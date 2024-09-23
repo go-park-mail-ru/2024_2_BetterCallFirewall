@@ -47,11 +47,11 @@ func (a *Adapter) Create(user *models.User) error {
 }
 
 func (a *Adapter) GetByEmail(email string) (*models.User, error) {
-	query := `SELECT first_name, last_name, email, password FROM users WHERE email = $1`
+	query := `SELECT id, first_name, last_name, email, password FROM users WHERE email = $1`
 	row := a.db.QueryRow(query, email)
 
 	var user models.User
-	err := row.Scan(&user.FirstName, &user.LastName, &user.Email, &user.Password)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("postgres get user: %w", myErr.ErrUserNotFound)
