@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -38,29 +39,36 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
+
+		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+
 		return
 	}
 
 	err = c.serviceAuth.Register(user)
-	if errors.Is(err, myErr.ErrUserAlreadyExists) {
+	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, err)
+
 		return
 	}
 
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
+
 		return
 	}
 
 	_, err = c.sessionManager.Create(w, user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
+
+		return
 	}
 
 	c.responder.OutputJSON(w, Message{Msg: "user create successful"})
@@ -69,28 +77,53 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
+
+		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+
+		return
+	}
+
+	sess, err := c.sessionManager.Check(r)
+	if err == nil {
+		cookie := &http.Cookie{
+			Name:     "session_id",
+			Value:    sess.ID,
+			Path:     "/",
+			HttpOnly: true,
+			Expires:  time.Now().Add(24 * time.Second),
+		}
+		http.SetCookie(w, cookie)
+
+		c.responder.OutputJSON(w, Message{Msg: "user auth"})
+
 		return
 	}
 
 	err = c.serviceAuth.Auth(user)
 
-	if errors.Is(err, myErr.ErrWrongEmailOrPassword) {
+	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller auth: %w", err))
+
+		return
 	}
 
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+
+		return
 	}
 
 	_, err = c.sessionManager.Create(w, user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+
+		return
 	}
 
 	c.responder.OutputJSON(w, Message{Msg: "user auth"})

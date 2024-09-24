@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -78,6 +80,7 @@ func (a *Adapter) CreateNewSessionTable() error {
 	if err != nil {
 		return fmt.Errorf("postgres create session table: %w", err)
 	}
+
 	return nil
 }
 
@@ -117,6 +120,7 @@ func (a *Adapter) DestroySession(sessID string) error {
 	if err != nil {
 		return fmt.Errorf("postgres delete session table: %w", err)
 	}
+
 	return nil
 }
 
@@ -125,9 +129,18 @@ func StartPostgres(connStr string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("postgres ping: %w", err)
+
+	retrying := 10
+	i := 1
+	log.Printf("try ping:%v", i)
+	for err = db.Ping(); err != nil; err = db.Ping() {
+		if i >= retrying {
+			return nil, fmt.Errorf("postgres connect: %w", err)
+		}
+		i++
+		time.Sleep(1 * time.Second)
+		log.Printf("try ping postgresql: %v", i)
 	}
+
 	return db, nil
 }

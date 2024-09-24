@@ -42,6 +42,7 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	if err != nil {
 		r.logger.Println(err)
 	}
+	r.logger.Println(data)
 }
 
 func (r *Respond) ErrorUnAuthorized(w http.ResponseWriter, err error) {
