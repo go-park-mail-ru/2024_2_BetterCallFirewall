@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 
@@ -127,9 +129,17 @@ func StartPostgres(connStr string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("postgres ping: %w", err)
+
+	retrying := 10
+	i := 1
+	log.Printf("try ping:%v", i)
+	for err = db.Ping(); err != nil; err = db.Ping() {
+		if i >= retrying {
+			return nil, fmt.Errorf("postgres connect: %w", err)
+		}
+		i++
+		time.Sleep(1 * time.Second)
+		log.Printf("try ping postgresql: %v", i)
 	}
 
 	return db, nil
