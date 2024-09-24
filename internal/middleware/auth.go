@@ -2,17 +2,20 @@ package middleware
 
 import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
-	"github.com/2024_2_BetterCallFirewall/internal/controller"
 
 	"net/http"
 )
 
 var noAuthUrls = map[string]struct{}{
-	"/login":  {},
-	"/signup": {},
+	"/auth/register": {},
+	"/auth/login":    {},
 }
 
-func Auth(sm controller.SessionManager, next http.Handler) http.Handler {
+type SessionManager interface {
+	Check(r *http.Request) (*models.Session, error)
+}
+
+func Auth(sm SessionManager, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := noAuthUrls[r.URL.Path]; ok {
 			next.ServeHTTP(w, r)
@@ -21,7 +24,7 @@ func Auth(sm controller.SessionManager, next http.Handler) http.Handler {
 
 		sess, err := sm.Check(r)
 		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
+			http.Redirect(w, r, "/auth/login", http.StatusFound)
 			return
 		}
 

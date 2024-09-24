@@ -39,6 +39,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating user table: %v", err)
 	}
+	err = repo.CreateNewSessionTable()
+	if err != nil {
+		log.Fatalf("Error creating session table: %v", err)
+	}
 	authServ := service.NewAuthServiceImpl(repo)
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 	responder := controller.NewResponder(logger)
