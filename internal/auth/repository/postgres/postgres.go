@@ -78,6 +78,7 @@ func (a *Adapter) CreateNewSessionTable() error {
 	if err != nil {
 		return fmt.Errorf("postgres create session table: %w", err)
 	}
+
 	return nil
 }
 
@@ -117,6 +118,7 @@ func (a *Adapter) DestroySession(sessID string) error {
 	if err != nil {
 		return fmt.Errorf("postgres delete session table: %w", err)
 	}
+
 	return nil
 }
 
@@ -129,5 +131,6 @@ func StartPostgres(connStr string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("postgres ping: %w", err)
 	}
+
 	return db, nil
 }
