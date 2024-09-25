@@ -41,8 +41,12 @@ func (sm *SessionManagerImpl) Check(r *http.Request) (*models.Session, error) {
 }
 
 func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*models.Session, error) {
-	sess := models.NewSession(userID)
-	err := sm.DB.CreateSession(sess)
+	sess, err := models.NewSession(userID)
+	if err != nil {
+		return nil, fmt.Errorf("create session: %w", err)
+	}
+
+	err = sm.DB.CreateSession(sess)
 	if err != nil {
 		return nil, fmt.Errorf("session creation: %w", err)
 	}
