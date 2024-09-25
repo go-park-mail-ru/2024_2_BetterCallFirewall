@@ -2,10 +2,10 @@
 Backend проекта VK команды Better Call Firewall
 
 # Авторы
-*  - _frontend_
-*  - _frontend_
-*  - _backend_
-*  - _backend_
+* [Константин Галанин](https://github.com/KonstantinGalanin) - _frontend_
+* [Александр Новиков](https://github.com/WolfSanek2) - _frontend_
+* [Алексей Земляков](https://github.com/AlexeyZem)  - _backend_
+* [Андрей Савватеев](https://github.com/SlashLight) - _backend_
 
 # Менторы
 *  - _frontend_
