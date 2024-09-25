@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"net/http"
 )
 
 type AuthService interface {
@@ -71,7 +69,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.responder.OutputJSON(w, Message{Msg: "user create successful"})
+	c.responder.OutputJSON(w, "user create successful")
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
@@ -89,19 +87,9 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := c.sessionManager.Check(r)
+	_, err = c.sessionManager.Check(r)
 	if err == nil {
-		cookie := &http.Cookie{
-			Name:     "session_id",
-			Value:    sess.ID,
-			Path:     "/",
-			HttpOnly: true,
-			Expires:  time.Now().Add(24 * time.Second),
-		}
-		http.SetCookie(w, cookie)
-
-		c.responder.OutputJSON(w, Message{Msg: "user auth"})
-
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
@@ -126,5 +114,5 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.responder.OutputJSON(w, Message{Msg: "user auth"})
+	c.responder.OutputJSON(w, "user auth")
 }
