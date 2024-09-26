@@ -11,6 +11,7 @@ import (
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any)
 
+	ErrorWrongMethod(w http.ResponseWriter, err error)
 	ErrorUnAuthorized(w http.ResponseWriter, err error)
 	ErrorBadRequest(w http.ResponseWriter, err error)
 	ErrorInternal(w http.ResponseWriter, err error)
@@ -39,6 +40,16 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 		r.logger.Println(err)
 	}
 	r.logger.Println(data)
+}
+
+func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
+	r.logger.Println(err)
+	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "method not allowed"})
+	if errJ != nil {
+		r.logger.Println(err)
+	}
 }
 
 func (r *Respond) ErrorUnAuthorized(w http.ResponseWriter, err error) {
