@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 )
 
 type MocDB struct {
+	Storage map[string]*models.Session
 }
 
 type Test struct {
@@ -20,43 +23,62 @@ type Test struct {
 	err      error
 }
 
-func (m MocDB) CreateSession(session *models.Session) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (m MocDB) FindSession(sessID string) (*models.Session, error) {
-	if sessID == "2ht4k8s6v0m4hgl1" {
-		return &models.Session{
-			ID:     "2ht4k8s6v0m4hgl1",
-			UserID: 1,
-		}, nil
+func (m *MocDB) CreateSession(session *models.Session) error {
+	if _, ok := m.Storage[session.ID]; ok {
+		return fmt.Errorf("session already exists")
 	}
-	return nil, nil
+	m.Storage[session.ID] = session
+	return nil
 }
 
-func (m MocDB) DestroySession(sessID string) error {
-	//TODO implement me
-	panic("implement me")
+func (m *MocDB) FindSession(sessID string) (*models.Session, error) {
+	session, ok := m.Storage[sessID]
+	if !ok {
+		return nil, myErr.ErrNoAuth
+	}
+	return session, nil
 }
 
-func TestCheck(t *testing.T) {
-	sm := NewSessionManager(MocDB{})
-	testCookie := &http.Cookie{
+func (m *MocDB) DestroySession(sessID string) error {
+	if _, ok := m.Storage[sessID]; !ok {
+		return fmt.Errorf("session not found")
+	}
+	delete(m.Storage, sessID)
+	return nil
+}
+
+var (
+	db = &MocDB{
+		Storage: map[string]*models.Session{
+			"2ht4k8s6v0m4hgl1": &models.Session{
+				ID:     "2ht4k8s6v0m4hgl1",
+				UserID: 1,
+			},
+		},
+	}
+	testCookie = &http.Cookie{
 		Name:    "session_id",
 		Value:   "2ht4k8s6v0m4hgl1",
 		Expires: time.Now().Add(24 * time.Hour),
 	}
-	wrongTestCookie := &http.Cookie{
+	wrongTestCookie = &http.Cookie{
 		Name:    "sessionId",
-		Value:   "2ht4k8s6v0m4hgl1",
+		Value:   "2ht4k8sg30m4hgl1",
 		Expires: time.Now().Add(24 * time.Hour),
 	}
+	testSession = &models.Session{
+		ID:     "2ht4k8s6v0m4hgl1",
+		UserID: 1,
+	}
+	sm            = NewSessionManager(db)
+	goodCookieReq = httptest.NewRequest(http.MethodGet, "/", nil)
+	badCookieReq  = httptest.NewRequest(http.MethodGet, "/", nil)
+)
 
-	testReq := httptest.NewRequest(http.MethodGet, "/", nil)
-	testReq.AddCookie(testCookie)
-	wrongTestReq := httptest.NewRequest(http.MethodGet, "/", nil)
-	wrongTestReq.AddCookie(wrongTestCookie)
+func TestCheck(t *testing.T) {
+	goodCookieReq.AddCookie(testCookie)
+
+	badCookieReq.AddCookie(wrongTestCookie)
 
 	tests := []Test{
 		{
@@ -64,15 +86,12 @@ func TestCheck(t *testing.T) {
 			err:     myErr.ErrNoAuth,
 		},
 		{
-			testReq: testReq,
-			testRes: &models.Session{
-				ID:     "2ht4k8s6v0m4hgl1",
-				UserID: 1,
-			},
-			err: nil,
+			testReq: goodCookieReq,
+			testRes: testSession,
+			err:     nil,
 		},
 		{
-			testReq: wrongTestReq,
+			testReq: badCookieReq,
 			err:     myErr.ErrNoAuth,
 		},
 	}
@@ -85,9 +104,15 @@ func TestCheck(t *testing.T) {
 		if err == nil && test.err != nil {
 			t.Errorf("[%d] expected error, got nil", caseNum)
 		}
+		if !errors.Is(err, test.err) {
+			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
+		}
 		if !reflect.DeepEqual(res, test.testRes) {
 			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.testRes, res)
 		}
 	}
+}
 
+func TestCreate(t *testing.T) {
+	//TODO
 }
