@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	CreateUserTable       = `CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL);`
-	CreateUser            = `INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
-	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM users WHERE email = $1;`
-	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS sessions (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL);`
-	CreateSession         = `INSERT INTO sessions (sess_id, user_id) VALUES ($1, $2);`
-	FindSession           = `SELECT sess_id, user_id FROM sessions WHERE sess_id = $1;`
-	DeleteSession         = `DELETE FROM sessions WHERE sess_id = $1;`
+	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 50));`
+	CreateUser            = `INSERT INTO person (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
+	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
+	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL);`
+	CreateSession         = `INSERT INTO session (sess_id, user_id) VALUES ($1, $2);`
+	FindSession           = `SELECT sess_id, user_id FROM session WHERE sess_id = $1;`
+	DeleteSession         = `DELETE FROM session WHERE sess_id = $1;`
 )
 
 type Adapter struct {
