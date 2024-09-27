@@ -27,13 +27,12 @@ func NewSessionManager(DB SessionRepository) *SessionManagerImpl {
 }
 
 func (sm *SessionManagerImpl) Check(r *http.Request) (*models.Session, error) {
-	sess := &models.Session{}
 	sessionCookie, err := r.Cookie("session_id")
 	if errors.Is(err, http.ErrNoCookie) {
 		return nil, myErr.ErrNoAuth
 	}
 
-	sess, err = sm.DB.FindSession(sessionCookie.Value)
+	sess, err := sm.DB.FindSession(sessionCookie.Value)
 	if err != nil {
 		return nil, fmt.Errorf("session check: %w", err)
 	}

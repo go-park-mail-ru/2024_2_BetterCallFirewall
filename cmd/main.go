@@ -9,9 +9,13 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
-	"github.com/2024_2_BetterCallFirewall/internal/controller"
+	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
+	"github.com/2024_2_BetterCallFirewall/internal/post/repository"
+	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
+	"github.com/2024_2_BetterCallFirewall/internal/router"
 )
 
 func main() {
@@ -45,13 +49,19 @@ func main() {
 	}
 	authServ := service.NewAuthServiceImpl(repo)
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
-	responder := controller.NewResponder(logger)
+	responder := router.NewResponder(logger)
 	sessionManager := service.NewSessionManager(repo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
-	router := controller.NewAuthRouter(control)
+
+	postRepo := repository.NewRepository()
+	postRepo.FakeData(10)
+	postService := postServ.NewPostServiceImpl(postRepo)
+	postControl := postController.NewPostController(postService, responder)
+
+	rout := router.NewAuthRouter(control, postControl, sessionManager)
 	server := http.Server{
 		Addr:         ":8080",
-		Handler:      router,
+		Handler:      rout,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
