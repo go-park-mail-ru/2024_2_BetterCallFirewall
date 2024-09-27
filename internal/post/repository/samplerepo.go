@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/brianvoe/gofakeit"
 
 	"github.com/2024_2_BetterCallFirewall/internal/post/models"
@@ -24,7 +26,7 @@ func (r *Repository) FakeData(count int) {
 		r.storage[title] = &models.Post{
 			Header:    title,
 			Body:      content,
-			CreatedAt: date,
+			CreatedAt: date.Format(time.DateOnly),
 		}
 	}
 }
