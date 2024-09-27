@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -49,7 +51,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = c.serviceAuth.Register(user)
-	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) {
+	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.responder.ErrorBadRequest(w, err)
 		return
 	}
