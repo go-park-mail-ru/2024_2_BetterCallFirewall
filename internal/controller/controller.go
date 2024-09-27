@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
-	"net/http"
 )
 
 type AuthService interface {
@@ -36,8 +39,7 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
-
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
 		return
 	}
 
@@ -45,27 +47,23 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
-
 		return
 	}
 
 	err = c.serviceAuth.Register(user)
-	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) {
+	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.responder.ErrorBadRequest(w, err)
-
 		return
 	}
 
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
-
 		return
 	}
 
 	_, err = c.sessionManager.Create(w, user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
-
 		return
 	}
 
@@ -74,8 +72,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		c.responder.ErrorBadRequest(w, errors.New("method not allowed"))
-
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
 		return
 	}
 
@@ -83,7 +80,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
-
 		return
 	}
 
@@ -97,20 +93,17 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("controller auth: %w", err))
-
 		return
 	}
 
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
-
 		return
 	}
 
 	_, err = c.sessionManager.Create(w, user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
-
 		return
 	}
 
