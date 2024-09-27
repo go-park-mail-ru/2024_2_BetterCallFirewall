@@ -19,13 +19,14 @@ type MocDB struct {
 type Test struct {
 	testReq  *http.Request
 	testResp *httptest.ResponseRecorder
+	testId   uint32
 	testRes  *models.Session
 	err      error
 }
 
 func (m *MocDB) CreateSession(session *models.Session) error {
 	if _, ok := m.Storage[session.ID]; ok {
-		return fmt.Errorf("session already exists")
+		return myErr.ErrSessionAlreadyExists
 	}
 	m.Storage[session.ID] = session
 	return nil
@@ -47,38 +48,40 @@ func (m *MocDB) DestroySession(sessID string) error {
 	return nil
 }
 
+const (
+	IdInBase        = 1
+	IdNotInBase     = 2
+	CookieInBase    = "2ht4k8s6v0m4hgl1"
+	CookieNotInBase = "2ht4k8sg30m4hgl1"
+)
+
 var (
 	db = &MocDB{
 		Storage: map[string]*models.Session{
 			"2ht4k8s6v0m4hgl1": &models.Session{
 				ID:     "2ht4k8s6v0m4hgl1",
-				UserID: 1,
+				UserID: IdInBase,
 			},
 		},
 	}
-	testCookie = &http.Cookie{
+	baseCookie = &http.Cookie{
 		Name:    "session_id",
-		Value:   "2ht4k8s6v0m4hgl1",
+		Value:   CookieInBase,
 		Expires: time.Now().Add(24 * time.Hour),
 	}
-	wrongTestCookie = &http.Cookie{
+	newCookie = &http.Cookie{
 		Name:    "sessionId",
-		Value:   "2ht4k8sg30m4hgl1",
+		Value:   CookieNotInBase,
 		Expires: time.Now().Add(24 * time.Hour),
 	}
-	testSession = &models.Session{
-		ID:     "2ht4k8s6v0m4hgl1",
-		UserID: 1,
-	}
-	sm            = NewSessionManager(db)
-	goodCookieReq = httptest.NewRequest(http.MethodGet, "/", nil)
-	badCookieReq  = httptest.NewRequest(http.MethodGet, "/", nil)
+	sm                 = NewSessionManager(db)
+	CookieInBaseReq    = httptest.NewRequest(http.MethodGet, "/", nil)
+	CookieNotInBaseReq = httptest.NewRequest(http.MethodGet, "/", nil)
 )
 
 func TestCheck(t *testing.T) {
-	goodCookieReq.AddCookie(testCookie)
-
-	badCookieReq.AddCookie(wrongTestCookie)
+	CookieInBaseReq.AddCookie(baseCookie)
+	CookieNotInBaseReq.AddCookie(newCookie)
 
 	tests := []Test{
 		{
@@ -86,12 +89,15 @@ func TestCheck(t *testing.T) {
 			err:     myErr.ErrNoAuth,
 		},
 		{
-			testReq: goodCookieReq,
-			testRes: testSession,
-			err:     nil,
+			testReq: CookieInBaseReq,
+			testRes: &models.Session{
+				ID:     CookieInBase,
+				UserID: IdInBase,
+			},
+			err: nil,
 		},
 		{
-			testReq: badCookieReq,
+			testReq: CookieNotInBaseReq,
 			err:     myErr.ErrNoAuth,
 		},
 	}
@@ -114,5 +120,48 @@ func TestCheck(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	//TODO
+	tests := []Test{
+		{
+			testResp: httptest.NewRecorder(),
+			testId:   IdNotInBase,
+			testRes: &models.Session{
+				UserID: IdNotInBase,
+			},
+			err: nil,
+		},
+		{
+			testResp: httptest.NewRecorder(),
+			testId:   IdInBase,
+			testRes:  nil,
+			err:      myErr.ErrSessionAlreadyExists,
+		},
+	}
+
+	for caseNum, test := range tests {
+		res, err := sm.Create(test.testResp, test.testId)
+		if err != nil && test.err == nil {
+			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
+		}
+		if err == nil && test.err != nil {
+			t.Errorf("[%d] expected error, got nil", caseNum)
+		}
+		if !errors.Is(err, test.err) {
+			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
+		}
+		if test.testRes.UserID != res.UserID {
+			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.testRes, res)
+		}
+		expCookie := &http.Cookie{
+			Name:    "session_id",
+			Value:   res.ID,
+			Path:    "/",
+			Expires: time.Now().Add(24 * time.Second),
+		}
+		resCookie := test.testResp.Header().Get("Set-Cookie")
+		if !reflect.DeepEqual(expCookie.String(), resCookie) {
+			t.Errorf("[%d] wrong cookie, expected: %#v, got: %#v", caseNum, expCookie, resCookie)
+		}
+	}
 }
+
+func TestDestroy(t *testing.T) {}
