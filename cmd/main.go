@@ -32,7 +32,6 @@ func main() {
 	dbSSLMode := os.Getenv("DB_SSLMODE")
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
 
-	// repo := repository.NewSampleDB()
 	potgresDB, err := postgres.StartPostgres(connStr)
 	if err != nil {
 		log.Fatalf("Error starting postgres: %v", err)
