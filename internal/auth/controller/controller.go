@@ -23,17 +23,25 @@ type SessionManager interface {
 	Destroy(w http.ResponseWriter, r *http.Request) error
 }
 
+type Responder interface {
+	OutputJSON(w http.ResponseWriter, data any)
+
+	ErrorWrongMethod(w http.ResponseWriter, err error)
+	ErrorBadRequest(w http.ResponseWriter, err error)
+	ErrorInternal(w http.ResponseWriter, err error)
+}
+
 type AuthController struct {
 	responder      Responder
 	serviceAuth    AuthService
-	sessionManager SessionManager
+	SessionManager SessionManager
 }
 
 func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager SessionManager) *AuthController {
 	return &AuthController{
 		responder:      responder,
 		serviceAuth:    serviceAuth,
-		sessionManager: sessionManager,
+		SessionManager: sessionManager,
 	}
 }
 
@@ -46,7 +54,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
@@ -57,13 +65,13 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
-	_, err = c.sessionManager.Create(w, user.ID)
+	_, err = c.SessionManager.Create(w, user.ID)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("controller register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
@@ -79,11 +87,11 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("controller register: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
-	_, err = c.sessionManager.Check(r)
+	_, err = c.SessionManager.Check(r)
 	if err == nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
@@ -92,18 +100,18 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	err = c.serviceAuth.Auth(user)
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("controller auth: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
-	_, err = c.sessionManager.Create(w, user.ID)
+	_, err = c.SessionManager.Create(w, user.ID)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("controller auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 

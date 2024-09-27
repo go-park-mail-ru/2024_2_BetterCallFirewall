@@ -215,7 +215,7 @@ func TestAuth(t *testing.T) {
 
 	for _, tt := range testCases {
 		controller.Auth(tt.w, tt.r)
-		if tt.w.Code != tt.w.Code {
+		if tt.w.Code != tt.wantCode {
 			t.Errorf("Auth() code = %d, want %d", tt.w.Code, tt.w.Code)
 		}
 		if strings.TrimSpace(tt.w.Body.String()) != tt.wantBody {
