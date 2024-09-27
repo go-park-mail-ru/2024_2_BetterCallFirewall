@@ -116,9 +116,16 @@ func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
 }
 
 func (a *Adapter) DestroySession(sessID string) error {
-	_, err := a.db.Exec(DeleteSession, sessID)
+	res, err := a.db.Exec(DeleteSession, sessID)
 	if err != nil {
 		return fmt.Errorf("postgres delete session table: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres delete session rows affected: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("postgres delete session: %w", myErr.ErrSessionNotFound)
 	}
 
 	return nil

@@ -7,7 +7,7 @@ import (
 var (
 	ErrUserNotFound         = errors.New("user not found")
 	ErrUserAlreadyExists    = errors.New("user already exists")
-	ErrNoAuth               = errors.New("no session found")
+	ErrNoAuth               = errors.New("no auth")
 	ErrWrongEmailOrPassword = errors.New("wrong email or password")
 	ErrNonValidEmail        = errors.New("invalid email")
 	ErrSessionNotFound      = errors.New("session not found")
