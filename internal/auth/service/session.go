@@ -74,9 +74,12 @@ func (sm *SessionManagerImpl) Destroy(w http.ResponseWriter, r *http.Request) er
 	}
 
 	cookie := &http.Cookie{
-		Name:    "session_id",
-		Expires: time.Now().AddDate(0, 0, -1),
-		Path:    "/",
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, -1),
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, cookie)
 
