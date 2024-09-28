@@ -47,5 +47,6 @@ func (pc *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 	for _, post := range posts {
 		res = append(res, *post)
 	}
+
 	pc.responder.OutputJSON(w, res)
 }

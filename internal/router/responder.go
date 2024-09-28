@@ -25,6 +25,7 @@ func NewResponder(logger *log.Logger) *Respond {
 func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
 	err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data})
 	if err != nil {
 		r.logger.Println(err)
@@ -36,6 +37,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.WriteHeader(http.StatusMethodNotAllowed)
+
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "method not allowed"})
 	if errJ != nil {
 		r.logger.Println(err)
@@ -46,6 +48,7 @@ func (r *Respond) ErrorNoContent(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.WriteHeader(http.StatusNoContent)
+
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "no content"})
 	if errJ != nil {
 		r.logger.Println(err)
@@ -56,6 +59,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.WriteHeader(http.StatusBadRequest)
+
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "bad request"})
 	if errJ != nil {
 		r.logger.Println(err)
@@ -70,6 +74,7 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	}
 
 	w.WriteHeader(http.StatusInternalServerError)
+
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "internal server error"})
 	if errJ != nil {
 		r.logger.Println(err)

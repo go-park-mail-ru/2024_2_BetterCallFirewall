@@ -32,6 +32,7 @@ func (r *Repository) FakeData(count int) {
 			CreatedAt: date.Format(time.DateOnly),
 		}
 	}
+
 	r.havePost = true
 }
 
@@ -39,10 +40,12 @@ func (r *Repository) GetAll() ([]*models.Post, error) {
 	if !r.havePost {
 		return nil, myErr.ErrPostEnd
 	}
+
 	res := make([]*models.Post, 0, len(r.storage))
 	for _, post := range r.storage {
 		res = append(res, post)
 	}
 	r.havePost = false
+
 	return res, nil
 }
