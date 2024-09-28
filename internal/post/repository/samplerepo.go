@@ -5,19 +5,16 @@ import (
 
 	"github.com/brianvoe/gofakeit"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/post/models"
 )
 
 type Repository struct {
-	storage  map[string]*models.Post
-	havePost bool
+	storage map[string]*models.Post
 }
 
 func NewRepository() *Repository {
 	return &Repository{
-		storage:  make(map[string]*models.Post),
-		havePost: false,
+		storage: make(map[string]*models.Post),
 	}
 }
 
@@ -32,20 +29,13 @@ func (r *Repository) FakeData(count int) {
 			CreatedAt: date.Format(time.DateOnly),
 		}
 	}
-
-	r.havePost = true
 }
 
-func (r *Repository) GetAll() ([]*models.Post, error) {
-	if !r.havePost {
-		return nil, myErr.ErrPostEnd
-	}
-
+func (r *Repository) GetAll() []*models.Post {
 	res := make([]*models.Post, 0, len(r.storage))
 	for _, post := range r.storage {
 		res = append(res, post)
 	}
-	r.havePost = false
 
-	return res, nil
+	return res
 }

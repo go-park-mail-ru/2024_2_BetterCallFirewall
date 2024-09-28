@@ -1,15 +1,11 @@
 package service
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/post/models"
 )
 
 type DB interface {
-	GetAll() ([]*models.Post, error)
+	GetAll() []*models.Post
 }
 
 type PostServiceImpl struct {
@@ -22,11 +18,8 @@ func NewPostServiceImpl(db DB) *PostServiceImpl {
 	}
 }
 
-func (s *PostServiceImpl) GetAll() ([]*models.Post, error) {
-	posts, err := s.db.GetAll()
-	if errors.Is(err, myErr.ErrPostEnd) {
-		return nil, fmt.Errorf("get all posts: %w", err)
-	}
+func (s *PostServiceImpl) GetAll() []*models.Post {
+	posts := s.db.GetAll()
 
-	return posts, nil
+	return posts
 }

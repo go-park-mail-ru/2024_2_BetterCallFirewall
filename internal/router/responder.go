@@ -44,17 +44,6 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 	}
 }
 
-func (r *Respond) ErrorNoContent(w http.ResponseWriter, err error) {
-	r.logger.Println(err)
-	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.WriteHeader(http.StatusNoContent)
-
-	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "no content"})
-	if errJ != nil {
-		r.logger.Println(err)
-	}
-}
-
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
