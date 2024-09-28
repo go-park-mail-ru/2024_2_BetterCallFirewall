@@ -49,7 +49,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8000")
 	w.WriteHeader(http.StatusBadRequest)
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "bad request"})

@@ -87,7 +87,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 

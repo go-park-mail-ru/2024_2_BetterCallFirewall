@@ -20,7 +20,7 @@ type SessionManager interface {
 func Auth(sm SessionManager, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8000")
 			w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 			w.Header().Set("Access-Control-Max-Age", "3600")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
