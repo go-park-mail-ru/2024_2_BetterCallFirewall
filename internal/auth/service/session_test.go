@@ -171,6 +171,7 @@ func TestCreateSession(t *testing.T) {
 		if !reflect.DeepEqual(expCookie.String(), resCookie) {
 			t.Errorf("[%d] wrong cookie, expected: %#v, got: %#v", caseNum, expCookie, resCookie)
 		}*/
+
 	}
 }
 
