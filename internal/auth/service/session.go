@@ -50,6 +50,7 @@ func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*mod
 		return nil, fmt.Errorf("session creation: %w", err)
 	}
 
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sess.ID,
