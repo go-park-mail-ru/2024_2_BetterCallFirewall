@@ -1,7 +1,7 @@
 package models
 
 type Post struct {
-	Header    string
-	Body      string
-	CreatedAt string
+	Header    string `json:"header"`
+	Body      string `json:"body"`
+	CreatedAt string `json:"created_at"`
 }
