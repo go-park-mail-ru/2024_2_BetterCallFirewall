@@ -22,9 +22,9 @@ func NewResponder(logger *log.Logger) *Respond {
 	return &Respond{logger: logger}
 }
 
-// TODO 1 test for every function
 func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
 	w.WriteHeader(http.StatusOK)
 
 	err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data})
@@ -37,6 +37,7 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
 	w.WriteHeader(http.StatusMethodNotAllowed)
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "method not allowed"})
@@ -48,6 +49,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
 	w.WriteHeader(http.StatusBadRequest)
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "bad request"})
@@ -59,6 +61,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
 	if errors.Is(err, context.Canceled) {
 		return
 	}

@@ -27,6 +27,8 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 		sess, err := sm.Check(r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+			w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
 			_, _ = w.Write([]byte(fmt.Errorf("not authorized: %w", err).Error()))
 			log.Println(err)
 			return
