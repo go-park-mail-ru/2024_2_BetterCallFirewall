@@ -32,12 +32,15 @@ func NewPostController(service PostService, responder Responder) *PostController
 func (pc *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+		return
 	}
 
 	posts := pc.service.GetAll()
+
 	var res []models.Post
 	for _, post := range posts {
 		res = append(res, *post)
 	}
+
 	pc.responder.OutputJSON(w, res)
 }

@@ -36,5 +36,6 @@ func (r *Repository) GetAll() []*models.Post {
 	for _, post := range r.storage {
 		res = append(res, post)
 	}
+
 	return res
 }

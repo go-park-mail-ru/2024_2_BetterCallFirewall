@@ -20,5 +20,6 @@ func NewPostServiceImpl(db DB) *PostServiceImpl {
 
 func (s *PostServiceImpl) GetAll() []*models.Post {
 	posts := s.db.GetAll()
+
 	return posts
 }
