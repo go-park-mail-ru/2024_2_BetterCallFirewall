@@ -25,6 +25,7 @@ func NewResponder(logger *log.Logger) *Respond {
 func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusOK)
 
 	err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data})
