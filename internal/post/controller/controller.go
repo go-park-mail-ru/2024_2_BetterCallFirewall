@@ -4,16 +4,18 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/post/models"
 )
 
 type PostService interface {
-	GetAll() []*models.Post
+	GetAll() ([]*models.Post, error)
 }
 
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any)
 
+	ErrorNoContent(w http.ResponseWriter, err error)
 	ErrorWrongMethod(w http.ResponseWriter, err error)
 }
 
@@ -35,7 +37,12 @@ func (pc *PostController) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts := pc.service.GetAll()
+	posts, err := pc.service.GetAll()
+	if errors.Is(err, myErr.ErrPostEnd) {
+		pc.responder.ErrorNoContent(w, err)
+		return
+	}
+
 	var res []models.Post
 	for _, post := range posts {
 		res = append(res, *post)

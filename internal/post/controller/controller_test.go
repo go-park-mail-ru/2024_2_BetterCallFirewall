@@ -10,8 +10,8 @@ import (
 
 type mockPostService struct{}
 
-func (m *mockPostService) GetAll() []*models.Post {
-	return []*models.Post{{Header: "Header", Body: "Body", CreatedAt: "2012-10-12"}}
+func (m *mockPostService) GetAll() ([]*models.Post, error) {
+	return []*models.Post{{Header: "Header", Body: "Body", CreatedAt: "2012-10-12"}}, nil
 }
 
 type mockResponder struct{}
@@ -24,6 +24,11 @@ func (m *mockResponder) OutputJSON(w http.ResponseWriter, _ any) {
 func (m *mockResponder) ErrorWrongMethod(w http.ResponseWriter, _ error) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	_, _ = w.Write([]byte("send err to client"))
+}
+
+func (m *mockResponder) ErrorNoContent(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusNoContent)
+	_, _ = w.Write([]byte("not content"))
 }
 
 type TestCase struct {

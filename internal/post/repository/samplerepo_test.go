@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type TestCase struct {
@@ -18,7 +21,7 @@ func TestRepository(t *testing.T) {
 	for _, testCase := range testCases {
 		repo := NewRepository()
 		repo.FakeData(testCase.dataCount)
-		got := repo.GetAll()
+		got, _ := repo.GetAll()
 		if len(got) != testCase.dataCount {
 			t.Errorf("GetAll returned wrong number of results: got %v want %v", len(got), testCase.dataCount)
 		}
@@ -27,5 +30,14 @@ func TestRepository(t *testing.T) {
 				t.Errorf("wrong format Data:%s", val.CreatedAt)
 			}
 		}
+	}
+	// test for checking err, if more query, then in database
+
+	repo := NewRepository()
+	repo.FakeData(10)
+	_, _ = repo.GetAll()
+	_, err := repo.GetAll()
+	if !errors.Is(err, myErr.ErrPostEnd) {
+		t.Errorf("want err: %v, got: %v", myErr.ErrPostEnd, err)
 	}
 }
