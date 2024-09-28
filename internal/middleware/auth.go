@@ -25,6 +25,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Max-Age", "3600")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
 			w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 			w.WriteHeader(http.StatusOK)
 			return

@@ -57,7 +57,7 @@ func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*mod
 		HttpOnly: true,
 		Expires:  time.Now().Add(24 * time.Hour),
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
+		//Secure:   true,
 	}
 	http.SetCookie(w, cookie)
 	return sess, nil
