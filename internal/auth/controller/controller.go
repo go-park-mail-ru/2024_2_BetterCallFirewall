@@ -91,12 +91,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = c.SessionManager.Check(r)
-	if err == nil {
-		c.responder.OutputJSON(w, "user auth")
-		return
-	}
-
 	err = c.serviceAuth.Auth(user)
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
@@ -106,6 +100,12 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+		return
+	}
+
+	_, err = c.SessionManager.Check(r)
+	if err == nil {
+		c.responder.OutputJSON(w, "user auth")
 		return
 	}
 

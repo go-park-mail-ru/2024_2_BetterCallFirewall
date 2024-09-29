@@ -53,7 +53,6 @@ func main() {
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
 	postRepo := repository.NewRepository()
-	postRepo.FakeData(10)
 	postService := postServ.NewPostServiceImpl(postRepo)
 	postControl := postController.NewPostController(postService, responder)
 
