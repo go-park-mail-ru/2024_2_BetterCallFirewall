@@ -20,7 +20,7 @@ type SessionManager interface {
 func Auth(sm SessionManager, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8000")
+			w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 			w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 			w.Header().Set("Access-Control-Max-Age", "3600")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
@@ -39,7 +39,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 		sess, err := sm.Check(r)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-			w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8000, http://185.241.194.197:8000")
+			w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(fmt.Errorf("not authorized: %w", err).Error()))

@@ -24,7 +24,7 @@ func NewResponder(logger *log.Logger) *Respond {
 
 func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000, http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusOK)
 
@@ -38,7 +38,7 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000, http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusMethodNotAllowed)
 
@@ -51,7 +51,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://127.0.0.1:8000, http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusBadRequest)
 
@@ -64,7 +64,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", " http://127.0.0.1:8000, http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	if errors.Is(err, context.Canceled) {
 		return
