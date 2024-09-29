@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>controller: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/2024_2_BetterCallFirewall/internal/auth/controller/controller.go (84.9%)</option>
+				
+				<option value="file1">github.com/2024_2_BetterCallFirewall/internal/auth/service/auth.go (100.0%)</option>
+				
+				<option value="file2">github.com/2024_2_BetterCallFirewall/internal/auth/service/session.go (92.3%)</option>
+				
+				<option value="file3">github.com/2024_2_BetterCallFirewall/internal/post/controller/controller.go (100.0%)</option>
+				
+				<option value="file4">github.com/2024_2_BetterCallFirewall/internal/post/repository/samplerepo.go (100.0%)</option>
+				
+				<option value="file5">github.com/2024_2_BetterCallFirewall/internal/post/service/post.go (100.0%)</option>
+				
+				<option value="file6">github.com/2024_2_BetterCallFirewall/internal/router/responder.go (84.2%)</option>
+				
+				<option value="file7">github.com/2024_2_BetterCallFirewall/internal/router/router.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package controller
+
+import (
+        "encoding/json"
+        "errors"
+        "fmt"
+        "net/http"
+
+        "golang.org/x/crypto/bcrypt"
+
+        "github.com/2024_2_BetterCallFirewall/internal/auth/models"
+        "github.com/2024_2_BetterCallFirewall/internal/myErr"
+)
+
+type AuthService interface {
+        Register(user models.User) error
+        Auth(user models.User) error
+}
+
+type SessionManager interface {
+        Check(r *http.Request) (*models.Session, error)                       //TODO сделать через контексты
+        Create(w http.ResponseWriter, userID uint32) (*models.Session, error) //TODO сделаь без w
+        Destroy(w http.ResponseWriter, r *http.Request) error
+}
+
+type Responder interface {
+        OutputJSON(w http.ResponseWriter, data any)
+
+        ErrorWrongMethod(w http.ResponseWriter, err error)
+        ErrorBadRequest(w http.ResponseWriter, err error)
+        ErrorInternal(w http.ResponseWriter, err error)
+}
+
+type AuthController struct {
+        responder      Responder
+        serviceAuth    AuthService
+        SessionManager SessionManager
+}
+
+func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager SessionManager) *AuthController <span class="cov8" title="1">{
+        return &amp;AuthController{
+                responder:      responder,
+                serviceAuth:    serviceAuth,
+                SessionManager: sessionManager,
+        }
+}</span>
+
+func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Method != http.MethodPost </span><span class="cov8" title="1">{
+                c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+                return
+        }</span>
+
+        <span class="cov8" title="1">user := models.User{}
+        err := json.NewDecoder(r.Body).Decode(&amp;user)
+        if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = c.serviceAuth.Register(user)
+        if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) </span><span class="cov8" title="1">{
+                c.responder.ErrorBadRequest(w, err)
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">_, err = c.SessionManager.Create(w, user.ID)
+        if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.responder.OutputJSON(w, "user create successful")</span>
+}
+
+func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Method != http.MethodPost </span><span class="cov8" title="1">{
+                c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+                return
+        }</span>
+
+        <span class="cov8" title="1">user := models.User{}
+        err := json.NewDecoder(r.Body).Decode(&amp;user)
+        if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">_, err = c.SessionManager.Check(r)
+        if err == nil </span><span class="cov8" title="1">{
+                c.responder.OutputJSON(w, "user auth")
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = c.serviceAuth.Auth(user)
+
+        if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) </span><span class="cov8" title="1">{
+                c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">_, err = c.SessionManager.Create(w, user.ID)
+        if err != nil </span><span class="cov8" title="1">{
+                c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">c.responder.OutputJSON(w, "user auth")</span>
+}
+
+func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if r.Method != http.MethodPost </span><span class="cov0" title="0">{
+                c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+                return
+        }</span>
+
+        <span class="cov0" title="0">err := c.SessionManager.Destroy(w, r)
+        if err != nil </span><span class="cov0" title="0">{
+                c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err))
+                return
+        }</span>
+
+        <span class="cov0" title="0">c.responder.OutputJSON(w, "user logout")</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package service
+
+import (
+        "errors"
+        "fmt"
+        "regexp"
+
+        "golang.org/x/crypto/bcrypt"
+
+        "github.com/2024_2_BetterCallFirewall/internal/auth/models"
+        "github.com/2024_2_BetterCallFirewall/internal/myErr"
+)
+
+type UserRepo interface {
+        Create(user *models.User) error
+        GetByEmail(email string) (*models.User, error)
+}
+
+type AuthServiceImpl struct {
+        db UserRepo
+}
+
+func NewAuthServiceImpl(db UserRepo) *AuthServiceImpl <span class="cov8" title="1">{
+        return &amp;AuthServiceImpl{
+                db: db,
+        }
+}</span>
+
+func (a *AuthServiceImpl) Register(user models.User) error <span class="cov8" title="1">{
+        if !a.validateEmail(user.Email) </span><span class="cov8" title="1">{
+                return fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+        }</span>
+
+        <span class="cov8" title="1">hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("registration: %w", err)
+        }</span>
+        <span class="cov8" title="1">user.Password = string(hashPassword)
+
+        err = a.db.Create(&amp;user)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("registration: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (a *AuthServiceImpl) Auth(user models.User) error <span class="cov8" title="1">{
+        if !a.validateEmail(user.Email) </span><span class="cov8" title="1">{
+                return fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+        }</span>
+
+        <span class="cov8" title="1">dbUser, err := a.db.GetByEmail(user.Email)
+        if errors.Is(err, myErr.ErrUserNotFound) </span><span class="cov8" title="1">{
+                return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("auth service: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (a *AuthServiceImpl) validateEmail(email string) bool <span class="cov8" title="1">{
+        emailRegex := regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
+        return emailRegex.MatchString(email)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package service
+
+import (
+        "errors"
+        "fmt"
+        "net/http"
+        "time"
+
+        "github.com/2024_2_BetterCallFirewall/internal/auth/models"
+        "github.com/2024_2_BetterCallFirewall/internal/myErr"
+)
+
+type SessionRepository interface {
+        CreateSession(*models.Session) error
+        FindSession(sessID string) (*models.Session, error)
+        DestroySession(sessID string) error
+}
+
+type SessionManagerImpl struct {
+        DB SessionRepository
+}
+
+func NewSessionManager(DB SessionRepository) *SessionManagerImpl <span class="cov8" title="1">{
+        return &amp;SessionManagerImpl{
+                DB: DB,
+        }
+}</span>
+
+func (sm *SessionManagerImpl) Check(r *http.Request) (*models.Session, error) <span class="cov8" title="1">{
+        sessionCookie, err := r.Cookie("session_id")
+        if errors.Is(err, http.ErrNoCookie) </span><span class="cov8" title="1">{
+                return nil, myErr.ErrNoAuth
+        }</span>
+
+        <span class="cov8" title="1">sess, err := sm.DB.FindSession(sessionCookie.Value)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("session check: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return sess, nil</span>
+}
+
+func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*models.Session, error) <span class="cov8" title="1">{
+        sess, err := models.NewSession(userID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("create session: %w", err)
+        }</span>
+        <span class="cov8" title="1">err = sm.DB.CreateSession(sess)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("session creation: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">cookie := &amp;http.Cookie{
+                Name:     "session_id",
+                Value:    sess.ID,
+                Path:     "/",
+                HttpOnly: true,
+                Expires:  time.Now().Add(24 * time.Hour),
+                SameSite: http.SameSiteNoneMode,
+                //Secure:   true,
+        }
+        http.SetCookie(w, cookie)
+        return sess, nil</span>
+}
+
+func (sm *SessionManagerImpl) Destroy(w http.ResponseWriter, r *http.Request) error <span class="cov8" title="1">{
+        sess, err := models.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("session destroy: %w", err)
+        }</span>
+        <span class="cov8" title="1">err = sm.DB.DestroySession(sess.ID)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("session destroy: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">cookie := &amp;http.Cookie{
+                Name:     "session_id",
+                Value:    sess.ID,
+                Path:     "/",
+                HttpOnly: true,
+                Expires:  time.Now().AddDate(0, 0, -1),
+                SameSite: http.SameSiteNoneMode,
+        }
+        http.SetCookie(w, cookie)
+
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package controller
+
+import (
+        "errors"
+        "net/http"
+
+        "github.com/2024_2_BetterCallFirewall/internal/post/models"
+)
+
+type PostService interface {
+        GetAll() []*models.Post
+}
+
+type Responder interface {
+        OutputJSON(w http.ResponseWriter, data any)
+
+        ErrorWrongMethod(w http.ResponseWriter, err error)
+}
+
+type PostController struct {
+        service   PostService
+        responder Responder
+}
+
+func NewPostController(service PostService, responder Responder) *PostController <span class="cov8" title="1">{
+        return &amp;PostController{
+                service:   service,
+                responder: responder,
+        }
+}</span>
+
+func (pc *PostController) GetAll(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Method != http.MethodGet </span><span class="cov8" title="1">{
+                pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+                return
+        }</span>
+
+        <span class="cov8" title="1">posts := pc.service.GetAll()
+
+        var res []models.Post
+        for _, post := range posts </span><span class="cov8" title="1">{
+                res = append(res, *post)
+        }</span>
+
+        <span class="cov8" title="1">pc.responder.OutputJSON(w, res)</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package repository
+
+import (
+        "time"
+
+        "github.com/brianvoe/gofakeit"
+
+        "github.com/2024_2_BetterCallFirewall/internal/post/models"
+)
+
+type Repository struct {
+        storage map[string]*models.Post
+}
+
+func NewRepository() *Repository <span class="cov8" title="1">{
+        return &amp;Repository{
+                storage: make(map[string]*models.Post),
+        }
+}</span>
+
+func (r *Repository) FakeData(count int) <span class="cov8" title="1">{
+        for i := 0; i &lt; count; i++ </span><span class="cov8" title="1">{
+                title := gofakeit.FirstName() + " " + gofakeit.LastName()
+                content := gofakeit.Sentence(10)
+                date := gofakeit.Date()
+                r.storage[title] = &amp;models.Post{
+                        Header:    title,
+                        Body:      content,
+                        CreatedAt: date.Format(time.DateOnly),
+                }
+        }</span>
+}
+
+func (r *Repository) GetAll() []*models.Post <span class="cov8" title="1">{
+        res := make([]*models.Post, 0, len(r.storage))
+        for _, post := range r.storage </span><span class="cov8" title="1">{
+                res = append(res, post)
+        }</span>
+
+        <span class="cov8" title="1">return res</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package service
+
+import (
+        "github.com/2024_2_BetterCallFirewall/internal/post/models"
+)
+
+type DB interface {
+        GetAll() []*models.Post
+}
+
+type PostServiceImpl struct {
+        db DB
+}
+
+func NewPostServiceImpl(db DB) *PostServiceImpl <span class="cov8" title="1">{
+        return &amp;PostServiceImpl{
+                db: db,
+        }
+}</span>
+
+func (s *PostServiceImpl) GetAll() []*models.Post <span class="cov8" title="1">{
+        posts := s.db.GetAll()
+
+        return posts
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package router
+
+import (
+        "context"
+        "encoding/json"
+        "errors"
+        "log"
+        "net/http"
+)
+
+type Response struct {
+        Success bool   `json:"success"`
+        Data    any    `json:"data"`
+        Message string `json:"message"`
+}
+
+type Respond struct {
+        logger *log.Logger
+}
+
+func NewResponder(logger *log.Logger) *Respond <span class="cov8" title="1">{
+        return &amp;Respond{logger: logger}
+}</span>
+
+func (r *Respond) OutputJSON(w http.ResponseWriter, data any) <span class="cov8" title="1">{
+        w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+        w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+        w.Header().Set("Access-Control-Allow-Credentials", "true")
+        w.WriteHeader(http.StatusOK)
+
+        err := json.NewEncoder(w).Encode(&amp;Response{Success: true, Data: data})
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Println(err)
+        }</span>
+        <span class="cov8" title="1">dataJ, err := json.Marshal(&amp;Response{Success: true, Data: data})
+        if err != nil </span><span class="cov0" title="0">{
+                r.logger.Println(err)
+        }</span>
+        <span class="cov8" title="1">r.logger.Println(string(dataJ))</span>
+}
+
+func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) <span class="cov8" title="1">{
+        r.logger.Println(err)
+        w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+        w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+        w.Header().Set("Access-Control-Allow-Credentials", "true")
+        w.WriteHeader(http.StatusMethodNotAllowed)
+
+        errJ := json.NewEncoder(w).Encode(&amp;Response{Success: false, Data: err.Error(), Message: "method not allowed"})
+        if errJ != nil </span><span class="cov0" title="0">{
+                r.logger.Println(err)
+        }</span>
+}
+
+func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) <span class="cov8" title="1">{
+        r.logger.Println(err)
+        w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+        w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+        w.Header().Set("Access-Control-Allow-Credentials", "true")
+        w.WriteHeader(http.StatusBadRequest)
+
+        errJ := json.NewEncoder(w).Encode(&amp;Response{Success: false, Data: err.Error(), Message: "bad request"})
+        if errJ != nil </span><span class="cov0" title="0">{
+                r.logger.Println(err)
+        }</span>
+}
+
+func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) <span class="cov8" title="1">{
+        r.logger.Println(err)
+        w.Header().Set("Content-Type", "application/json:charset=UTF-8")
+        w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+        w.Header().Set("Access-Control-Allow-Credentials", "true")
+        if errors.Is(err, context.Canceled) </span><span class="cov0" title="0">{
+                return
+        }</span>
+
+        <span class="cov8" title="1">w.WriteHeader(http.StatusInternalServerError)
+
+        errJ := json.NewEncoder(w).Encode(&amp;Response{Success: false, Data: err.Error(), Message: "internal server error"})
+        if errJ != nil </span><span class="cov0" title="0">{
+                r.logger.Println(err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package router
+
+import (
+        "net/http"
+
+        "github.com/2024_2_BetterCallFirewall/internal/middleware"
+)
+
+type AuthController interface {
+        Register(w http.ResponseWriter, r *http.Request)
+        Auth(w http.ResponseWriter, r *http.Request)
+        Logout(w http.ResponseWriter, r *http.Request)
+}
+
+type PostController interface {
+        GetAll(w http.ResponseWriter, r *http.Request)
+}
+
+func NewAuthRouter(authControl AuthController, postControl PostController, sm middleware.SessionManager) http.Handler <span class="cov0" title="0">{
+        mux := http.NewServeMux()
+        mux.HandleFunc("/api/v1/auth/register", authControl.Register)
+        mux.HandleFunc("/api/v1/auth/login", authControl.Auth)
+        mux.HandleFunc("/api/v1/auth/logout", authControl.Logout)
+        mux.HandleFunc("/api/v1/post", postControl.GetAll)
+        res := middleware.Auth(sm, mux)
+
+        return res
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

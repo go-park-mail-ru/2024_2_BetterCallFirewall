@@ -208,8 +208,8 @@ func TestAuth(t *testing.T) {
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewBuffer(jsonUser3)),
-			wantCode: http.StatusFound,
-			wantBody: "",
+			wantCode: http.StatusOK,
+			wantBody: `"user auth"`,
 		},
 	}
 

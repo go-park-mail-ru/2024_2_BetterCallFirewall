@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type MocDB struct {
