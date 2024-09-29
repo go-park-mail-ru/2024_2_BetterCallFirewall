@@ -48,7 +48,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "method not allowed"})
 	if errJ != nil {
-		r.logger.Println(err)
+		r.logger.Println(errJ)
 	}
 }
 
@@ -61,7 +61,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "bad request"})
 	if errJ != nil {
-		r.logger.Println(err)
+		r.logger.Println(errJ)
 	}
 }
 
@@ -78,6 +78,6 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "internal server error"})
 	if errJ != nil {
-		r.logger.Println(err)
+		r.logger.Println(errJ)
 	}
 }
