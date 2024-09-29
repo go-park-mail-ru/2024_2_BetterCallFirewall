@@ -117,3 +117,18 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	c.responder.OutputJSON(w, "user auth")
 }
+
+func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+		return
+	}
+
+	err := c.SessionManager.Destroy(w, r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err))
+		return
+	}
+
+	c.responder.OutputJSON(w, "user logout")
+}

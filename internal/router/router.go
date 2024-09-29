@@ -9,6 +9,7 @@ import (
 type AuthController interface {
 	Register(w http.ResponseWriter, r *http.Request)
 	Auth(w http.ResponseWriter, r *http.Request)
+	Logout(w http.ResponseWriter, r *http.Request)
 }
 
 type PostController interface {
@@ -19,6 +20,7 @@ func NewAuthRouter(authControl AuthController, postControl PostController, sm mi
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/auth/register", authControl.Register)
 	mux.HandleFunc("/api/v1/auth/login", authControl.Auth)
+	mux.HandleFunc("/api/v1/auth/logout", authControl.Logout)
 	mux.HandleFunc("/api/v1/post", postControl.GetAll)
 	res := middleware.Auth(sm, mux)
 
