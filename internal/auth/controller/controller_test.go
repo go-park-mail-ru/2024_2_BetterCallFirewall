@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -60,7 +61,10 @@ func (m MockSessionManager) Create(w http.ResponseWriter, userID uint32) (*model
 }
 
 func (m MockSessionManager) Destroy(w http.ResponseWriter, r *http.Request) error {
-	panic("implement me")
+	if _, err := models.SessionFromContext(r.Context()); err != nil {
+		return err
+	}
+	return nil
 }
 
 type MockResponder struct{}
@@ -220,6 +224,49 @@ func TestAuth(t *testing.T) {
 		}
 		if strings.TrimSpace(tt.w.Body.String()) != tt.wantBody {
 			t.Errorf("Auth() body = %s, want %s", tt.w.Body.String(), tt.wantBody)
+		}
+	}
+}
+
+var (
+	session, _        = models.NewSession(1)
+	ctxWithSession    = models.ContextWithSession(context.Background(), session)
+	reqWithSession    = httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctxWithSession)
+	reqWithoutSession = httptest.NewRequest(http.MethodPost, "/", nil)
+)
+
+func TestLogout(t *testing.T) {
+	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
+
+	testCases := []TestCase{
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodGet, "/", nil),
+			wantCode: http.StatusMethodNotAllowed,
+			wantBody: "wrong method error",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithoutSession,
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request error",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithSession,
+			wantCode: http.StatusOK,
+			wantBody: `"user logout"`,
+		},
+	}
+
+	for caseNum, tt := range testCases {
+		controller.Logout(tt.w, tt.r)
+
+		if tt.w.Code != tt.wantCode {
+			t.Errorf("[%d] Logout() code = %d, want %d", caseNum, tt.w.Code, tt.wantCode)
+		}
+		if strings.TrimSpace(tt.w.Body.String()) != tt.wantBody {
+			t.Errorf("[%d] Logout() body = %s, want %s", caseNum, tt.w.Body.String(), tt.wantBody)
 		}
 	}
 }
