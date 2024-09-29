@@ -93,10 +93,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	_, err = c.SessionManager.Check(r)
 	if err == nil {
-		w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		http.Redirect(w, r, "/", http.StatusFound)
+		c.responder.OutputJSON(w, "user auth")
 		return
 	}
 
