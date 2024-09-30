@@ -162,17 +162,6 @@ func TestCreateSession(t *testing.T) {
 		if res != nil && res.UserID != test.testRes.UserID {
 			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.testRes, res)
 		}
-		/*expCookie := &http.Cookie{
-			Name:    "session_id",
-			Value:   res.ID,
-			Path:    "/",
-			Expires: time.Now().Add(24 * time.Second),
-		}
-		resCookie := test.testResp.Header().Get("Set-Cookie")
-		if !reflect.DeepEqual(expCookie.String(), resCookie) {
-			t.Errorf("[%d] wrong cookie, expected: %#v, got: %#v", caseNum, expCookie, resCookie)
-		}*/
-
 	}
 }
 

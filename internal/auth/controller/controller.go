@@ -18,8 +18,8 @@ type AuthService interface {
 }
 
 type SessionManager interface {
-	Check(r *http.Request) (*models.Session, error)                       //TODO сделать через контексты
-	Create(w http.ResponseWriter, userID uint32) (*models.Session, error) //TODO сделаь без w
+	Check(r *http.Request) (*models.Session, error)
+	Create(w http.ResponseWriter, userID uint32) (*models.Session, error)
 	Destroy(w http.ResponseWriter, r *http.Request) error
 }
 

@@ -25,7 +25,6 @@ func NewSession(userID uint32) (*Session, error) {
 	}, nil
 }
 
-// SessionKey TODO сделать тип
 var (
 	SessionKey string = "sessionKey"
 )
