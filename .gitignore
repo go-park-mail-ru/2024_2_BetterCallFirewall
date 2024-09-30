@@ -1,0 +1,5 @@
+.idea
+/go.work.sum
+.env
+cover.html
+cover.out
