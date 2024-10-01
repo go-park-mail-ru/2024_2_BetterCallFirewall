@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
+	_ "github.com/swaggo/http-swagger"
 )
 
 type AuthController interface {
