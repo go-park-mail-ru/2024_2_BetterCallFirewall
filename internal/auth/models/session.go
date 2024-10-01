@@ -4,13 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type Session struct {
-	ID     string
-	UserID uint32
+	ID        string
+	UserID    uint32
+	CreatedAt int64
 }
 
 func NewSession(userID uint32) (*Session, error) {
@@ -20,8 +22,9 @@ func NewSession(userID uint32) (*Session, error) {
 		return nil, fmt.Errorf("new session: %w", err)
 	}
 	return &Session{
-		ID:     fmt.Sprintf("%x", randID),
-		UserID: userID,
+		ID:        fmt.Sprintf("%x", randID),
+		UserID:    userID,
+		CreatedAt: time.Now().Unix(),
 	}, nil
 }
 

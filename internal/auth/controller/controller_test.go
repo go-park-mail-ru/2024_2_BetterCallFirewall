@@ -20,16 +20,16 @@ var (
 
 type MockAuthService struct{}
 
-func (m MockAuthService) Register(user models.User) error {
+func (m MockAuthService) Register(user models.User) (uint32, error) {
 	if user.ID == 1 {
-		return myErr.ErrUserAlreadyExists
+		return user.ID, myErr.ErrUserAlreadyExists
 	}
 
 	if user.ID == 0 {
-		return mockErrorInternal
+		return user.ID, mockErrorInternal
 	}
 
-	return nil
+	return user.ID, nil
 }
 
 func (m MockAuthService) Auth(user models.User) error {

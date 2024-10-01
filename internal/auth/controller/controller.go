@@ -13,7 +13,7 @@ import (
 )
 
 type AuthService interface {
-	Register(user models.User) error
+	Register(user models.User) (uint32, error)
 	Auth(user models.User) error
 }
 
@@ -58,7 +58,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.serviceAuth.Register(user)
+	user.ID, err = c.serviceAuth.Register(user)
 	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.responder.ErrorBadRequest(w, err)
 		return
