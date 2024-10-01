@@ -73,7 +73,7 @@ func TestAuth(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		err := serv.Auth(testCase.user)
+		_, err := serv.Auth(testCase.user)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Auth() error = %v, wantErr %v", err, testCase.wantError)
 		}

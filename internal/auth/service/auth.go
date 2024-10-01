@@ -41,30 +41,30 @@ func (a *AuthServiceImpl) Register(user models.User) (uint32, error) {
 	if err != nil {
 		return 0, fmt.Errorf("registration: %w", err)
 	}
-	
+
 	return user.ID, nil
 }
 
-func (a *AuthServiceImpl) Auth(user models.User) error {
+func (a *AuthServiceImpl) Auth(user models.User) (uint32, error) {
 	if !a.validateEmail(user.Email) {
-		return fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
 	}
 
 	dbUser, err := a.db.GetByEmail(user.Email)
 	if errors.Is(err, myErr.ErrUserNotFound) {
-		return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
 	}
 
 	if err != nil {
-		return fmt.Errorf("auth service: %w", err)
+		return 0, fmt.Errorf("auth service: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if err != nil {
-		return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
 	}
 
-	return nil
+	return dbUser.ID, nil
 }
 
 func (a *AuthServiceImpl) validateEmail(email string) bool {
