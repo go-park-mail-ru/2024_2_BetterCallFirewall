@@ -14,7 +14,7 @@ import (
 
 type AuthService interface {
 	Register(user models.User) (uint32, error)
-	Auth(user models.User) error
+	Auth(user models.User) (uint32, error)
 }
 
 type SessionManager interface {
@@ -91,7 +91,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.serviceAuth.Auth(user)
+	id, err := c.serviceAuth.Auth(user)
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
@@ -103,13 +103,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = c.SessionManager.Check(r)
-	if err == nil {
-		c.responder.OutputJSON(w, "user auth")
-		return
-	}
-
-	_, err = c.SessionManager.Create(w, user.ID)
+	_, err = c.SessionManager.Create(w, id)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
