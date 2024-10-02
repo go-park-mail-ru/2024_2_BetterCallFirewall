@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 )
@@ -15,6 +16,8 @@ var noAuthUrls = map[string]struct{}{
 
 type SessionManager interface {
 	Check(r *http.Request) (*models.Session, error)
+	Create(w http.ResponseWriter, userID uint32) (*models.Session, error)
+	Destroy(w http.ResponseWriter, r *http.Request) error
 }
 
 func Auth(sm SessionManager, next http.Handler) http.Handler {
@@ -31,12 +34,19 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			return
 		}
 
+		sess, err := sm.Check(r)
+
 		if _, ok := noAuthUrls[r.URL.Path]; ok {
+			if err == nil {
+				err := sm.Destroy(w, r.WithContext(models.ContextWithSession(r.Context(), sess)))
+				if err != nil {
+					log.Println(err)
+				}
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		sess, err := sm.Check(r)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 			w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
@@ -45,6 +55,13 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			_, _ = w.Write([]byte(fmt.Errorf("not authorized: %w", err).Error()))
 			log.Println(err)
 			return
+		}
+
+		if sess.CreatedAt <= time.Now().Add(-12*time.Hour).Unix() {
+			sess, err = sm.Create(w, sess.UserID)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 
 		ctx := models.ContextWithSession(r.Context(), sess)

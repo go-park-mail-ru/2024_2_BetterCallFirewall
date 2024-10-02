@@ -14,11 +14,11 @@ var errMock = errors.New("something with DB")
 
 type MockDB struct{}
 
-func (m MockDB) Create(user *models.User) error {
+func (m MockDB) Create(user *models.User) (uint32, error) {
 	if user.ID == 0 {
-		return myErr.ErrUserNotFound
+		return user.ID, myErr.ErrUserNotFound
 	}
-	return nil
+	return user.ID, nil
 }
 
 func (m MockDB) GetByEmail(email string) (*models.User, error) {
@@ -54,7 +54,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		err := serv.Register(testCase.user)
+		_, err := serv.Register(testCase.user)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Register() error = %v, wantErr %v", err, testCase.wantError)
 		}
@@ -73,7 +73,7 @@ func TestAuth(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		err := serv.Auth(testCase.user)
+		_, err := serv.Auth(testCase.user)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Auth() error = %v, wantErr %v", err, testCase.wantError)
 		}

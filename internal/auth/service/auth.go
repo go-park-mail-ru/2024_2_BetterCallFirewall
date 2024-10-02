@@ -12,7 +12,7 @@ import (
 )
 
 type UserRepo interface {
-	Create(user *models.User) error
+	Create(user *models.User) (uint32, error)
 	GetByEmail(email string) (*models.User, error)
 }
 
@@ -26,45 +26,45 @@ func NewAuthServiceImpl(db UserRepo) *AuthServiceImpl {
 	}
 }
 
-func (a *AuthServiceImpl) Register(user models.User) error {
+func (a *AuthServiceImpl) Register(user models.User) (uint32, error) {
 	if !a.validateEmail(user.Email) {
-		return fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("registration: %w", err)
+		return 0, fmt.Errorf("registration: %w", err)
 	}
 	user.Password = string(hashPassword)
 
-	err = a.db.Create(&user)
+	user.ID, err = a.db.Create(&user)
 	if err != nil {
-		return fmt.Errorf("registration: %w", err)
+		return 0, fmt.Errorf("registration: %w", err)
 	}
 
-	return nil
+	return user.ID, nil
 }
 
-func (a *AuthServiceImpl) Auth(user models.User) error {
+func (a *AuthServiceImpl) Auth(user models.User) (uint32, error) {
 	if !a.validateEmail(user.Email) {
-		return fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
 	}
 
 	dbUser, err := a.db.GetByEmail(user.Email)
 	if errors.Is(err, myErr.ErrUserNotFound) {
-		return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
 	}
 
 	if err != nil {
-		return fmt.Errorf("auth service: %w", err)
+		return 0, fmt.Errorf("auth service: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if err != nil {
-		return fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
 	}
 
-	return nil
+	return dbUser.ID, nil
 }
 
 func (a *AuthServiceImpl) validateEmail(email string) bool {
