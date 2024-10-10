@@ -36,6 +36,8 @@ func NewAdapter(db *sql.DB) *Adapter {
 	return adapter
 }
 
+//TODO вернуть айди через RETURNING
+
 func (a *Adapter) Create(user *models.User) (uint32, error) {
 	res, err := a.db.Exec(CreateUser, user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
