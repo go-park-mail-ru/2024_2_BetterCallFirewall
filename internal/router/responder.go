@@ -22,10 +22,14 @@ func NewResponder(logger *log.Logger) *Respond {
 	return &Respond{logger: logger}
 }
 
-func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
+func writeHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
+	writeHeaders(w)
 	w.WriteHeader(http.StatusOK)
 
 	err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data})
@@ -41,9 +45,7 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 
 func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
-	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	writeHeaders(w)
 	w.WriteHeader(http.StatusMethodNotAllowed)
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "method not allowed"})
@@ -54,9 +56,7 @@ func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {
 
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
-	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	writeHeaders(w)
 	w.WriteHeader(http.StatusBadRequest)
 
 	errJ := json.NewEncoder(w).Encode(&Response{Success: false, Data: err.Error(), Message: "bad request"})
@@ -67,9 +67,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error) {
 
 func (r *Respond) ErrorInternal(w http.ResponseWriter, err error) {
 	r.logger.Println(err)
-	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	writeHeaders(w)
 	if errors.Is(err, context.Canceled) {
 		return
 	}

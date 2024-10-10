@@ -57,7 +57,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			return
 		}
 
-		if sess.CreatedAt <= time.Now().Add(-21*time.Hour).Unix() {
+		if sess.CreatedAt <= time.Now().Add(-12*time.Hour).Unix() {
 			sess, err = sm.Create(w, sess.UserID)
 			if err != nil {
 				log.Println(err)
