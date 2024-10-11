@@ -14,14 +14,16 @@ import (
 )
 
 const (
-	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
-	CreateUser            = `INSERT INTO person (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
-	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
-	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL UNIQUE, created_at BIGINT NOT NULL);`
-	CreateSession         = `INSERT INTO session (sess_id, user_id, created_at) VALUES ($1, $2, $3) ON CONFLICT(user_id) DO UPDATE SET sess_id = EXCLUDED.sess_id, created_at = EXCLUDED.created_at;`
-	FindSession           = `SELECT sess_id, user_id, created_at FROM session WHERE sess_id = $1;`
-	DeleteSession         = `DELETE FROM session WHERE sess_id = $1;`
-	DeleteOutdatedSession = `DELETE FROM session WHERE created_at <= $1;`
+	CreateUserTable          = `CREATE TABLE IF NOT EXISTS person (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
+	CreateFunctionForTrigger = "CREATE OR REPLACE FUNCTION profile_creation RETURNS AS TRIGGER AS $BODY$ BEGIN INSERT INTO profile(id, person_id) VALUES(new.id, new.name); RETURN new END; $BODY$ language plpgsql;"
+	CreateTriggerForProfiles = `CREATE OR REPLACE TRIGGER create_profile AFTER INSERT ON person FOR EACH ROW EXECUTE PROCEDURE profile_creation;`
+	CreateUser               = `INSERT INTO person (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
+	GetUserByEmail           = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
+	CreateNewSessionTable    = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL UNIQUE, created_at BIGINT NOT NULL);`
+	CreateSession            = `INSERT INTO session (sess_id, user_id, created_at) VALUES ($1, $2, $3) ON CONFLICT(user_id) DO UPDATE SET sess_id = EXCLUDED.sess_id, created_at = EXCLUDED.created_at;`
+	FindSession              = `SELECT sess_id, user_id, created_at FROM session WHERE sess_id = $1;`
+	DeleteSession            = `DELETE FROM session WHERE sess_id = $1;`
+	DeleteOutdatedSession    = `DELETE FROM session WHERE created_at <= $1;`
 )
 
 type Adapter struct {
@@ -80,6 +82,14 @@ func (a *Adapter) CreateNewUserTable() error {
 	_, err := a.db.Exec(CreateUserTable)
 	if err != nil {
 		return fmt.Errorf("postgres create user table: %w", err)
+	}
+	_, err = a.db.Exec(CreateNewSessionTable)
+	if err != nil {
+		return fmt.Errorf("postgres create user table: %w", err)
+	}
+	_, err = a.db.Exec(CreateTriggerForProfiles)
+	if err != nil {
+		return fmt.Errorf("postgres create user trigger for profiles: %w", err)
 	}
 
 	return nil
