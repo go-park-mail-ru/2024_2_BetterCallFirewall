@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	models2 "github.com/2024_2_BetterCallFirewall/internal/models"
 	"log"
 	"time"
 
 	_ "github.com/lib/pq"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
@@ -38,7 +38,7 @@ func NewAdapter(db *sql.DB) *Adapter {
 
 //TODO вернуть айди через RETURNING
 
-func (a *Adapter) Create(user *models.User) (uint32, error) {
+func (a *Adapter) Create(user *models2.User) (uint32, error) {
 	res, err := a.db.Exec(CreateUser, user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		return 0, fmt.Errorf("postgres create user: %w", err)
@@ -61,10 +61,10 @@ func (a *Adapter) Create(user *models.User) (uint32, error) {
 	return user.ID, nil
 }
 
-func (a *Adapter) GetByEmail(email string) (*models.User, error) {
+func (a *Adapter) GetByEmail(email string) (*models2.User, error) {
 	row := a.db.QueryRow(GetUserByEmail, email)
 
-	var user models.User
+	var user models2.User
 	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -94,7 +94,7 @@ func (a *Adapter) CreateNewSessionTable() error {
 	return nil
 }
 
-func (a *Adapter) CreateSession(sess *models.Session) error {
+func (a *Adapter) CreateSession(sess *models2.Session) error {
 	res, err := a.db.Exec(CreateSession, sess.ID, sess.UserID, sess.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("postgres create session table: %w", err)
@@ -111,9 +111,9 @@ func (a *Adapter) CreateSession(sess *models.Session) error {
 	return nil
 }
 
-func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
+func (a *Adapter) FindSession(sessID string) (*models2.Session, error) {
 	res := a.db.QueryRow(FindSession, sessID)
-	var sess models.Session
+	var sess models2.Session
 	err := res.Scan(&sess.ID, &sess.UserID, &sess.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

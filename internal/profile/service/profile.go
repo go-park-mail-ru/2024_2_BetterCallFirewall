@@ -1,11 +1,13 @@
 package service
 
-import "github.com/2024_2_BetterCallFirewall/internal/profile/models"
+import (
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+)
 
 type ProfileUsecase interface {
-	GetProfileById(uint64 uint32) (*models.Profile, error)
-	GetAll() ([]*models.Profile, error)
+	GetProfileById(uint32) (*models.Profile, error)
+	GetAll(self uint32) ([]*models.Profile, error)
 	CreateProfile(models.Profile) (uint32, error)
-	UpdateProfile(*models.Profile) (bool, error)
+	UpdateProfile(*models.Profile) error
 	DeleteProfile(uint32) error
 }

@@ -4,22 +4,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	models2 "github.com/2024_2_BetterCallFirewall/internal/models"
 	"net/http"
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type AuthService interface {
-	Register(user models.User) (uint32, error)
-	Auth(user models.User) (uint32, error)
+	Register(user models2.User) (uint32, error)
+	Auth(user models2.User) (uint32, error)
 }
 
 type SessionManager interface {
-	Check(r *http.Request) (*models.Session, error)
-	Create(w http.ResponseWriter, userID uint32) (*models.Session, error)
+	Check(r *http.Request) (*models2.Session, error)
+	Create(w http.ResponseWriter, userID uint32) (*models2.Session, error)
 	Destroy(w http.ResponseWriter, r *http.Request) error
 }
 
@@ -51,7 +51,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.User{}
+	user := models2.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
@@ -84,7 +84,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.User{}
+	user := models2.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
