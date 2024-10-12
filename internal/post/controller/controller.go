@@ -17,6 +17,7 @@ type PostService interface {
 	Get(postID uint32) (*models.Post, error)
 	Update(post *models.Post) error
 	Delete(postID uint32) error
+	CheckUserAccess(userID uint32, postID uint32) (bool, error)
 }
 
 type Responder interface {
@@ -27,7 +28,7 @@ type Responder interface {
 }
 
 type FileService interface {
-	Save(file multipart.File) (*models.Picture, error)
+	Save(file multipart.File, fileHeader *multipart.FileHeader) (*models.Picture, error)
 }
 
 type PostController struct {
@@ -99,6 +100,21 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err)
+		return
+	}
+	authorID := sess.UserID
+	ok, err := pc.service.CheckUserAccess(authorID, post.ID)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err)
+		return
+	}
+	if !ok {
+		pc.responder.ErrorBadRequest(w, errors.New("access denied"))
+	}
+
 	if err := pc.service.Update(post); err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
@@ -118,6 +134,20 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err)
+		return
+	}
+	authorID := sess.UserID
+	ok, err := pc.service.CheckUserAccess(authorID, postID)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err)
+		return
+	}
+	if !ok {
+		pc.responder.ErrorBadRequest(w, errors.New("access denied"))
+	}
 
 	if err := pc.service.Delete(postID); err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -134,13 +164,18 @@ func (pc *PostController) getPost(r *http.Request) (*models.Post, error) {
 		return nil, err
 	}
 	defer r.Body.Close()
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		return nil, err
+	}
+	newPost.AuthorID = sess.UserID
 
 	defer r.MultipartForm.RemoveAll()
 	if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
 		return nil, myErr.ErrToLargeFile
 	}
 
-	file, _, err := r.FormFile("file")
+	file, fileHeader, err := r.FormFile("file")
 	defer file.Close()
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		return nil, err
@@ -150,7 +185,7 @@ func (pc *PostController) getPost(r *http.Request) (*models.Post, error) {
 		return newPost, nil
 	}
 
-	pic, err := pc.fileService.Save(file)
+	pic, err := pc.fileService.Save(file, fileHeader)
 	if err != nil {
 		return nil, err
 	}

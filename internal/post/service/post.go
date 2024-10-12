@@ -13,6 +13,7 @@ type DB interface {
 	Get(postID uint32) (*models.Post, error)
 	Delete(postID uint32) error
 	GetContentID(postID uint32) (uint32, error)
+	CheckAccess(profileID uint32, postID uint32) (bool, error)
 }
 
 type ContentRepo interface {
@@ -22,6 +23,7 @@ type ContentRepo interface {
 
 type ProfileRepo interface {
 	GetHeader(userID uint32) (models.Header, error)
+	GetProfileID(userID uint32) (uint32, error)
 }
 
 type PostServiceImpl struct {
@@ -47,7 +49,12 @@ func (s *PostServiceImpl) Create(post *models.Post) (uint32, error) {
 		return 0, fmt.Errorf("create content failed: %w", err)
 	}
 
-	id, err := s.db.Create(&entities.PostDB{AuthorID: post.AuthorID, ContentID: contentID})
+	authorID, err := s.profileRepo.GetProfileID(post.AuthorID)
+	if err != nil {
+		return 0, fmt.Errorf("get author id failed: %w", err)
+	}
+
+	id, err := s.db.Create(&entities.PostDB{AuthorID: authorID, ContentID: contentID})
 	if err != nil {
 		return 0, fmt.Errorf("create post failed: %w", err)
 	}
@@ -70,7 +77,6 @@ func (s *PostServiceImpl) Get(postID uint32) (*models.Post, error) {
 	return post, nil
 }
 
-// TODO проверить доступ юзера
 func (s *PostServiceImpl) Delete(postID uint32) error {
 	err := s.db.Delete(postID)
 	if err != nil {
@@ -80,7 +86,6 @@ func (s *PostServiceImpl) Delete(postID uint32) error {
 	return nil
 }
 
-// TODO проверить доступ юзера
 func (s *PostServiceImpl) Update(post *models.Post) error {
 	post.PostContent.UpdatedAt = time.Now()
 	contentID, err := s.db.GetContentID(post.ID)
@@ -95,4 +100,18 @@ func (s *PostServiceImpl) Update(post *models.Post) error {
 	}
 
 	return nil
+}
+
+func (s *PostServiceImpl) CheckUserAccess(userID uint32, postID uint32) (bool, error) {
+	authorID, err := s.profileRepo.GetProfileID(userID)
+	if err != nil {
+		return false, fmt.Errorf("get author id: %w", err)
+	}
+
+	ok, err := s.db.CheckAccess(authorID, postID)
+	if err != nil {
+		return false, fmt.Errorf("check access: %w", err)
+	}
+
+	return ok, nil
 }

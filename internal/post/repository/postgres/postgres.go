@@ -15,6 +15,7 @@ const (
 	getPost         = `SELECT (author_id, content_id, text, created_at, image_path)  FROM post AS p INNER JOIN content AS c ON c.id = p.content_id INNER JOIN content_image AS ci ON ci.content_id = p.content_id WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
 	getContentID    = `SELECT content_id FROM post WHERE id = $1;`
+	checkCreater    = `SELECT author_id FROM post WHERE id = $1;`
 )
 
 type Adapter struct {
@@ -89,4 +90,23 @@ func (a *Adapter) GetContentID(postID uint32) (uint32, error) {
 	}
 
 	return contentID, nil
+}
+
+func (a *Adapter) CheckAccess(profileID uint32, postID uint32) (bool, error) {
+	row, err := a.db.Query(checkCreater, postID)
+	if err != nil {
+		return false, fmt.Errorf("postgres check access: %w", err)
+	}
+
+	var createrID uint32
+	err = row.Scan(&createrID)
+	if err != nil {
+		return false, fmt.Errorf("postgres check access: %w", err)
+	}
+
+	if createrID != profileID {
+		return false, nil
+	}
+
+	return true, nil
 }
