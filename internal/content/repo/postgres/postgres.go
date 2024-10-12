@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	createTable           = `CREATE TABLE IF NOT EXISTS content (id SERIAL PRIMARY KEY, text TEXT, created_at DATE NOT NULL, updated_at DATE NOT NULL);`
+	createTable           = `CREATE TABLE IF NOT EXISTS content (id INT PRIMARY KEY, text TEXT, created_at DATE NOT NULL, updated_at DATE NOT NULL);`
 	createTableManyToMany = `CREATE TABLE IF NOT EXISTS content_image (content_id INTEGER REFERENCES content(id) ON DELETE CASCADE, image_path TEXT NOT NULL);`
 	createContent         = `INSERT INTO content (text, created_at, update_at) VALUES ($1, $2, $3);`
 	createContentImage    = `INSERT INTO content_image (content_id, image_path) VALUES ($1, $2);`

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id SERIAL PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
+	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id INT PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
 	CreateUser            = `INSERT INTO person (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
 	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
 	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL UNIQUE, created_at BIGINT NOT NULL);`
