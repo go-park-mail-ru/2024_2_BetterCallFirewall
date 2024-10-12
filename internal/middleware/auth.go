@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 var noAuthUrls = map[string]struct{}{
