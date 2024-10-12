@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"time"
 
-	modelsCon "github.com/2024_2_BetterCallFirewall/internal/content/models"
-	"github.com/2024_2_BetterCallFirewall/internal/post/models"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/post/entities"
 )
 
 type DB interface {
-	Create(post *models.PostDB) (uint32, error)
-	Get(postID uint32) (*models.PostDB, error)
+	Create(post *entities.PostDB) (uint32, error)
+	Get(postID uint32) (*models.Post, error)
 	Delete(postID uint32) error
 }
 
 type ContentRepo interface {
-	Create(content *modelsCon.Content) (uint32, error)
-	Get(contentID uint32) (*modelsCon.Content, error)
-	Update(content *modelsCon.Content) error
+	Create(content *models.Content) (uint32, error)
+	Update(content *models.Content) error
 }
 
 type ProfileRepo interface {
-	GetName(userID uint32) (string, error)
+	GetHeader(userID uint32) (models.Header, error)
 }
 
 type PostServiceImpl struct {
@@ -40,19 +39,14 @@ func NewPostServiceImpl(db DB, profileRepo ProfileRepo, contentRepo ContentRepo)
 
 func (s *PostServiceImpl) Create(post *models.Post) (uint32, error) {
 	createTime := time.Now()
-	content := &modelsCon.Content{
-		Text:      post.Body,
-		FilesPath: post.FilesPath,
-		CreatedAt: createTime,
-		UpdatedAt: createTime,
-	}
+	post.PostContent.CreatedAt, post.PostContent.UpdatedAt = createTime, createTime
 
-	contentID, err := s.contentRepo.Create(content)
+	contentID, err := s.contentRepo.Create(&post.PostContent)
 	if err != nil {
 		return 0, fmt.Errorf("create content failed: %w", err)
 	}
 
-	id, err := s.db.Create(&models.PostDB{AuthorID: post.UserID, ContentID: contentID})
+	id, err := s.db.Create(&entities.PostDB{AuthorID: post.AuthorID, ContentID: contentID})
 	if err != nil {
 		return 0, fmt.Errorf("create post failed: %w", err)
 	}
@@ -61,31 +55,21 @@ func (s *PostServiceImpl) Create(post *models.Post) (uint32, error) {
 }
 
 func (s *PostServiceImpl) Get(postID uint32) (*models.Post, error) {
-	postDB, err := s.db.Get(postID)
+	post, err := s.db.Get(postID)
 	if err != nil {
 		return nil, fmt.Errorf("get post failed: %w", err)
 	}
 
-	content, err := s.contentRepo.Get(postDB.ContentID)
-	if err != nil {
-		return nil, fmt.Errorf("get content failed: %w", err)
-	}
-
-	author, err := s.profileRepo.GetName(postDB.AuthorID)
+	header, err := s.profileRepo.GetHeader(post.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("get author failed: %w", err)
 	}
-
-	post := &models.Post{
-		Header:    author,
-		Body:      content.Text,
-		FilesPath: content.FilesPath,
-		CreatedAt: content.CreatedAt,
-	}
+	post.Header = header
 
 	return post, nil
 }
 
+// TODO проверить доступ юзера
 func (s *PostServiceImpl) Delete(postID uint32) error {
 	err := s.db.Delete(postID)
 	if err != nil {
@@ -95,14 +79,11 @@ func (s *PostServiceImpl) Delete(postID uint32) error {
 	return nil
 }
 
+// TODO проверить доступ юзера
 func (s *PostServiceImpl) Update(post *models.Post) error {
-	newContent := &modelsCon.Content{
-		Text:      post.Body,
-		FilesPath: post.FilesPath,
-		UpdatedAt: time.Now(),
-	}
+	post.PostContent.UpdatedAt = time.Now()
 
-	err := s.contentRepo.Update(newContent)
+	err := s.contentRepo.Update(&post.PostContent)
 	if err != nil {
 		return fmt.Errorf("update post failed: %w", err)
 	}
