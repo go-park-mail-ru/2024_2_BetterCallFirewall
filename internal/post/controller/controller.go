@@ -27,7 +27,7 @@ type Responder interface {
 }
 
 type FileService interface {
-	Save(file multipart.File) (models.Picture, error)
+	Save(file multipart.File) (*models.Picture, error)
 }
 
 type PostController struct {
@@ -50,34 +50,12 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newPost *models.Post
-
-	if err := json.NewDecoder(r.Body).Decode(newPost); err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
-	}
-	defer r.Body.Close()
-
-	defer r.MultipartForm.RemoveAll()
-	if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
-		pc.responder.ErrorBadRequest(w, myErr.ErrToLargeFile)
-		return
-	}
-
-	file, _, err := r.FormFile("file")
-	defer file.Close()
+	newPost, err := pc.getPost(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
 
-	pic, err := pc.fileService.Save(file)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
-	}
-
-	newPost.PostContent.File = pic
 	id, err := pc.service.Create(newPost)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, fmt.Errorf("create controller: %w", err))
@@ -115,12 +93,11 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post *models.Post
-	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+	post, err := pc.getPost(r)
+	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
-	defer r.Body.Close()
 
 	if err := pc.service.Update(post); err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -148,6 +125,38 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pc.responder.OutputJSON(w, postID)
+}
+
+func (pc *PostController) getPost(r *http.Request) (*models.Post, error) {
+	var newPost *models.Post
+
+	if err := json.NewDecoder(r.Body).Decode(newPost); err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	defer r.MultipartForm.RemoveAll()
+	if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
+		return nil, myErr.ErrToLargeFile
+	}
+
+	file, _, err := r.FormFile("file")
+	defer file.Close()
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		return nil, err
+	}
+
+	if errors.Is(err, http.ErrMissingFile) {
+		return newPost, nil
+	}
+
+	pic, err := pc.fileService.Save(file)
+	if err != nil {
+		return nil, err
+	}
+	newPost.PostContent.File = pic
+
+	return newPost, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {

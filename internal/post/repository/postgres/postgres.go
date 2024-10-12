@@ -14,6 +14,7 @@ const (
 	createPost      = `INSERT INTO post (author_id, content_id) VALUES ($1, $2);`
 	getPost         = `SELECT (author_id, content_id, text, created_at, image_path)  FROM post AS p INNER JOIN content AS c ON c.id = p.content_id INNER JOIN content_image AS ci ON ci.content_id = p.content_id WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
+	getContentID    = `SELECT content_id FROM post WHERE id = $1;`
 )
 
 type Adapter struct {
@@ -72,4 +73,20 @@ func (a *Adapter) Delete(postID uint32) error {
 	}
 
 	return nil
+}
+
+func (a *Adapter) GetContentID(postID uint32) (uint32, error) {
+	row, err := a.db.Query(getContentID, postID)
+	if err != nil {
+		return 0, fmt.Errorf("postgres get content id: %w", err)
+	}
+
+	var contentID uint32
+
+	err = row.Scan(&contentID)
+	if err != nil {
+		return 0, fmt.Errorf("postgres get content id: %w", err)
+	}
+
+	return contentID, nil
 }

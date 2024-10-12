@@ -12,6 +12,7 @@ type DB interface {
 	Create(post *entities.PostDB) (uint32, error)
 	Get(postID uint32) (*models.Post, error)
 	Delete(postID uint32) error
+	GetContentID(postID uint32) (uint32, error)
 }
 
 type ContentRepo interface {
@@ -82,8 +83,13 @@ func (s *PostServiceImpl) Delete(postID uint32) error {
 // TODO проверить доступ юзера
 func (s *PostServiceImpl) Update(post *models.Post) error {
 	post.PostContent.UpdatedAt = time.Now()
+	contentID, err := s.db.GetContentID(post.ID)
+	if err != nil {
+		return fmt.Errorf("get content failed: %w", err)
+	}
+	post.PostContent.ID = contentID
 
-	err := s.contentRepo.Update(&post.PostContent)
+	err = s.contentRepo.Update(&post.PostContent)
 	if err != nil {
 		return fmt.Errorf("update post failed: %w", err)
 	}
