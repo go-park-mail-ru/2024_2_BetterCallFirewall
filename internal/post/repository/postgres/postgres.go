@@ -10,7 +10,7 @@ import (
 
 // TODO добавить сообщества
 const (
-	createPostTable = `CREATE TABLE IF NOT EXISTS post (id SERIAL PRIMARY KEY, author_id INTEGER REFERENCES profile(id) ON DELETE CASCADE, content_id INTEGER REFERENCES content(id) ON DELETE CASCADE);`
+	createPostTable = `CREATE TABLE IF NOT EXISTS post (id INT PRIMARY KEY, author_id INTEGER REFERENCES profile(id) ON DELETE CASCADE, content_id INTEGER REFERENCES content(id) ON DELETE CASCADE);`
 	createPost      = `INSERT INTO post (author_id, content_id) VALUES ($1, $2);`
 	getPost         = `SELECT (author_id, content_id, text, created_at, image_path)  FROM post AS p INNER JOIN content AS c ON c.id = p.content_id INNER JOIN content_image AS ci ON ci.content_id = p.content_id WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`

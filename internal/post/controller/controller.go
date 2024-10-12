@@ -105,6 +105,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
+
 	authorID := sess.UserID
 	ok, err := pc.service.CheckUserAccess(authorID, post.ID)
 	if err != nil {
@@ -134,17 +135,20 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
+
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
+
 	authorID := sess.UserID
 	ok, err := pc.service.CheckUserAccess(authorID, postID)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
+
 	if !ok {
 		pc.responder.ErrorBadRequest(w, errors.New("access denied"))
 	}

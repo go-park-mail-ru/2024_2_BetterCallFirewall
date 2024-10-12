@@ -23,7 +23,6 @@ type ContentRepo interface {
 
 type ProfileRepo interface {
 	GetHeader(userID uint32) (models.Header, error)
-	GetProfileID(userID uint32) (uint32, error)
 }
 
 type PostServiceImpl struct {
@@ -49,12 +48,7 @@ func (s *PostServiceImpl) Create(post *models.Post) (uint32, error) {
 		return 0, fmt.Errorf("create content failed: %w", err)
 	}
 
-	authorID, err := s.profileRepo.GetProfileID(post.AuthorID)
-	if err != nil {
-		return 0, fmt.Errorf("get author id failed: %w", err)
-	}
-
-	id, err := s.db.Create(&entities.PostDB{AuthorID: authorID, ContentID: contentID})
+	id, err := s.db.Create(&entities.PostDB{AuthorID: post.AuthorID, ContentID: contentID})
 	if err != nil {
 		return 0, fmt.Errorf("create post failed: %w", err)
 	}
@@ -103,12 +97,7 @@ func (s *PostServiceImpl) Update(post *models.Post) error {
 }
 
 func (s *PostServiceImpl) CheckUserAccess(userID uint32, postID uint32) (bool, error) {
-	authorID, err := s.profileRepo.GetProfileID(userID)
-	if err != nil {
-		return false, fmt.Errorf("get author id: %w", err)
-	}
-
-	ok, err := s.db.CheckAccess(authorID, postID)
+	ok, err := s.db.CheckAccess(userID, postID)
 	if err != nil {
 		return false, fmt.Errorf("check access: %w", err)
 	}
