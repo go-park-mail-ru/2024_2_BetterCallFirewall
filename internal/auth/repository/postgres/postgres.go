@@ -15,7 +15,7 @@ import (
 
 const (
 	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id INT PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
-	CreateUser            = `INSERT INTO person (first_name, last_name, email, password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING;`
+	CreateUser            = `INSERT INTO person (id, first_name, last_name, email, password) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING;`
 	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
 	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL UNIQUE, created_at BIGINT NOT NULL);`
 	CreateSession         = `INSERT INTO session (sess_id, user_id, created_at) VALUES ($1, $2, $3) ON CONFLICT(user_id) DO UPDATE SET sess_id = EXCLUDED.sess_id, created_at = EXCLUDED.created_at;`
@@ -25,19 +25,21 @@ const (
 )
 
 type Adapter struct {
-	db *sql.DB
+	db      *sql.DB
+	counter uint32
 }
 
 func NewAdapter(db *sql.DB) *Adapter {
 	adapter := &Adapter{
-		db: db,
+		db:      db,
+		counter: 1,
 	}
 	go adapter.startSessionGC()
 	return adapter
 }
 
 func (a *Adapter) Create(user *models.User) (uint32, error) {
-	res, err := a.db.Exec(CreateUser, user.FirstName, user.LastName, user.Email, user.Password)
+	res, err := a.db.Exec(CreateUser, a.counter, user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		return 0, fmt.Errorf("postgres create user: %w", err)
 	}
@@ -50,13 +52,9 @@ func (a *Adapter) Create(user *models.User) (uint32, error) {
 	if rowsAffected == 0 {
 		return 0, fmt.Errorf("postgres create user: %w", myErr.ErrUserAlreadyExists)
 	}
+	a.counter++
 
-	user, err = a.GetByEmail(user.Email)
-	if err != nil {
-		return 0, err
-	}
-
-	return user.ID, nil
+	return a.counter - 1, nil
 }
 
 func (a *Adapter) GetByEmail(email string) (*models.User, error) {
