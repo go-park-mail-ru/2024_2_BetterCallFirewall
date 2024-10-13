@@ -5,9 +5,8 @@ import (
 )
 
 type ProfileUsecase interface {
-	GetProfileById(uint32) (*models.Profile, error)
-	GetAll(self uint32) ([]*models.Profile, error)
-	CreateProfile(models.Profile) (uint32, error)
-	UpdateProfile(*models.Profile) error
+	GetProfileById(uint32) (*models.FullProfile, error)
+	GetAll(self uint32) ([]*models.ShortProfile, error)
+	UpdateProfile(uint32, *models.FullProfile) error
 	DeleteProfile(uint32) error
 }

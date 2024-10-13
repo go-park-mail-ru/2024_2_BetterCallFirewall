@@ -12,4 +12,5 @@ var (
 	ErrNonValidEmail        = errors.New("invalid email")
 	ErrSessionNotFound      = errors.New("session not found")
 	ErrSessionAlreadyExists = errors.New("session already exists")
+	ErrWrongOwner           = errors.New("wrong owner")
 )

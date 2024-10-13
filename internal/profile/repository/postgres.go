@@ -13,7 +13,7 @@ type ProfileRepo struct {
 	DB *pgx.ConnPool
 }
 
-func NewProfileRepo(db *pgx.ConnPool) profile.ProfileUsecase {
+func NewProfileRepo(db *pgx.ConnPool) profile.Repository {
 	repo := &ProfileRepo{
 		DB: db,
 	}
@@ -30,8 +30,8 @@ const (
 	CreateProfile   = "INSERT INTO profile (first_name, last_name, bio, avatar) VALUES ($1, $2, $3, $4) RETURNING id;);"
 )
 
-func (p *ProfileRepo) GetProfileById(id uint32) (*models.Profile, error) {
-	res := &models.Profile{}
+func (p *ProfileRepo) GetProfileById(id uint32) (*models.FullProfile, error) {
+	res := &models.FullProfile{}
 	err := p.DB.QueryRow(GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
 		return nil, fmt.Errorf("get profile by id %w", err)
@@ -47,8 +47,8 @@ func (p *ProfileRepo) GetProfileById(id uint32) (*models.Profile, error) {
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAll(self uint32) ([]*models.Profile, error) {
-	res := make([]*models.Profile, 0)
+func (p *ProfileRepo) GetAll(self uint32) ([]*models.ShortProfile, error) {
+	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.Query(GetAllProfiles, self)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles %w", err)
@@ -60,12 +60,12 @@ func (p *ProfileRepo) GetAll(self uint32) ([]*models.Profile, error) {
 	return res, nil
 }
 
-/*func (p *ProfileRepo) CreateProfile(profile models.Profile) (uint32, error) {
+/*func (p *ProfileRepo) CreateProfile(profile models.FullProfile) (uint32, error) {
 	p.DB.Exec() //Возможно через триггеры при создании person
 	panic("implement me")
 }*/
 
-func (p *ProfileRepo) UpdateProfile(profile *models.Profile) error {
+func (p *ProfileRepo) UpdateProfile(profile *models.FullProfile) error {
 	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.Avatar, profile.ID)
 	if err != nil {
 		return fmt.Errorf("update profile %w", err)
