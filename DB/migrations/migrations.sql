@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS comment (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS like (
+CREATE TABLE IF NOT EXISTS reaction (
     post_id INT REFERENCES post(id),
     comment_id INT REFERENCES comment(id),
     user_id INT REFERENCES profile(id),
