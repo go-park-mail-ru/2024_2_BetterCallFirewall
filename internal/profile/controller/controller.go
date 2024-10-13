@@ -3,19 +3,20 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
-	"github.com/2024_2_BetterCallFirewall/internal/profile/service"
-	"net/http"
+	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
 type ProfileHandler struct {
-	Repo      service.ProfileUsecase
+	Repo      profile.ProfileUsecase
 	Responder controller.Responder
 }
 
-func NewProfileController(repo service.ProfileUsecase, responder controller.Responder) *ProfileHandler {
+func NewProfileController(repo profile.ProfileUsecase, responder controller.Responder) *ProfileHandler {
 	return &ProfileHandler{
 		Repo:      repo,
 		Responder: responder,

@@ -2,16 +2,18 @@ package repository
 
 import (
 	"fmt"
-	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/profile/service"
+
 	"github.com/jackc/pgx"
+
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
 type ProfileRepo struct {
 	DB *pgx.ConnPool
 }
 
-func NewProfileRepo(db *pgx.ConnPool) service.ProfileUsecase {
+func NewProfileRepo(db *pgx.ConnPool) profile.ProfileUsecase {
 	repo := &ProfileRepo{
 		DB: db,
 	}
