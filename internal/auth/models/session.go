@@ -28,12 +28,14 @@ func NewSession(userID uint32) (*Session, error) {
 	}, nil
 }
 
+type SessionKey string
+
 var (
-	SessionKey string = "sessionKey"
+	SessKey SessionKey = "sessionKey"
 )
 
 func SessionFromContext(ctx context.Context) (*Session, error) {
-	sess, ok := ctx.Value(SessionKey).(*Session)
+	sess, ok := ctx.Value(SessKey).(*Session)
 	if !ok || sess == nil {
 		return nil, myErr.ErrNoAuth
 	}
@@ -41,5 +43,5 @@ func SessionFromContext(ctx context.Context) (*Session, error) {
 }
 
 func ContextWithSession(ctx context.Context, sess *Session) context.Context {
-	return context.WithValue(ctx, SessionKey, sess)
+	return context.WithValue(ctx, SessKey, sess)
 }
