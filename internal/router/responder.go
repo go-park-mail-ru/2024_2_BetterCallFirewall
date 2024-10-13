@@ -11,7 +11,7 @@ import (
 type Response struct {
 	Success bool   `json:"success"`
 	Data    any    `json:"data"`
-	Message string `json:"message"`
+	Message string `json:"message,omitempty"`
 }
 
 type Respond struct {
@@ -36,11 +36,16 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	if err != nil {
 		r.logger.Println(err)
 	}
-	dataJ, err := json.Marshal(&Response{Success: true, Data: data})
+}
+
+func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, data any) {
+	writeHeaders(w)
+	w.WriteHeader(http.StatusNoContent)
+
+	err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data})
 	if err != nil {
 		r.logger.Println(err)
 	}
-	r.logger.Println(string(dataJ))
 }
 
 func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {

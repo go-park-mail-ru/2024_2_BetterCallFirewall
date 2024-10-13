@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
+	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -18,14 +19,14 @@ func NewFileService() *FileService {
 	return &FileService{}
 }
 
-func (f *FileService) Save(file multipart.File, fileHeader *multipart.FileHeader) (*models.Picture, error) {
+func (f *FileService) Upload(file multipart.File) (*models.Picture, error) {
 	var firstData [1024]byte
 	n, err := file.Read(firstData[:])
 	if err != nil {
 		return nil, fmt.Errorf("save file: %w", err)
 	}
 
-	name := string(firstData[:n]) + fileHeader.Filename
+	name := string(firstData[:n])
 	hash := md5.Sum([]byte(name))
 	hashName := hex.EncodeToString(hash[:])
 	dst, err := os.Create(hashName)
@@ -37,7 +38,24 @@ func (f *FileService) Save(file multipart.File, fileHeader *multipart.FileHeader
 	if _, err := io.Copy(dst, file); err != nil {
 		return nil, fmt.Errorf("save file: %w", err)
 	}
-	log.Println("Save file")
 
+	prefix := "localhost:8080"
+	dir, err := filepath.Abs(hashName)
+	if err != nil {
+		return nil, fmt.Errorf("save file: %w", err)
+	}
+
+	picUrl, err := url.Parse(prefix + dir)
+	if err != nil {
+		return nil, fmt.Errorf("upload file: %w", err)
+	}
+
+	pic := models.Picture(*picUrl)
+
+	return &pic, nil
+}
+
+// TODO realize
+func (f *FileService) GetPostPicture(postID uint32) (*models.Picture, error) {
 	return nil, nil
 }

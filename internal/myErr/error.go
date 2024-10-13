@@ -13,4 +13,6 @@ var (
 	ErrSessionNotFound      = errors.New("session not found")
 	ErrSessionAlreadyExists = errors.New("session already exists")
 	ErrToLargeFile          = errors.New("file too large")
+	ErrNoMoreContent        = errors.New("no more content")
+	ErrWrongFiletype        = errors.New("wrong type of file")
 )

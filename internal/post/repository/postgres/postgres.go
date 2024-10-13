@@ -3,19 +3,21 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/post/entities"
 )
 
 // TODO добавить сообщества
 const (
-	createPostTable = `CREATE TABLE IF NOT EXISTS post (id INT PRIMARY KEY, author_id INTEGER REFERENCES profile(id) ON DELETE CASCADE, content_id INTEGER REFERENCES content(id) ON DELETE CASCADE);`
-	createPost      = `INSERT INTO post (id, author_id, content_id) VALUES ($1, $2, $3);`
-	getPost         = `SELECT (author_id, content_id, text, created_at, image_path)  FROM post AS p INNER JOIN content AS c ON c.id = p.content_id INNER JOIN content_image AS ci ON ci.content_id = p.content_id WHERE id = $1;`
+	createPostTable = `CREATE TABLE IF NOT EXISTS post (id INT PRIMARY KEY, author_id INTEGER REFERENCES profile(id) ON DELETE CASCADE, content TEXT, created_at DATE, updated_at DATE);`
+	createPost      = `INSERT INTO post (id, author_id, content, created_at, updated_at) VALUES ($1, $2, $3, $4, $5);`
+	getPost         = `SELECT (author_id, content, created_at)  FROM post WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
-	getContentID    = `SELECT content_id FROM post WHERE id = $1;`
 	checkCreater    = `SELECT author_id FROM post WHERE id = $1;`
+	getPosts        = `SELECT (id, author_id, content, created_at)  FROM post WHERE id < $1 LIMIT 10;`
 )
 
 type Adapter struct {
@@ -40,7 +42,7 @@ func (a *Adapter) CreateNewTable() error {
 }
 
 func (a *Adapter) Create(post *entities.PostDB) (uint32, error) {
-	_, err := a.db.Exec(createPost, a.counter, post.AuthorID, post.ContentID)
+	_, err := a.db.Exec(createPost, a.counter, post.AuthorID, post.Content, post.Created, post.Updated)
 	if err != nil {
 		return 0, fmt.Errorf("postgres create post: %w", err)
 	}
@@ -50,14 +52,11 @@ func (a *Adapter) Create(post *entities.PostDB) (uint32, error) {
 }
 
 func (a *Adapter) Get(postID uint32) (*models.Post, error) {
-	var (
-		post      models.Post
-		contentID uint32
-	)
+	var post models.Post
 
 	row := a.db.QueryRow(getPost, postID)
 
-	err := row.Scan(&post.AuthorID, &contentID, &post.PostContent.Text, &post.PostContent.CreatedAt, &post.PostContent.File)
+	err := row.Scan(&post.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get post: %w", err)
 	}
@@ -74,20 +73,8 @@ func (a *Adapter) Delete(postID uint32) error {
 	return nil
 }
 
-func (a *Adapter) GetContentID(postID uint32) (uint32, error) {
-	row, err := a.db.Query(getContentID, postID)
-	if err != nil {
-		return 0, fmt.Errorf("postgres get content id: %w", err)
-	}
-
-	var contentID uint32
-
-	err = row.Scan(&contentID)
-	if err != nil {
-		return 0, fmt.Errorf("postgres get content id: %w", err)
-	}
-
-	return contentID, nil
+func (a *Adapter) Update(post *entities.PostDB) error {
+	return nil
 }
 
 func (a *Adapter) CheckAccess(profileID uint32, postID uint32) (bool, error) {
@@ -95,6 +82,7 @@ func (a *Adapter) CheckAccess(profileID uint32, postID uint32) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("postgres check access: %w", err)
 	}
+	defer row.Close()
 
 	var createrID uint32
 	err = row.Scan(&createrID)
@@ -107,4 +95,63 @@ func (a *Adapter) CheckAccess(profileID uint32, postID uint32) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (a *Adapter) GetPosts(lastID uint32, newRequest bool) ([]*models.Post, error) {
+	if newRequest {
+		lastID = a.counter
+	}
+
+	row, err := a.db.Query(getPosts, lastID)
+	if err != nil {
+		return nil, fmt.Errorf("postgres get posts: %w", err)
+	}
+	defer row.Close()
+
+	return createPostBatchFromRows(row)
+}
+
+func (a *Adapter) GetFriendsPosts(friendsID []uint32, lastID uint32, newRequest bool) ([]*models.Post, error) {
+	if newRequest {
+		lastID = a.counter
+	}
+
+	var paramrefs string
+
+	for i := range friendsID {
+		paramrefs += `$` + strconv.Itoa(i+2) + `,`
+	}
+	paramrefs = paramrefs[:len(paramrefs)-1]
+
+	query := `SELECT (id, author_id, content, created_at) FROM post
+	WHERE id < $1 AND author_id IN (` + paramrefs + `)LIMIT 10;`
+
+	rows, err := a.db.Query(query, lastID, friendsID)
+	if err != nil {
+		return nil, fmt.Errorf("postgres get friends posts: %w", err)
+	}
+	defer rows.Close()
+
+	return createPostBatchFromRows(rows)
+}
+
+func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
+	var (
+		post  models.Post
+		posts []*models.Post
+	)
+
+	for rows.Next() {
+		err := rows.Scan(&post.ID, &post.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("postgres scan posts: %w", err)
+		}
+		posts = append(posts, &post)
+	}
+
+	if len(posts) < 10 {
+		return posts, myErr.ErrNoMoreContent
+	}
+
+	return posts, nil
 }
