@@ -18,6 +18,7 @@ const (
 	deletePost      = `DELETE FROM post WHERE id = $1;`
 	checkCreater    = `SELECT author_id FROM post WHERE id = $1;`
 	getPosts        = `SELECT (id, author_id, content, created_at)  FROM post WHERE id < $1 LIMIT 10;`
+	getProfilePosts = `SELECT (id, content, created_at) FROM post WHERE author_id = $1;`
 )
 
 type Adapter struct {
@@ -133,6 +134,29 @@ func (a *Adapter) GetFriendsPosts(friendsID []uint32, lastID uint32, newRequest 
 	defer rows.Close()
 
 	return createPostBatchFromRows(rows)
+}
+
+func (a *Adapter) GetAuthorsPosts(authorID uint32) ([]*models.Post, error) {
+	var (
+		post  models.Post
+		posts []*models.Post
+	)
+
+	rows, err := a.db.Query(getProfilePosts, authorID)
+	if err != nil {
+		return nil, fmt.Errorf("postgres get author posts: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(post.ID, post.PostContent.Text, post.PostContent.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("postgres get author posts: %w", err)
+		}
+		posts = append(posts, &post)
+	}
+
+	return posts, nil
 }
 
 func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
