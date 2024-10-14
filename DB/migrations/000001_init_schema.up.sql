@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS friend (
                                       receiver INT CONSTRAINT unique_friends CHECK(sender != receiver),
                                       status INT,
                                       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                                      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                                      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                                      PRIMARY KEY (sender, receiver)
 );
 
 CREATE TABLE IF NOT EXISTS community (
