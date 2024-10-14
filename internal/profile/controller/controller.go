@@ -16,9 +16,9 @@ type ProfileHandler struct {
 	Responder      controller.Responder
 }
 
-func NewProfileController(repo profile.ProfileUsecase, responder controller.Responder) *ProfileHandler {
+func NewProfileController(manager profile.ProfileUsecase, responder controller.Responder) *ProfileHandler {
 	return &ProfileHandler{
-		ProfileManager: repo,
+		ProfileManager: manager,
 		Responder:      responder,
 	}
 }
@@ -85,5 +85,6 @@ func (h *ProfileHandler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}
+	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
 	return
 }

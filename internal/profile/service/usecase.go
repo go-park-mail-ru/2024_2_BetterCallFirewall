@@ -62,3 +62,26 @@ func (p ProfileUsecase) DeleteProfile(u uint32) error {
 	}
 	return nil
 }
+
+func (p ProfileUsecase) SendFriendReq(reciever uint32, sender uint32) error {
+	if reciever == sender {
+		return myErr.ErrSameUser
+	}
+
+	panic("implement me")
+}
+
+func (p ProfileUsecase) AcceptFriendReq(who uint32, whose uint32) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p ProfileUsecase) RemoveFromFriends(who uint32, whose uint32) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p ProfileUsecase) GetAllFriends(self uint32) ([]*models.ShortProfile, error) {
+	//TODO implement me
+	panic("implement me")
+}

@@ -13,4 +13,5 @@ var (
 	ErrSessionNotFound      = errors.New("session not found")
 	ErrSessionAlreadyExists = errors.New("session already exists")
 	ErrWrongOwner           = errors.New("wrong owner")
+	ErrSameUser             = errors.New("same user")
 )
