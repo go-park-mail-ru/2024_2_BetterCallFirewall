@@ -67,21 +67,43 @@ func (p ProfileUsecase) SendFriendReq(reciever uint32, sender uint32) error {
 	if reciever == sender {
 		return myErr.ErrSameUser
 	}
+	err := p.repo.AddFriendsReq(reciever, sender)
+	if err != nil {
+		return fmt.Errorf("add friend req usecase: %w", err)
+	}
 
-	panic("implement me")
+	return nil
 }
 
 func (p ProfileUsecase) AcceptFriendReq(who uint32, whose uint32) error {
-	//TODO implement me
-	panic("implement me")
+	err := p.repo.AcceptFriendsReq(who, whose)
+	if err != nil {
+		return fmt.Errorf("accept friend req usecase: %w", err)
+	}
+	return nil
 }
 
-func (p ProfileUsecase) RemoveFromFriends(who uint32, whose uint32) error {
-	//TODO implement me
-	panic("implement me")
+func (p ProfileUsecase) RemoveFromFriends(who uint32, whom uint32) error {
+	status, err := p.repo.CheckStatus(who, whom)
+	if err != nil {
+		return fmt.Errorf("check status usecase: %w", err)
+	}
+
+	if status == 0 {
+		err = p.repo.MoveToSubs(who, whom)
+	} else {
+		err = p.repo.RemoveSub(who, whom)
+	}
+	if err != nil {
+		return fmt.Errorf("remove sub usecase: %w", err)
+	}
+	return nil
 }
 
 func (p ProfileUsecase) GetAllFriends(self uint32) ([]*models.ShortProfile, error) {
-	//TODO implement me
-	panic("implement me")
+	res, err := p.repo.GetAllFriends(self)
+	if err != nil {
+		return nil, fmt.Errorf("get all friends usecase: %w", err)
+	}
+	return res, nil
 }
