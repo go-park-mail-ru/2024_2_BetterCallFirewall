@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS profile (
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30),
     last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30),
     email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50),
@@ -11,17 +11,17 @@ CREATE TABLE IF NOT EXISTS profile (
 );
 
 CREATE TABLE IF NOT EXISTS friend (
-    sender INT REFERENCES profile(id) ON DELETE CASCADE ,
-    receiver INT REFERENCES profile(id) ON DELETE CASCADE CONSTRAINT unique_friends CHECK(sender != receiver),
+    sender INT,
+    receiver INT CONSTRAINT unique_friends CHECK(sender != receiver),
     status INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS community (
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name text CONSTRAINT community_name_length CHECK(CHAR_LENGTH(name) <= 50),
-    avatar INT REFERENCES file(id) ON DELETE SET NULL ,
+    avatar INT,
     about TEXT CONSTRAINT about_length CHECK (CHAR_LENGTH(about) <= 500),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -35,17 +35,17 @@ CREATE TABLE IF NOT EXISTS community_profile (
 );
 
 CREATE TABLE IF NOT EXISTS file (
-    id INT PRIMARY KEY,
-    post_id INT REFERENCES post(id) ON DELETE NO ACTION ,
-    comment_id INT REFERENCES comment(id) ON DELETE NO ACTION ,
-    profile_id INT REFERENCES profile(id) ON DELETE NO ACTION ,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    post_id INT,
+    comment_id INT,
+    profile_id INT,
     likes INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS post (
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
     community_id INT REFERENCES community(id) ON DELETE CASCADE ,
     content TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(content) <= 500),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS message (
 );
 
 CREATE TABLE IF NOT EXISTS comment (
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     user_id INT REFERENCES profile(id) ON DELETE CASCADE ,
     post_id INT REFERENCES post(id) ON DELETE CASCADE ,
     likes INT DEFAULT 0,
@@ -79,5 +79,17 @@ CREATE TABLE IF NOT EXISTS reaction (
     file_id INT REFERENCES file(id) ON DELETE CASCADE ,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-)
+);
+
+ALTER TABLE friend
+ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
+ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
+
+ALTER TABLE community ADD FOREIGN KEY ("avatar") REFERENCES file(id) ON DELETE SET NULL;
+
+ALTER TABLE file
+ADD FOREIGN KEY ("post_id") REFERENCES post(id) ON DELETE NO ACTION,
+ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE NO ACTION,
+ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE NO ACTION;
+
 
