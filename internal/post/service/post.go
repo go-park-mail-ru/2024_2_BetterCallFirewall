@@ -23,7 +23,6 @@ type ProfileRepo interface {
 	GetFriendsID(userID uint32) ([]uint32, error)
 }
 
-// PostServiceImpl TODO get all post with pagination by last post ID
 type PostServiceImpl struct {
 	db          DB
 	profileRepo ProfileRepo
@@ -74,7 +73,7 @@ func (s *PostServiceImpl) Delete(postID uint32) error {
 func (s *PostServiceImpl) Update(post *models.Post) error {
 	post.PostContent.UpdatedAt = time.Now()
 
-	err := s.db.Update(&entities.PostDB{Content: post.PostContent.Text, Updated: post.PostContent.UpdatedAt})
+	err := s.db.Update(&entities.PostDB{ID: post.ID, Content: post.PostContent.Text, Updated: post.PostContent.UpdatedAt})
 	if err != nil {
 		return fmt.Errorf("update post: %w", err)
 	}
