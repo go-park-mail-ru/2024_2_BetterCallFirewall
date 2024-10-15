@@ -8,16 +8,16 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
-type ProfileUsecase struct {
+type ProfileUsecaseImplementation struct {
 	repo        profile.Repository
 	postManager profile.PostGetter
 }
 
-func NewProfileUsecase(repo profile.Repository) *ProfileUsecase {
-	return &ProfileUsecase{repo: repo}
+func NewProfileUsecase(repo profile.Repository) *ProfileUsecaseImplementation {
+	return &ProfileUsecaseImplementation{repo: repo}
 }
 
-func (p ProfileUsecase) GetProfileById(u uint32) (*models.FullProfile, error) {
+func (p ProfileUsecaseImplementation) GetProfileById(u uint32) (*models.FullProfile, error) {
 	profile, err := p.repo.GetProfileById(u)
 	if err != nil {
 		return nil, fmt.Errorf("get profile by id usecase: %w", err)
@@ -32,7 +32,7 @@ func (p ProfileUsecase) GetProfileById(u uint32) (*models.FullProfile, error) {
 	return profile, nil
 }
 
-func (p ProfileUsecase) GetAll(self uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAll(self uint32) ([]*models.ShortProfile, error) {
 	profiles, err := p.repo.GetAll(self)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles usecase: %w", err)
@@ -44,7 +44,7 @@ func validateOwner(ownerId uint32, profile *models.FullProfile) bool {
 	return ownerId == profile.ID
 }
 
-func (p ProfileUsecase) UpdateProfile(owner uint32, newProfile *models.FullProfile) error {
+func (p ProfileUsecaseImplementation) UpdateProfile(owner uint32, newProfile *models.FullProfile) error {
 	if !validateOwner(owner, newProfile) {
 		return myErr.ErrWrongOwner
 	}
@@ -55,7 +55,7 @@ func (p ProfileUsecase) UpdateProfile(owner uint32, newProfile *models.FullProfi
 	return nil
 }
 
-func (p ProfileUsecase) DeleteProfile(u uint32) error {
+func (p ProfileUsecaseImplementation) DeleteProfile(u uint32) error {
 	err := p.repo.DeleteProfile(u)
 	if err != nil {
 		return fmt.Errorf("delete profile usecase: %w", err)
@@ -63,7 +63,7 @@ func (p ProfileUsecase) DeleteProfile(u uint32) error {
 	return nil
 }
 
-func (p ProfileUsecase) SendFriendReq(reciever uint32, sender uint32) error {
+func (p ProfileUsecaseImplementation) SendFriendReq(reciever uint32, sender uint32) error {
 	if reciever == sender {
 		return myErr.ErrSameUser
 	}
@@ -75,7 +75,7 @@ func (p ProfileUsecase) SendFriendReq(reciever uint32, sender uint32) error {
 	return nil
 }
 
-func (p ProfileUsecase) AcceptFriendReq(who uint32, whose uint32) error {
+func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) error {
 	err := p.repo.AcceptFriendsReq(who, whose)
 	if err != nil {
 		return fmt.Errorf("accept friend req usecase: %w", err)
@@ -83,7 +83,7 @@ func (p ProfileUsecase) AcceptFriendReq(who uint32, whose uint32) error {
 	return nil
 }
 
-func (p ProfileUsecase) RemoveFromFriends(who uint32, whom uint32) error {
+func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
 	status, err := p.repo.CheckStatus(who, whom)
 	if err != nil {
 		return fmt.Errorf("check status usecase: %w", err)
@@ -100,7 +100,7 @@ func (p ProfileUsecase) RemoveFromFriends(who uint32, whom uint32) error {
 	return nil
 }
 
-func (p ProfileUsecase) GetAllFriends(self uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAllFriends(self uint32) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllFriends(self)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
