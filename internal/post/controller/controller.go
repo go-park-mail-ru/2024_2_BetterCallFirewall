@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"strconv"
@@ -21,13 +23,13 @@ var fileFormat = map[string]struct{}{
 }
 
 type PostService interface {
-	Create(post *models.Post) (uint32, error)
-	Get(postID uint32) (*models.Post, error)
-	Update(post *models.Post) error
-	Delete(postID uint32) error
-	GetBatch(lastID uint32, newRequest bool) ([]*models.Post, error)
-	GetBatchFromFriend(userID uint32, lastID uint32, newRequest bool) ([]*models.Post, error)
-	CheckUserAccess(userID uint32, postID uint32) (bool, error)
+	Create(ctx context.Context, post *models.Post) (uint32, error)
+	Get(ctx context.Context, postID uint32) (*models.Post, error)
+	Update(ctx context.Context, post *models.Post) error
+	Delete(ctx context.Context, postID uint32) error
+	GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error)
+	GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error)
+	GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error)
 }
 
 type Responder interface {
@@ -64,13 +66,13 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newPost, err := pc.getPost(r)
+	newPost, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
 
-	id, err := pc.postService.Create(newPost)
+	id, err := pc.postService.Create(r.Context(), newPost)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, fmt.Errorf("create controller: %w", err))
 		return
@@ -92,7 +94,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := pc.postService.Get(postID)
+	post, err := pc.postService.Get(r.Context(), postID)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
@@ -112,7 +114,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := pc.getPost(r)
+	post, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
@@ -124,17 +126,24 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorID := sess.UserID
-	ok, err := pc.postService.CheckUserAccess(authorID, post.ID)
+	userID := sess.UserID
+	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err)
+			return
+		}
+
+		pc.responder.ErrorInternal(w, err)
 		return
 	}
-	if !ok {
-		pc.responder.ErrorBadRequest(w, errors.New("access denied"))
+
+	if userID != authorID {
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		return
 	}
 
-	if err := pc.postService.Update(post); err != nil {
+	if err := pc.postService.Update(r.Context(), post); err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
@@ -160,18 +169,24 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorID := sess.UserID
-	ok, err := pc.postService.CheckUserAccess(authorID, postID)
+	userID := sess.UserID
+	authorID, err := pc.postService.GetPostAuthorID(r.Context(), postID)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err)
+			return
+		}
+
+		pc.responder.ErrorInternal(w, err)
 		return
 	}
 
-	if !ok {
-		pc.responder.ErrorBadRequest(w, errors.New("access denied"))
+	if userID != authorID {
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		return
 	}
 
-	if err := pc.postService.Delete(postID); err != nil {
+	if err := pc.postService.Delete(r.Context(), postID); err != nil {
 		pc.responder.ErrorBadRequest(w, err)
 		return
 	}
@@ -188,16 +203,14 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	section := r.URL.Query().Get("section")
 
 	var (
-		posts      []*models.Post
-		err        error
-		lastID     int
-		newRequest = false
+		posts  []*models.Post
+		err    error
+		lastID int
 	)
 
 	cookie, err := r.Cookie("postID")
 	if err != nil {
-		lastID = 0
-		newRequest = true
+		lastID = math.MaxUint32
 	} else {
 		lastID, err = strconv.Atoi(cookie.Value)
 		if err != nil {
@@ -205,8 +218,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if lastID < 0 {
-			lastID = 0
-			newRequest = true
+			lastID = math.MaxUint32
 		}
 	}
 
@@ -219,11 +231,11 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 
-			posts, err = pc.postService.GetBatchFromFriend(sess.UserID, uint32(lastID), newRequest)
+			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(lastID))
 		}
 	case "":
 		{
-			posts, err = pc.postService.GetBatch(uint32(lastID), newRequest)
+			posts, err = pc.postService.GetBatch(r.Context(), uint32(lastID))
 		}
 	default:
 		pc.responder.ErrorBadRequest(w, errors.New("invalid query params"))
@@ -250,7 +262,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 
 	cookie = &http.Cookie{
 		Name:    "postID",
-		Value:   strconv.Itoa(int(lastID)),
+		Value:   strconv.Itoa(int(posts[len(posts)-1].ID)),
 		Path:    "/api/v1/feed/",
 		Expires: time.Now().Add(time.Hour),
 	}
@@ -260,18 +272,19 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	pc.responder.OutputJSON(w, posts)
 }
 
-func (pc *PostController) getPost(r *http.Request) (*models.Post, error) {
+func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
 	var newPost *models.Post
 
 	if err := json.NewDecoder(r.Body).Decode(newPost); err != nil {
 		return nil, err
 	}
 	defer r.Body.Close()
+
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
 		return nil, err
 	}
-	newPost.AuthorID = sess.UserID
+	newPost.Header.AuthorID = sess.UserID
 
 	defer r.MultipartForm.RemoveAll()
 	if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
@@ -280,12 +293,12 @@ func (pc *PostController) getPost(r *http.Request) (*models.Post, error) {
 
 	file, _, err := r.FormFile("file")
 	defer file.Close()
-	if err != nil && !errors.Is(err, http.ErrMissingFile) {
-		return nil, err
-	}
-
 	if errors.Is(err, http.ErrMissingFile) {
 		return newPost, nil
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	_, format, err := image.Decode(file)

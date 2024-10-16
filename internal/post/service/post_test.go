@@ -1,12 +1,12 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/post/entities"
 )
 
 var (
@@ -15,38 +15,38 @@ var (
 )
 
 var Posts = []*models.Post{
-	{ID: 1, AuthorID: 1, PostContent: models.Content{Text: "post from author 1"}},
-	{ID: 2, AuthorID: 2, PostContent: models.Content{Text: "post from author 2"}},
-	{ID: 3, AuthorID: 3, PostContent: models.Content{Text: "post from author 3"}},
-	{ID: 4, AuthorID: 4, PostContent: models.Content{Text: "post from author 4"}},
-	{ID: 5, AuthorID: 5, PostContent: models.Content{Text: "post from author 5"}},
+	{ID: 1, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "post from author 1"}},
+	{ID: 2, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "post from author 2"}},
+	{ID: 3, Header: models.Header{AuthorID: 3}, PostContent: models.Content{Text: "post from author 3"}},
+	{ID: 4, Header: models.Header{AuthorID: 4}, PostContent: models.Content{Text: "post from author 4"}},
+	{ID: 5, Header: models.Header{AuthorID: 5}, PostContent: models.Content{Text: "post from author 5"}},
 }
 
 type mockDB struct {
 	counter uint32
 }
 
-func (m *mockDB) Create(post *entities.PostDB) (uint32, error) {
-	if post.AuthorID == 0 {
+func (m *mockDB) Create(ctx context.Context, post *models.Post) (uint32, error) {
+	if post.Header.AuthorID == 0 {
 		return 0, errMockDB
 	}
 
 	return m.counter, nil
 }
 
-func (m *mockDB) Get(postID uint32) (*models.Post, error) {
+func (m *mockDB) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	if postID == 0 {
 		return nil, errMockDB
 	}
 
 	if postID == 1 {
-		return &models.Post{ID: postID, AuthorID: 0, PostContent: models.Content{Text: "post with wrong author"}}, nil
+		return &models.Post{ID: postID, Header: models.Header{AuthorID: 0}, PostContent: models.Content{Text: "post with wrong author"}}, nil
 	}
 
-	return &models.Post{ID: postID, AuthorID: 1, PostContent: models.Content{Text: "post with real author"}}, nil
+	return &models.Post{ID: postID, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "post with real author"}}, nil
 }
 
-func (m *mockDB) Update(post *entities.PostDB) error {
+func (m *mockDB) Update(ctx context.Context, post *models.Post) error {
 	if post.ID == 0 {
 		return errMockDB
 	}
@@ -54,7 +54,7 @@ func (m *mockDB) Update(post *entities.PostDB) error {
 	return nil
 }
 
-func (m *mockDB) Delete(postID uint32) error {
+func (m *mockDB) Delete(ctx context.Context, postID uint32) error {
 	if postID == 0 {
 		return errMockDB
 	}
@@ -62,64 +62,45 @@ func (m *mockDB) Delete(postID uint32) error {
 	return nil
 }
 
-func (m *mockDB) CheckAccess(profileID uint32, postID uint32) (bool, error) {
-	if profileID == 0 || postID == 0 {
-		return false, errMockDB
-	}
-
-	if postID != profileID {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (m *mockDB) GetPosts(lastID uint32, newRequest bool) ([]*models.Post, error) {
+func (m *mockDB) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
 	if lastID > 5 || lastID == 0 {
 		return nil, errMockDB
 	}
 	if lastID == 1 {
-		return []*models.Post{{AuthorID: 0}}, nil
-	}
-
-	if newRequest {
-		return Posts, nil
+		return []*models.Post{{Header: models.Header{AuthorID: 0}}}, nil
 	}
 
 	return Posts[:lastID], nil
 }
 
-func (m *mockDB) GetFriendsPosts(friendsID []uint32, lastID uint32, newRequest bool) ([]*models.Post, error) {
+func (m *mockDB) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
 	if lastID > 5 || lastID == 0 {
 		return nil, errMockDB
 	}
 
 	if lastID == 1 {
-		return []*models.Post{{AuthorID: 0}}, nil
+		return []*models.Post{{Header: models.Header{AuthorID: 0}}}, nil
 	}
 
 	var res []*models.Post
 
-	if newRequest {
-		for _, id := range friendsID {
-			for _, post := range Posts {
-				if post.AuthorID == id {
-					res = append(res, post)
-				}
-			}
-		}
-		return res, nil
-	}
-
 	for _, id := range friendsID {
-		for i := int(lastID) - 1; i >= 0; i-- {
-			if Posts[i].AuthorID == id {
+		for i := 0; i <= int(lastID)-1; i++ {
+			if Posts[i].Header.AuthorID == id {
 				res = append(res, Posts[i])
 			}
 		}
 	}
 
 	return res, nil
+}
+
+func (m *mockDB) GetPostAuthor(ctx context.Context, postID uint32) (uint32, error) {
+	if postID == 0 {
+		return 0, errMockDB
+	}
+
+	return postID, nil
 }
 
 type profileRepositoryMock struct{}
@@ -129,7 +110,7 @@ func (p *profileRepositoryMock) GetHeader(userID uint32) (models.Header, error) 
 		return models.Header{}, errMockProfile
 	}
 
-	return models.Header{Author: "Alexey Zemliakov"}, nil
+	return models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
 }
 
 func (p *profileRepositoryMock) GetFriendsID(userID uint32) ([]uint32, error) {
@@ -158,6 +139,7 @@ var (
 	baseId uint32 = 1
 	db            = &mockDB{counter: baseId}
 	pr            = &profileRepositoryMock{}
+	ctx           = context.Background()
 )
 
 func TestPostServiceCreate(t *testing.T) {
@@ -168,13 +150,13 @@ func TestPostServiceCreate(t *testing.T) {
 	}
 
 	tests := []TestCaseCreate{
-		{post: &models.Post{AuthorID: 1, PostContent: models.Content{Text: "text of content"}}, wantID: baseId, wantErr: nil},
-		{post: &models.Post{AuthorID: 0, PostContent: models.Content{Text: ""}}, wantID: 0, wantErr: errMockDB},
-		{post: &models.Post{AuthorID: 20, PostContent: models.Content{Text: "post about VK"}}, wantID: baseId, wantErr: nil},
+		{post: &models.Post{Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "text of content"}}, wantID: baseId, wantErr: nil},
+		{post: &models.Post{Header: models.Header{AuthorID: 0}, PostContent: models.Content{Text: ""}}, wantID: 0, wantErr: errMockDB},
+		{post: &models.Post{Header: models.Header{AuthorID: 20}, PostContent: models.Content{Text: "post about VK"}}, wantID: baseId, wantErr: nil},
 	}
 
 	for i, tt := range tests {
-		id, err := service.Create(tt.post)
+		id, err := service.Create(ctx, tt.post)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
@@ -199,12 +181,12 @@ func TestPostServiceGet(t *testing.T) {
 	tests := []TestCaseGet{
 		{ID: 0, wantPost: nil, wantErr: errMockDB},
 		{ID: 1, wantPost: nil, wantErr: errMockProfile},
-		{ID: 2, wantPost: &models.Post{ID: 2, AuthorID: 1, PostContent: models.Content{Text: "post with real author"}, Header: models.Header{Author: "Alexey Zemliakov"}}, wantErr: nil},
-		{ID: 6, wantPost: &models.Post{ID: 6, AuthorID: 1, PostContent: models.Content{Text: "post with real author"}, Header: models.Header{Author: "Alexey Zemliakov"}}, wantErr: nil},
+		{ID: 2, wantPost: &models.Post{ID: 2, PostContent: models.Content{Text: "post with real author"}, Header: models.Header{Author: "Alexey Zemliakov", AuthorID: 1}}, wantErr: nil},
+		{ID: 6, wantPost: &models.Post{ID: 6, PostContent: models.Content{Text: "post with real author"}, Header: models.Header{Author: "Alexey Zemliakov", AuthorID: 1}}, wantErr: nil},
 	}
 
 	for i, tt := range tests {
-		gotPost, err := service.Get(tt.ID)
+		gotPost, err := service.Get(ctx, tt.ID)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
@@ -232,7 +214,7 @@ func TestPostServiceDelete(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		err := service.Delete(tt.ID)
+		err := service.Delete(ctx, tt.ID)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
@@ -257,50 +239,17 @@ func TestPostServiceUpdate(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		err := service.Update(tt.post)
+		err := service.Update(ctx, tt.post)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
-		}
-	}
-}
-
-type TestCaseCheckAccess struct {
-	postID  uint32
-	userID  uint32
-	want    bool
-	wantErr error
-}
-
-func TestPostServiceCheckUserAccess(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
-	if service == nil {
-		t.Fatal("service is nil")
-	}
-
-	tests := []TestCaseCheckAccess{
-		{postID: 0, userID: 0, wantErr: errMockDB, want: false},
-		{postID: 0, userID: 10, wantErr: errMockDB, want: false},
-		{postID: 10, userID: 0, wantErr: errMockDB, want: false},
-		{postID: 10, userID: 1, wantErr: nil, want: false},
-		{postID: 10, userID: 10, wantErr: nil, want: true},
-	}
-
-	for i, tt := range tests {
-		ok, err := service.CheckUserAccess(tt.postID, tt.userID)
-		if !errors.Is(err, tt.wantErr) {
-			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
-		}
-		if ok != tt.want {
-			t.Errorf("#%d: ok mismatch: exp=%v got=%v", i, tt.want, ok)
 		}
 	}
 }
 
 type TestCaseGetBatch struct {
-	lastId     uint32
-	newRequest bool
-	wantPosts  []*models.Post
-	wantErr    error
+	lastId    uint32
+	wantPosts []*models.Post
+	wantErr   error
 }
 
 func TestPostServiceGetBatch(t *testing.T) {
@@ -310,16 +259,16 @@ func TestPostServiceGetBatch(t *testing.T) {
 	}
 
 	tests := []TestCaseGetBatch{
-		{lastId: 0, newRequest: false, wantPosts: nil, wantErr: errMockDB},
-		{lastId: 1, newRequest: true, wantPosts: nil, wantErr: errMockProfile},
-		{lastId: 10, newRequest: true, wantPosts: nil, wantErr: errMockDB},
-		{lastId: 2, newRequest: false, wantPosts: Posts[:2], wantErr: nil},
-		{lastId: 2, newRequest: true, wantPosts: Posts[:], wantErr: nil},
-		{lastId: 4, newRequest: false, wantPosts: Posts[:4], wantErr: nil},
+		{lastId: 0, wantPosts: nil, wantErr: errMockDB},
+		{lastId: 1, wantPosts: nil, wantErr: errMockProfile},
+		{lastId: 10, wantPosts: nil, wantErr: errMockDB},
+		{lastId: 2, wantPosts: Posts[:2], wantErr: nil},
+		{lastId: 5, wantPosts: Posts[:], wantErr: nil},
+		{lastId: 4, wantPosts: Posts[:4], wantErr: nil},
 	}
 
 	for i, tt := range tests {
-		gotPosts, err := service.GetBatch(tt.lastId, tt.newRequest)
+		gotPosts, err := service.GetBatch(ctx, tt.lastId)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
@@ -330,11 +279,10 @@ func TestPostServiceGetBatch(t *testing.T) {
 }
 
 type TestCaseGetBatchFromFriend struct {
-	lastId     uint32
-	userId     uint32
-	newRequest bool
-	wantPosts  []*models.Post
-	wantErr    error
+	lastId    uint32
+	userId    uint32
+	wantPosts []*models.Post
+	wantErr   error
 }
 
 func TestPostServiceGetBatchFromFriend(t *testing.T) {
@@ -343,22 +291,51 @@ func TestPostServiceGetBatchFromFriend(t *testing.T) {
 		t.Fatal("service is nil")
 	}
 	tests := []TestCaseGetBatchFromFriend{
-		{lastId: 0, userId: 10, newRequest: false, wantPosts: nil, wantErr: errMockDB},
-		{lastId: 10, userId: 10, newRequest: false, wantPosts: nil, wantErr: errMockDB},
-		{lastId: 1, userId: 0, newRequest: true, wantPosts: nil, wantErr: errMockProfile},
-		{lastId: 1, userId: 10, newRequest: true, wantPosts: nil, wantErr: errMockProfile},
-		{lastId: 3, userId: 5, newRequest: false, wantPosts: Posts[:3], wantErr: nil},
-		{lastId: 2, userId: 5, newRequest: true, wantPosts: Posts[:], wantErr: nil},
-		{lastId: 2, userId: 3, newRequest: true, wantPosts: Posts[:3], wantErr: nil},
+		{lastId: 0, userId: 10, wantPosts: nil, wantErr: errMockDB},
+		{lastId: 10, userId: 10, wantPosts: nil, wantErr: errMockDB},
+		{lastId: 1, userId: 0, wantPosts: nil, wantErr: errMockProfile},
+		{lastId: 1, userId: 10, wantPosts: nil, wantErr: errMockProfile},
+		{lastId: 3, userId: 5, wantPosts: Posts[:3], wantErr: nil},
+		{lastId: 5, userId: 5, wantPosts: Posts[:], wantErr: nil},
+		{lastId: 2, userId: 3, wantPosts: Posts[:2], wantErr: nil},
 	}
 
 	for i, tt := range tests {
-		posts, err := service.GetBatchFromFriend(tt.userId, tt.lastId, tt.newRequest)
+		posts, err := service.GetBatchFromFriend(ctx, tt.userId, tt.lastId)
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
 		if !reflect.DeepEqual(posts, tt.wantPosts) {
 			t.Errorf("#%d: post mismatch:\n exp=%v got=%v", i, tt.wantPosts, posts)
+		}
+	}
+}
+
+type TestCaseGetAuthor struct {
+	postID  uint32
+	wantID  uint32
+	wantErr error
+}
+
+func TestPostServiceGetAuthor(t *testing.T) {
+	service := NewPostServiceImpl(db, pr)
+	if service == nil {
+		t.Fatal("service is nil")
+	}
+
+	tests := []TestCaseGetAuthor{
+		{postID: 0, wantID: 0, wantErr: errMockDB},
+		{postID: 1, wantID: 1, wantErr: nil},
+		{postID: 10, wantID: 10, wantErr: nil},
+	}
+
+	for i, tt := range tests {
+		id, err := service.GetPostAuthorID(ctx, tt.postID)
+		if !errors.Is(err, tt.wantErr) {
+			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
+		}
+		if id != tt.wantID {
+			t.Errorf("#%d: id mismatch:\n exp=%v got=%v", i, tt.wantID, id)
 		}
 	}
 }
