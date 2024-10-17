@@ -17,4 +17,5 @@ var (
 	ErrWrongFiletype        = errors.New("wrong type of file")
 	ErrPostNotFound         = errors.New("post not found")
 	ErrAccessDenied         = errors.New("access denied")
+	ErrInternal             = errors.New("internal error")
 )

@@ -109,13 +109,13 @@ func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastI
 	return createPostBatchFromRows(rows)
 }
 
-func (a *Adapter) GetAuthorsPosts(ctx context.Context, authorID uint32) ([]*models.Post, error) {
+func (a *Adapter) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
 	var (
 		post  models.Post
 		posts []*models.Post
 	)
 
-	rows, err := a.db.Query(ctx, getProfilePosts, authorID)
+	rows, err := a.db.Query(ctx, getProfilePosts, header.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
 	}
@@ -126,6 +126,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, authorID uint32) ([]*mode
 		if err != nil {
 			return nil, fmt.Errorf("postgres get author posts: %w", err)
 		}
+		post.Header = *header
 		posts = append(posts, &post)
 	}
 
@@ -139,7 +140,6 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, myErr.ErrPostNotFound
 		}
-
 		return 0, fmt.Errorf("postgres get post author: %w", err)
 	}
 

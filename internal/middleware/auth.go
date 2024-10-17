@@ -40,7 +40,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			if err == nil {
 				err := sm.Destroy(w, r.WithContext(models.ContextWithSession(r.Context(), sess)))
 				if err != nil {
-					log.Println(err)
+					log.Println(r.Context().Value("requestID"), err)
 				}
 			}
 			next.ServeHTTP(w, r)
@@ -53,14 +53,14 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(fmt.Errorf("not authorized: %w", err).Error()))
-			log.Println(err)
+			log.Println(r.Context().Value("requestID"), err)
 			return
 		}
 
 		if sess.CreatedAt <= time.Now().Add(-12*time.Hour).Unix() {
 			sess, err = sm.Create(w, sess.UserID)
 			if err != nil {
-				log.Println(err)
+				log.Println(r.Context().Value("requestID"), err)
 			}
 		}
 
