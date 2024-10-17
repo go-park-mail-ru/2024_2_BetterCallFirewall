@@ -7,8 +7,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/jackc/pgx"
-
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 
 	_ "github.com/jackc/pgx"
@@ -17,10 +15,10 @@ import (
 )
 
 type Adapter struct {
-	db *pgx.ConnPool
+	db *sql.DB
 }
 
-func NewAdapter(db *pgx.ConnPool) *Adapter {
+func NewAdapter(db *sql.DB) *Adapter {
 	adapter := &Adapter{
 		db: db,
 	}
@@ -71,7 +69,10 @@ func (a *Adapter) CreateSession(sess *models.Session) error {
 		return fmt.Errorf("postgres create session table: %w", err)
 	}
 
-	rows := res.RowsAffected()
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres create session table: %w", err)
+	}
 	if rows == 0 {
 		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionAlreadyExists)
 	}
@@ -98,7 +99,10 @@ func (a *Adapter) DestroySession(sessID string) error {
 	if err != nil {
 		return fmt.Errorf("postgres delete session table: %w", err)
 	}
-	rows := res.RowsAffected()
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres delete session table: %w", err)
+	}
 	if rows == 0 {
 		return fmt.Errorf("postgres delete session: %w", myErr.ErrSessionNotFound)
 	}
@@ -132,6 +136,7 @@ func StartPostgres(connStr string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}
+	db.SetMaxOpenConns(10)
 
 	retrying := 10
 	i := 1
