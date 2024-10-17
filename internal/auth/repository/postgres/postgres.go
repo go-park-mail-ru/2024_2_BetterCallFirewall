@@ -9,7 +9,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 
-	_ "github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -132,7 +132,7 @@ func (a *Adapter) startSessionGC() {
 }
 
 func StartPostgres(connStr string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}

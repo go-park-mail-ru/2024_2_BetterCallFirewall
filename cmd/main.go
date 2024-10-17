@@ -7,9 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
-
 	_ "github.com/jackc/pgx"
+	"github.com/joho/godotenv"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
