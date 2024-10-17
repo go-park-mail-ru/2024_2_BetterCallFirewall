@@ -16,6 +16,9 @@ type Repository interface {
 	RemoveSub(who uint32, whom uint32) error
 	CheckStatus(uint32, uint32) (int, error)
 	GetAllFriends(uint32) ([]*models.ShortProfile, error)
+
+	GetFriendsID(uint32) ([]uint32, error)
+	GetHeader(uint32) (*models.Header, error)
 }
 
 type PostGetter interface {

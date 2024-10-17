@@ -8,6 +8,7 @@ type Post struct {
 }
 
 type Header struct {
-	Author string  `json:"author"`
-	Avatar Picture `json:"avatar"`
+	AuthorID uint32  `json:"author_id"`
+	Author   string  `json:"author"`
+	Avatar   Picture `json:"avatar"`
 }

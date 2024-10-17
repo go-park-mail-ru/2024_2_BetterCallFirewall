@@ -107,3 +107,19 @@ func (p ProfileUsecaseImplementation) GetAllFriends(self uint32) ([]*models.Shor
 	}
 	return res, nil
 }
+
+func (p ProfileUsecaseImplementation) GetFriendsID(userID uint32) ([]uint32, error) {
+	res, err := p.repo.GetFriendsID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("get friends id usecase: %w", err)
+	}
+	return res, nil
+}
+
+func (p ProfileUsecaseImplementation) GetHeader(userID uint32) (models.Header, error) {
+	header, err := p.repo.GetHeader(userID)
+	if err != nil {
+		return models.Header{}, fmt.Errorf("get header usecase: %w", err)
+	}
+	return *header, nil
+}
