@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -190,9 +191,7 @@ func TestPostServiceGet(t *testing.T) {
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
-		if !reflect.DeepEqual(gotPost, tt.wantPost) {
-			t.Errorf("#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
-		}
+		assert.Equal(t, tt.wantPost, gotPost, "#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
 	}
 }
 
@@ -272,9 +271,7 @@ func TestPostServiceGetBatch(t *testing.T) {
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
-		if !reflect.DeepEqual(gotPosts, tt.wantPosts) {
-			t.Errorf("#%d: post mismatch:\n exp=%v got=%v", i, tt.wantPosts, gotPosts)
-		}
+		assert.Equalf(t, gotPosts, tt.wantPosts, "#%d: post mismatch:\n exp=%v got=%v", i, tt.wantPosts, gotPosts)
 	}
 }
 
@@ -305,9 +302,7 @@ func TestPostServiceGetBatchFromFriend(t *testing.T) {
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
-		if !reflect.DeepEqual(posts, tt.wantPosts) {
-			t.Errorf("#%d: post mismatch:\n exp=%v got=%v", i, tt.wantPosts, posts)
-		}
+		assert.Equalf(t, posts, tt.wantPosts, "#%d: post mismatch:\n exp=%v got=%v", i, tt.wantPosts, posts)
 	}
 }
 
