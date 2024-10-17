@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 

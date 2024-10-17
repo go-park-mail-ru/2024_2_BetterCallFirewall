@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/jackc/pgx"
 	"github.com/joho/godotenv"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
@@ -32,16 +33,12 @@ func main() {
 	dbSSLMode := os.Getenv("DB_SSLMODE")
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
 
-	potgresDB, err := postgres.StartPostgres(connStr)
+	postgresDB, err := postgres.StartPostgres(connStr)
 	if err != nil {
 		log.Fatalf("Error starting postgres: %v", err)
 	}
 
-	repo := postgres.NewAdapter(potgresDB)
-	err = repo.CreateNewUserTable()
-	if err != nil {
-		log.Fatalf("Error creating user table: %v", err)
-	}
+	repo := postgres.NewAdapter(postgresDB)
 	err = repo.CreateNewSessionTable()
 	if err != nil {
 		log.Fatalf("Error creating session table: %v", err)

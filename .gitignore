@@ -1,5 +1,6 @@
 .idea
 /go.work.sum
 .env
+/go.sum
 cover.html
 cover.out
