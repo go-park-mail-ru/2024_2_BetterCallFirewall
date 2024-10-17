@@ -1,8 +1,9 @@
 package router
 
 import (
-	"log"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 )
@@ -24,7 +25,7 @@ func NewAuthRouter(authControl AuthController, postControl PostController, sm mi
 	mux.HandleFunc("/api/v1/auth/logout", authControl.Logout)
 	mux.HandleFunc("/api/v1/post", postControl.GetAll)
 	res := middleware.Auth(sm, mux)
-	res = middleware.AccessLog(log.Default(), res)
+	res = middleware.AccessLog(logrus.New(), res)
 
 	return res
 }
