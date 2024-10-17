@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
+
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -58,6 +60,7 @@ func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	newProfile := models.FullProfile{}
 	err := json.NewDecoder(r.Body).Decode(&newProfile)
+	r.Body.Close()
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, fmt.Errorf("update error:%w", err))
 		return
@@ -91,7 +94,8 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 }
 
 func GetIdFromQuery(r *http.Request) (uint32, error) {
-	id := r.URL.Query().Get("id")
+	vars := mux.Vars(r)
+	id := vars["id"]
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
@@ -181,7 +185,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 }
 
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
-	id, _, err := GetReceiverAndSender(r)
+	id, err := GetIdFromQuery(r)
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err)
 	}
