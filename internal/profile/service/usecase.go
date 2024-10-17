@@ -23,7 +23,12 @@ func (p ProfileUsecaseImplementation) GetProfileById(u uint32) (*models.FullProf
 		return nil, fmt.Errorf("get profile by id usecase: %w", err)
 	}
 
-	posts, err := p.postManager.GetAuthorsPosts(u)
+	header := models.Header{
+		AuthorID: profile.ID,
+		Author:   profile.FirstName + " " + profile.LastName,
+		Avatar:   profile.Avatar,
+	}
+	posts, err := p.postManager.GetAuthorsPosts(header)
 	if err != nil {
 		return nil, fmt.Errorf("get authors posts usecase: %w", err)
 	}
