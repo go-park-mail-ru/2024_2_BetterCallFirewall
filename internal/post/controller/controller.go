@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -36,7 +38,6 @@ type Responder interface {
 	OutputNoMoreContentJSON(w http.ResponseWriter, data any)
 
 	ErrorInternal(w http.ResponseWriter, err error)
-	ErrorWrongMethod(w http.ResponseWriter, err error)
 	ErrorBadRequest(w http.ResponseWriter, err error)
 }
 
@@ -60,11 +61,6 @@ func NewPostController(service PostService, responder Responder, fileService Fil
 }
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	newPost, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -82,11 +78,6 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	postID, err := getIDFromQuery(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -108,11 +99,6 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	post, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -151,11 +137,6 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	postID, err := getIDFromQuery(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err)
@@ -194,11 +175,6 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	section := r.URL.Query().Get("section")
 
 	var (
@@ -285,50 +261,21 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	//defer r.MultipartForm.RemoveAll()
-	//if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
-	//	return nil, myErr.ErrToLargeFile
-	//}
-	//
-	//file, _, err := r.FormFile("file")
-	//defer file.Close()
-	//if errors.Is(err, http.ErrMissingFile) {
-	//	return newPost, nil
-	//}
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//_, format, err := image.Decode(file)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//if _, ok := fileFormat[format]; !ok {
-	//	return nil, myErr.ErrWrongFiletype
-	//}
-	//
-	//pic, err := pc.fileService.Upload(file)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//newPost.PostContent.File = pic
-
 	return newPost, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
-	id := r.URL.Query().Get("id")
+	vars := mux.Vars(r)
 
+	id := vars["id"]
 	if id == "" {
-		return 0, errors.New("wrong id")
+		return 0, errors.New("id is empty")
 	}
 
-	postID, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		return 0, errors.New("wrong id")
+		return 0, err
 	}
 
-	return uint32(postID), nil
+	return uint32(uid), nil
 }
