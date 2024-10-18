@@ -2,11 +2,12 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgxpool"
+	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -25,10 +26,10 @@ const (
 )
 
 type Adapter struct {
-	db *pgxpool.Conn
+	db *sql.DB
 }
 
-func NewAdapter(db *pgxpool.Conn) *Adapter {
+func NewAdapter(db *sql.DB) *Adapter {
 	return &Adapter{
 		db: db,
 	}
@@ -37,7 +38,7 @@ func NewAdapter(db *pgxpool.Conn) *Adapter {
 func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	var postID uint32
 
-	if err := a.db.QueryRow(ctx, createPost, post.Header.AuthorID, post.PostContent.Text).Scan(&postID); err != nil {
+	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text).Scan(&postID); err != nil {
 		return 0, fmt.Errorf("postgres create post: %w", err)
 	}
 
@@ -47,7 +48,7 @@ func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error)
 func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	var post models.Post
 
-	if err := a.db.QueryRow(ctx, getPost, postID).Scan(&post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+	if err := a.db.QueryRowContext(ctx, getPost, postID).Scan(&post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, myErr.ErrPostNotFound
 		}
@@ -60,7 +61,7 @@ func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) 
 }
 
 func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
-	_, err := a.db.Exec(ctx, deletePost, postID)
+	_, err := a.db.ExecContext(ctx, deletePost, postID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return myErr.ErrPostNotFound
 	}
@@ -73,7 +74,7 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 }
 
 func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
-	_, err := a.db.Exec(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.ID)
+	_, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.ID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return myErr.ErrPostNotFound
 	}
@@ -86,7 +87,7 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 }
 
 func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
-	row, err := a.db.Query(ctx, getPosts, lastID)
+	row, err := a.db.QueryContext(ctx, getPosts, lastID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, myErr.ErrNoMoreContent
 	}
@@ -100,7 +101,7 @@ func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, 
 }
 
 func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
-	rows, err := a.db.Query(ctx, getFriendsPost, lastID, friendsID)
+	rows, err := a.db.QueryContext(ctx, getFriendsPost, lastID, friendsID)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get friends posts: %w", err)
 	}
@@ -115,7 +116,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, header *models.Header) ([
 		posts []*models.Post
 	)
 
-	rows, err := a.db.Query(ctx, getProfilePosts, header.AuthorID)
+	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
 	}
@@ -136,7 +137,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, header *models.Header) ([
 func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, error) {
 	var authorID uint32
 
-	if err := a.db.QueryRow(ctx, getPostAuthor, postID).Scan(&authorID); err != nil {
+	if err := a.db.QueryRowContext(ctx, getPostAuthor, postID).Scan(&authorID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, myErr.ErrPostNotFound
 		}
@@ -146,7 +147,7 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 	return authorID, nil
 }
 
-func createPostBatchFromRows(rows pgx.Rows) ([]*models.Post, error) {
+func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 	var (
 		post  models.Post
 		posts []*models.Post
