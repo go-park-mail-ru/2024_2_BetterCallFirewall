@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"net/http"
 	"time"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
@@ -49,7 +49,6 @@ func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*mod
 	if err != nil {
 		return nil, fmt.Errorf("session creation: %w", err)
 	}
-
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sess.ID,

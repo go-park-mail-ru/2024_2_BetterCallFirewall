@@ -2,11 +2,10 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 )
 
 var noAuthUrls = map[string]struct{}{

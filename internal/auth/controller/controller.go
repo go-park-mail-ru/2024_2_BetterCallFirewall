@@ -1,20 +1,22 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type AuthService interface {
-	Register(user models.User) (uint32, error)
-	Auth(user models.User) (uint32, error)
+	Register(user models.User, ctx context.Context) (uint32, error)
+	Auth(user models.User, ctx context.Context) (uint32, error)
 }
 
 type SessionManager interface {
@@ -58,7 +60,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.ID, err = c.serviceAuth.Register(user)
+	user.ID, err = c.serviceAuth.Register(user, r.Context())
 	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.responder.ErrorBadRequest(w, err)
 		return
@@ -91,7 +93,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := c.serviceAuth.Auth(user)
+	id, err := c.serviceAuth.Auth(user, r.Context())
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
