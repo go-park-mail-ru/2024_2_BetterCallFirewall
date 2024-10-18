@@ -22,18 +22,18 @@ func NewProfileRepo(db *sql.DB) profile.Repository {
 	return repo
 }
 
-func (p *ProfileRepo) GetProfileById(id uint32) (*models.FullProfile, error) {
+func (p *ProfileRepo) GetProfileById(id uint32, ctx context.Context) (*models.FullProfile, error) {
 	res := &models.FullProfile{}
-	err := p.DB.QueryRowContext(context.Background(), GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
+	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
 		return nil, fmt.Errorf("get profile by id db: %w", err)
 	}
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAll(self uint32) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAll(self uint32, ctx context.Context) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
-	rows, err := p.DB.QueryContext(context.Background(), GetAllProfiles, self)
+	rows, err := p.DB.QueryContext(ctx, GetAllProfiles, self)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles %w", err)
 	}
@@ -66,8 +66,8 @@ func (p *ProfileRepo) DeleteProfile(u uint32) error {
 	return nil
 }
 
-func (p *ProfileRepo) AddFriendsReq(reciever uint32, sender uint32) error {
-	_, err := p.DB.Exec(AddFriends, sender, reciever)
+func (p *ProfileRepo) AddFriendsReq(receiver uint32, sender uint32) error {
+	_, err := p.DB.Exec(AddFriends, sender, receiver)
 	if err != nil {
 		return fmt.Errorf("add friend db: %w", err)
 	}
@@ -98,9 +98,9 @@ func (p *ProfileRepo) RemoveSub(who uint32, whom uint32) error {
 	return nil
 }
 
-func (p *ProfileRepo) GetAllFriends(u uint32) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
-	rows, err := p.DB.Query(GetAllFriends, u)
+	rows, err := p.DB.QueryContext(ctx, GetAllFriends, u)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends %w", err)
 	}
@@ -115,18 +115,18 @@ func (p *ProfileRepo) GetAllFriends(u uint32) ([]*models.ShortProfile, error) {
 	return res, nil
 }
 
-func (p *ProfileRepo) CheckStatus(u1 uint32, u2 uint32) (int, error) {
+func (p *ProfileRepo) CheckStatus(u1 uint32, u2 uint32, ctx context.Context) (int, error) {
 	var status int
-	err := p.DB.QueryRow(CheckFriendReq, u1, u2).Scan(&status)
+	err := p.DB.QueryRowContext(ctx, CheckFriendReq, u1, u2).Scan(&status)
 	if err != nil {
 		return status, fmt.Errorf("check status db: %w", err)
 	}
 	return status, nil
 }
 
-func (p *ProfileRepo) GetFriendsID(u uint32) ([]uint32, error) {
+func (p *ProfileRepo) GetFriendsID(u uint32, ctx context.Context) ([]uint32, error) {
 	res := make([]uint32, 0)
-	rows, err := p.DB.QueryContext(context.Background(), GetFriendsID, u)
+	rows, err := p.DB.QueryContext(ctx, GetFriendsID, u)
 	if err != nil {
 		return nil, fmt.Errorf("get friends id db: %w", err)
 	}

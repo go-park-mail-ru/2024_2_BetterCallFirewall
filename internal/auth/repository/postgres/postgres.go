@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -26,9 +27,9 @@ func NewAdapter(db *sql.DB) *Adapter {
 	return adapter
 }
 
-func (a *Adapter) Create(user *models.User) (uint32, error) {
+func (a *Adapter) Create(user *models.User, ctx context.Context) (uint32, error) {
 	var id uint32
-	err := a.db.QueryRow(CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
+	err := a.db.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, fmt.Errorf("postgres create user rows affected: %w", err)
@@ -39,11 +40,9 @@ func (a *Adapter) Create(user *models.User) (uint32, error) {
 	return id, nil
 }
 
-func (a *Adapter) GetByEmail(email string) (*models.User, error) {
-	row := a.db.QueryRow(GetUserByEmail, email)
-
-	var user models.User
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
+func (a *Adapter) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+	user := &models.User{}
+	err := a.db.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("postgres get user: %w", myErr.ErrUserNotFound)
@@ -51,7 +50,7 @@ func (a *Adapter) GetByEmail(email string) (*models.User, error) {
 		return nil, fmt.Errorf("postgres get user: %w", err)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (a *Adapter) CreateNewSessionTable() error {

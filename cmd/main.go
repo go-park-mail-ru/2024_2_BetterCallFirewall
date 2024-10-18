@@ -53,7 +53,7 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo)
 	postControl := postController.NewPostController(postService, responder)
 
-	rout := router.NewAuthRouter(control, postControl, sessionManager)
+	rout := router.NewRouter(control, postControl, sessionManager)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,

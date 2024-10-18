@@ -32,7 +32,7 @@ type ProfileController interface {
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 }
 
-func NewAuthRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager) http.Handler {
+func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager) http.Handler {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
