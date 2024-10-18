@@ -29,7 +29,7 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 		Author:   profile.FirstName + " " + profile.LastName,
 		Avatar:   profile.Avatar,
 	}
-	posts, err := p.postManager.GetAuthorsPosts(header)
+	posts, err := p.postManager.GetAuthorsPosts(context.Background(), &header)
 	if err != nil {
 		return nil, fmt.Errorf("get authors posts usecase: %w", err)
 	}
@@ -122,7 +122,7 @@ func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID u
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetHeader(userID uint32) (models.Header, error) {
+func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
 	header, err := p.repo.GetHeader(userID)
 	if err != nil {
 		return models.Header{}, fmt.Errorf("get header usecase: %w", err)

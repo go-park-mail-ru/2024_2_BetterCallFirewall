@@ -9,12 +9,14 @@ import (
 
 	_ "github.com/jackc/pgx"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
+	"github.com/2024_2_BetterCallFirewall/internal/fileService"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
-	"github.com/2024_2_BetterCallFirewall/internal/post/repository"
+	postgresProfile "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
 	profileController "github.com/2024_2_BetterCallFirewall/internal/profile/controller"
 	profileRepository "github.com/2024_2_BetterCallFirewall/internal/profile/repository"
@@ -48,17 +50,19 @@ func main() {
 		log.Fatalf("Error creating session table: %v", err)
 	}
 	authServ := service.NewAuthServiceImpl(repo)
-	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
+	logger := logrus.New()
 	responder := router.NewResponder(logger)
 	sessionManager := service.NewSessionManager(repo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
-	postRepo := repository.NewRepository()
-	postService := postServ.NewPostServiceImpl(postRepo)
-	postControl := postController.NewPostController(postService, responder)
+	postRepo := postgresProfile.NewAdapter(postgresDB)
 
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
+
+	fileServ := fileService.NewFileService()
+	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
+	postControl := postController.NewPostController(postService, responder, fileServ)
 
 	rout := router.NewRouter(control, profileControl, postControl, sessionManager)
 	server := http.Server{

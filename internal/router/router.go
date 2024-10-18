@@ -18,7 +18,11 @@ type AuthController interface {
 }
 
 type PostController interface {
-	GetAll(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	GetOne(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	GetBatchPosts(w http.ResponseWriter, r *http.Request)
 }
 
 type ProfileController interface {
@@ -38,7 +42,7 @@ func NewRouter(authControl AuthController, profileControl ProfileController, pos
 	mux.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/post", postControl.GetAll).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/post", postControl.Create).Methods(http.MethodPost)
 
 	mux.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
 	mux.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)

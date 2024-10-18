@@ -19,8 +19,8 @@ type DB interface {
 }
 
 type ProfileRepo interface {
-	GetHeader(userID uint32) (models.Header, error)
-	GetFriendsID(userID uint32) ([]uint32, error)
+	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
+	GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error)
 }
 
 type PostServiceImpl struct {
@@ -50,7 +50,7 @@ func (s *PostServiceImpl) Get(ctx context.Context, postID uint32) (*models.Post,
 		return nil, fmt.Errorf("get post: %w", err)
 	}
 
-	header, err := s.profileRepo.GetHeader(post.Header.AuthorID)
+	header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("get author: %w", err)
 	}
@@ -86,7 +86,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*model
 	}
 
 	for _, post := range posts {
-		header, err := s.profileRepo.GetHeader(post.Header.AuthorID)
+		header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {
 			return nil, fmt.Errorf("get author: %w", err)
 		}
@@ -97,7 +97,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*model
 }
 
 func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
-	friends, err := s.profileRepo.GetFriendsID(userID)
+	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
 	}
@@ -108,7 +108,7 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 	}
 
 	for _, post := range posts {
-		header, err := s.profileRepo.GetHeader(post.Header.AuthorID)
+		header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {
 			return nil, fmt.Errorf("get author: %w", err)
 		}
