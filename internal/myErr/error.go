@@ -18,4 +18,6 @@ var (
 	ErrPostNotFound         = errors.New("post not found")
 	ErrAccessDenied         = errors.New("access denied")
 	ErrInternal             = errors.New("internal error")
+	ErrWrongOwner           = errors.New("wrong owner")
+	ErrSameUser             = errors.New("same user")
 )

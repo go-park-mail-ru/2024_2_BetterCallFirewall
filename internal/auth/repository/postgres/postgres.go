@@ -1,67 +1,48 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	_ "github.com/lib/pq"
-
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
-const (
-	CreateUserTable       = `CREATE TABLE IF NOT EXISTS person (id INT PRIMARY KEY, first_name TEXT NOT NULL CONSTRAINT first_name_length CHECK (CHAR_LENGTH(first_name) <= 30), last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30), email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50), password TEXT NOT NULL CONSTRAINT password_length CHECK (CHAR_LENGTH(password) <= 61));`
-	CreateUser            = `INSERT INTO person (id, first_name, last_name, email, password) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING;`
-	GetUserByEmail        = `SELECT id, first_name, last_name, email, password FROM person WHERE email = $1;`
-	CreateNewSessionTable = `CREATE TABLE IF NOT EXISTS session (id SERIAL PRIMARY KEY, sess_id TEXT NOT NULL, user_id INTEGER NOT NULL UNIQUE, created_at BIGINT NOT NULL);`
-	CreateSession         = `INSERT INTO session (sess_id, user_id, created_at) VALUES ($1, $2, $3) ON CONFLICT(user_id) DO UPDATE SET sess_id = EXCLUDED.sess_id, created_at = EXCLUDED.created_at;`
-	FindSession           = `SELECT sess_id, user_id, created_at FROM session WHERE sess_id = $1;`
-	DeleteSession         = `DELETE FROM session WHERE sess_id = $1;`
-	DeleteOutdatedSession = `DELETE FROM session WHERE created_at <= $1;`
-)
-
 type Adapter struct {
-	db      *sql.DB
-	counter uint32
+	db *sql.DB
 }
 
 func NewAdapter(db *sql.DB) *Adapter {
 	adapter := &Adapter{
-		db:      db,
-		counter: 1,
+		db: db,
 	}
 	go adapter.startSessionGC()
 	return adapter
 }
 
-func (a *Adapter) Create(user *models.User) (uint32, error) {
-	res, err := a.db.Exec(CreateUser, a.counter, user.FirstName, user.LastName, user.Email, user.Password)
+func (a *Adapter) Create(user *models.User, ctx context.Context) (uint32, error) {
+	var id uint32
+	err := a.db.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("postgres create user rows affected: %w", err)
+		}
 		return 0, fmt.Errorf("postgres create user: %w", err)
 	}
 
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return 0, fmt.Errorf("postgres create user rows affected: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		return 0, fmt.Errorf("postgres create user: %w", myErr.ErrUserAlreadyExists)
-	}
-	a.counter++
-
-	return a.counter - 1, nil
+	return id, nil
 }
 
-func (a *Adapter) GetByEmail(email string) (*models.User, error) {
-	row := a.db.QueryRow(GetUserByEmail, email)
-
-	var user models.User
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
+func (a *Adapter) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+	user := &models.User{}
+	err := a.db.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("postgres get user: %w", myErr.ErrUserNotFound)
@@ -69,16 +50,7 @@ func (a *Adapter) GetByEmail(email string) (*models.User, error) {
 		return nil, fmt.Errorf("postgres get user: %w", err)
 	}
 
-	return &user, nil
-}
-
-func (a *Adapter) CreateNewUserTable() error {
-	_, err := a.db.Exec(CreateUserTable)
-	if err != nil {
-		return fmt.Errorf("postgres create user table: %w", err)
-	}
-
-	return nil
+	return user, nil
 }
 
 func (a *Adapter) CreateNewSessionTable() error {
@@ -98,7 +70,7 @@ func (a *Adapter) CreateSession(sess *models.Session) error {
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("postgres create session rows affected: %w", err)
+		return fmt.Errorf("postgres create session table: %w", err)
 	}
 	if rows == 0 {
 		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionAlreadyExists)
@@ -128,7 +100,7 @@ func (a *Adapter) DestroySession(sessID string) error {
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("postgres delete session rows affected: %w", err)
+		return fmt.Errorf("postgres delete session table: %w", err)
 	}
 	if rows == 0 {
 		return fmt.Errorf("postgres delete session: %w", myErr.ErrSessionNotFound)
@@ -159,10 +131,11 @@ func (a *Adapter) startSessionGC() {
 }
 
 func StartPostgres(connStr string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}
+	db.SetMaxOpenConns(10)
 
 	retrying := 10
 	i := 1

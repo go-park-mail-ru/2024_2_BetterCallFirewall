@@ -49,7 +49,6 @@ func (sm *SessionManagerImpl) Create(w http.ResponseWriter, userID uint32) (*mod
 	if err != nil {
 		return nil, fmt.Errorf("session creation: %w", err)
 	}
-
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sess.ID,
