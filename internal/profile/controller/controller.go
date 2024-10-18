@@ -34,7 +34,7 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 		return
 	}
 	userId := sess.UserID
-	userProfile, err := h.ProfileManager.GetProfileById(userId, r.Context())
+	userProfile, err := h.ProfileManager.GetProfileById(r.Context(), userId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 		return
@@ -49,7 +49,7 @@ func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *
 		return
 	}
 	userId := sess.UserID
-	profiles, err := h.ProfileManager.GetAll(userId, r.Context())
+	profiles, err := h.ProfileManager.GetAll(r.Context(), userId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 		return
@@ -112,7 +112,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 		h.Responder.ErrorBadRequest(w, err)
 	}
 
-	profile, err := h.ProfileManager.GetProfileById(id, r.Context())
+	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}
@@ -125,7 +125,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 		h.Responder.ErrorBadRequest(w, err)
 	}
 	uid := sess.UserID
-	profiles, err := h.ProfileManager.GetAll(uid, r.Context())
+	profiles, err := h.ProfileManager.GetAll(r.Context(), uid)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}
@@ -189,7 +189,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err)
 	}
-	profiles, err := h.ProfileManager.GetAllFriends(id, r.Context())
+	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -13,12 +14,12 @@ type ProfileUsecaseImplementation struct {
 	postManager profile.PostGetter
 }
 
-func NewProfileUsecase(repo profile.Repository) *ProfileUsecaseImplementation {
-	return &ProfileUsecaseImplementation{repo: repo}
+func NewProfileUsecase(profileRepo profile.Repository, postRepo profile.PostGetter) *ProfileUsecaseImplementation {
+	return &ProfileUsecaseImplementation{repo: profileRepo, postManager: postRepo}
 }
 
-func (p ProfileUsecaseImplementation) GetProfileById(u uint32) (*models.FullProfile, error) {
-	profile, err := p.repo.GetProfileById(u)
+func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint32) (*models.FullProfile, error) {
+	profile, err := p.repo.GetProfileById(u, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get profile by id usecase: %w", err)
 	}
@@ -37,8 +38,8 @@ func (p ProfileUsecaseImplementation) GetProfileById(u uint32) (*models.FullProf
 	return profile, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAll(self uint32) ([]*models.ShortProfile, error) {
-	profiles, err := p.repo.GetAll(self)
+func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	profiles, err := p.repo.GetAll(self, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles usecase: %w", err)
 	}
@@ -88,8 +89,8 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
-	status, err := p.repo.CheckStatus(who, whom)
+func (p ProfileUsecaseImplementation) RemoveFromFriends(ctx context.Context, who uint32, whom uint32) error {
+	status, err := p.repo.CheckStatus(who, whom, ctx)
 	if err != nil {
 		return fmt.Errorf("check status usecase: %w", err)
 	}
@@ -105,16 +106,16 @@ func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32)
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllFriends(self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllFriends(self)
+func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllFriends(self, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
 	}
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetFriendsID(userID uint32) ([]uint32, error) {
-	res, err := p.repo.GetFriendsID(userID)
+func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
+	res, err := p.repo.GetFriendsID(userID, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get friends id usecase: %w", err)
 	}

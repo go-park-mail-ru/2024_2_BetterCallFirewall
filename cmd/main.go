@@ -16,6 +16,9 @@ import (
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/post/repository"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
+	profileController "github.com/2024_2_BetterCallFirewall/internal/profile/controller"
+	profileRepository "github.com/2024_2_BetterCallFirewall/internal/profile/repository"
+	profileService "github.com/2024_2_BetterCallFirewall/internal/profile/service"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 )
 
@@ -39,6 +42,7 @@ func main() {
 	}
 
 	repo := postgres.NewAdapter(postgresDB)
+	profileRepo := profileRepository.NewProfileRepo(postgresDB)
 	err = repo.CreateNewSessionTable()
 	if err != nil {
 		log.Fatalf("Error creating session table: %v", err)
@@ -53,7 +57,10 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo)
 	postControl := postController.NewPostController(postService, responder)
 
-	rout := router.NewRouter(control, postControl, sessionManager)
+	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
+	profileControl := profileController.NewProfileController(profileUsecase, responder)
+
+	rout := router.NewRouter(control, profileControl, postControl, sessionManager)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,
