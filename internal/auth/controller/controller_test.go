@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	models2 "github.com/2024_2_BetterCallFirewall/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -20,7 +21,7 @@ var (
 
 type MockAuthService struct{}
 
-func (m MockAuthService) Register(user models2.User) (uint32, error) {
+func (m MockAuthService) Register(user models.User) (uint32, error) {
 	if user.ID == 1 {
 		return user.ID, myErr.ErrUserAlreadyExists
 	}
@@ -32,7 +33,7 @@ func (m MockAuthService) Register(user models2.User) (uint32, error) {
 	return user.ID, nil
 }
 
-func (m MockAuthService) Auth(user models2.User) (uint32, error) {
+func (m MockAuthService) Auth(user models.User) (uint32, error) {
 	if user.ID == 1 {
 		return user.ID, myErr.ErrWrongEmailOrPassword
 	}
@@ -46,14 +47,14 @@ func (m MockAuthService) Auth(user models2.User) (uint32, error) {
 
 type MockSessionManager struct{}
 
-func (m MockSessionManager) Check(r *http.Request) (*models2.Session, error) {
+func (m MockSessionManager) Check(r *http.Request) (*models.Session, error) {
 	if r.URL.Path == "/auth/login" {
 		return nil, nil
 	}
 	return nil, mockErrorInternal
 }
 
-func (m MockSessionManager) Create(w http.ResponseWriter, userID uint32) (*models2.Session, error) {
+func (m MockSessionManager) Create(w http.ResponseWriter, userID uint32) (*models.Session, error) {
 	if userID == 2 {
 		return nil, mockErrorInternal
 	}
@@ -61,7 +62,7 @@ func (m MockSessionManager) Create(w http.ResponseWriter, userID uint32) (*model
 }
 
 func (m MockSessionManager) Destroy(w http.ResponseWriter, r *http.Request) error {
-	if _, err := models2.SessionFromContext(r.Context()); err != nil {
+	if _, err := models.SessionFromContext(r.Context()); err != nil {
 		return err
 	}
 	return nil
@@ -110,10 +111,10 @@ type TestCase struct {
 
 func TestRegister(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
-	jsonUser0, _ := json.Marshal(models2.User{ID: 0})
-	jsonUser1, _ := json.Marshal(models2.User{ID: 1})
-	jsonUser2, _ := json.Marshal(models2.User{ID: 2})
-	jsonUser3, _ := json.Marshal(models2.User{ID: 3})
+	jsonUser0, _ := json.Marshal(models.User{ID: 0})
+	jsonUser1, _ := json.Marshal(models.User{ID: 1})
+	jsonUser2, _ := json.Marshal(models.User{ID: 2})
+	jsonUser3, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
 		{
@@ -167,10 +168,10 @@ func TestRegister(t *testing.T) {
 
 func TestAuth(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
-	jsonUser0, _ := json.Marshal(models2.User{ID: 0})
-	jsonUser1, _ := json.Marshal(models2.User{ID: 1})
-	jsonUser2, _ := json.Marshal(models2.User{ID: 2})
-	jsonUser3, _ := json.Marshal(models2.User{ID: 3})
+	jsonUser0, _ := json.Marshal(models.User{ID: 0})
+	jsonUser1, _ := json.Marshal(models.User{ID: 1})
+	jsonUser2, _ := json.Marshal(models.User{ID: 2})
+	jsonUser3, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
 		{
@@ -229,8 +230,8 @@ func TestAuth(t *testing.T) {
 }
 
 var (
-	session, _        = models2.NewSession(1)
-	ctxWithSession    = models2.ContextWithSession(context.Background(), session)
+	session, _        = models.NewSession(1)
+	ctxWithSession    = models.ContextWithSession(context.Background(), session)
 	reqWithSession    = httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctxWithSession)
 	reqWithoutSession = httptest.NewRequest(http.MethodPost, "/", nil)
 )
