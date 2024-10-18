@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/2024_2_BetterCallFirewall/internal/models"
-
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 

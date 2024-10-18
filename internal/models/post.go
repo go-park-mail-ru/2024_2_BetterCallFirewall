@@ -1,10 +1,9 @@
 package models
 
 type Post struct {
-	ID     uint32 `json:"id"`
-	Header Header `json:"header"`
-	//PostContent Content `json:"post_content"`
-	AuthorID uint32 `json:"user_id,omitempty"`
+	ID          uint32  `json:"id"`
+	Header      Header  `json:"header"`
+	PostContent Content `json:"post_content"`
 }
 
 type Header struct {

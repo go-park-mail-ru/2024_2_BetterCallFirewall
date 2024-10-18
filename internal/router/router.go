@@ -1,8 +1,9 @@
 package router
 
 import (
-	"log"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 	_ "github.com/swaggo/http-swagger"
@@ -49,7 +50,7 @@ func NewRouter(authControl AuthController, profileControl ProfileController, pos
 	mux.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAll).Methods(http.MethodGet)
 
 	res := middleware.Auth(sm, mux)
-	res = middleware.AccessLog(log.Default(), res)
+	res = middleware.AccessLog(logrus.New(), res)
 
 	return res
 }

@@ -2,11 +2,11 @@ package service
 
 import (
 	"errors"
-	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 

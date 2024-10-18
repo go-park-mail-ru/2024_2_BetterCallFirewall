@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
