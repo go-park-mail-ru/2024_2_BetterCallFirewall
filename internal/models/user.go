@@ -1,10 +1,6 @@
 package models
 
-import (
-	"net/url"
-)
-
-type Picture url.URL
+type Picture string
 
 type User struct {
 	ID        uint32  `json:"id"`

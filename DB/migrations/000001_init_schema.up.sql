@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS file (
                                     post_id INT DEFAULT NULL,
                                     comment_id INT DEFAULT NULL,
                                     profile_id INT DEFAULT NULL,
+                                    file_path TEXT DEFAULT '',
                                     likes INT DEFAULT 0,
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

@@ -51,7 +51,7 @@ func NewRouter(authControl AuthController, profileControl ProfileController, pos
 	mux.HandleFunc("/api/v1/send_friend_request/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/accept_friend_request/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/remove_friend/{id}", profileControl.RemoveFromFriends).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAll).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
 
 	res := middleware.Auth(sm, mux)
 	res = middleware.AccessLog(logrus.New(), res)

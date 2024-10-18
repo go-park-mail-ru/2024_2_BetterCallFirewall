@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"image"
 	"math"
 	"mime/multipart"
 	"net/http"
@@ -275,7 +274,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
 	var newPost *models.Post
 
-	if err := json.NewDecoder(r.Body).Decode(newPost); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
 		return nil, err
 	}
 	defer r.Body.Close()
@@ -286,35 +285,35 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	defer r.MultipartForm.RemoveAll()
-	if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
-		return nil, myErr.ErrToLargeFile
-	}
-
-	file, _, err := r.FormFile("file")
-	defer file.Close()
-	if errors.Is(err, http.ErrMissingFile) {
-		return newPost, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	_, format, err := image.Decode(file)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := fileFormat[format]; !ok {
-		return nil, myErr.ErrWrongFiletype
-	}
-
-	pic, err := pc.fileService.Upload(file)
-	if err != nil {
-		return nil, err
-	}
-	newPost.PostContent.File = pic
+	//defer r.MultipartForm.RemoveAll()
+	//if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
+	//	return nil, myErr.ErrToLargeFile
+	//}
+	//
+	//file, _, err := r.FormFile("file")
+	//defer file.Close()
+	//if errors.Is(err, http.ErrMissingFile) {
+	//	return newPost, nil
+	//}
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//_, format, err := image.Decode(file)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//if _, ok := fileFormat[format]; !ok {
+	//	return nil, myErr.ErrWrongFiletype
+	//}
+	//
+	//pic, err := pc.fileService.Upload(file)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//newPost.PostContent.File = pic
 
 	return newPost, nil
 }

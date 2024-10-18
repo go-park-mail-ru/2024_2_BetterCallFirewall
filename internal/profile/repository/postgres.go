@@ -105,12 +105,12 @@ func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.Sh
 		return nil, fmt.Errorf("get all friends %w", err)
 	}
 	for rows.Next() {
-		profile := &models.ShortProfile{}
-		err = rows.Scan(profile.ID, profile.FirstName, profile.LastName, profile.Avatar)
+		profile := models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
 		if err != nil {
 			return nil, fmt.Errorf("get all friends db: %w", err)
 		}
-		res = append(res, profile)
+		res = append(res, &profile)
 	}
 	return res, nil
 }

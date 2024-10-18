@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/url"
 	"os"
 	"path/filepath"
 
@@ -39,18 +38,12 @@ func (f *FileService) Upload(file multipart.File) (*models.Picture, error) {
 		return nil, fmt.Errorf("save file: %w", err)
 	}
 
-	prefix := "localhost:8080"
 	dir, err := filepath.Abs(hashName)
 	if err != nil {
 		return nil, fmt.Errorf("save file: %w", err)
 	}
 
-	picUrl, err := url.Parse(prefix + dir)
-	if err != nil {
-		return nil, fmt.Errorf("upload file: %w", err)
-	}
-
-	pic := models.Picture(*picUrl)
+	pic := models.Picture(dir)
 
 	return &pic, nil
 }
