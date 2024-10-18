@@ -177,7 +177,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err)
 	}
-	err = h.ProfileManager.RemoveFromFriends(who, whose)
+	err = h.ProfileManager.RemoveFromFriends(r.Context(), who, whose)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}
