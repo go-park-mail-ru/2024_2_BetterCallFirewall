@@ -35,7 +35,7 @@ type PostService interface {
 
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any)
-	OutputNoMoreContentJSON(w http.ResponseWriter, data any)
+	OutputNoMoreContentJSON(w http.ResponseWriter)
 
 	ErrorInternal(w http.ResponseWriter, err error)
 	ErrorBadRequest(w http.ResponseWriter, err error)
@@ -185,15 +185,19 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 
 	cookie, err := r.Cookie("postID")
 	if err != nil {
-		lastID = math.MaxUint32
+		lastID = math.MaxInt32
 	} else {
 		lastID, err = strconv.Atoi(cookie.Value)
 		if err != nil {
 			pc.responder.ErrorBadRequest(w, err)
 			return
 		}
+		if lastID == 0 {
+			pc.responder.OutputNoMoreContentJSON(w)
+			return
+		}
 		if lastID < 0 {
-			lastID = math.MaxUint32
+			lastID = math.MaxInt32
 		}
 	}
 
@@ -225,20 +229,23 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	if errors.Is(err, myErr.ErrNoMoreContent) {
-		pc.responder.OutputNoMoreContentJSON(w, posts)
-		return
-	}
-
-	if err != nil {
+	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) {
 		pc.responder.ErrorInternal(w, err)
 		return
 	}
 
+	var newLastID string
+
+	if errors.Is(err, myErr.ErrNoMoreContent) {
+		newLastID = "0"
+	} else {
+		newLastID = strconv.Itoa(int(posts[len(posts)-1].ID))
+	}
+
 	cookie = &http.Cookie{
 		Name:    "postID",
-		Value:   strconv.Itoa(int(posts[len(posts)-1].ID)),
-		Path:    "/api/v1/feed/",
+		Path:    "/api/v1/feed",
+		Value:   newLastID,
 		Expires: time.Now().Add(time.Hour),
 	}
 

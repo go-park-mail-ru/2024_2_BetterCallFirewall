@@ -53,14 +53,11 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any) {
 	}
 }
 
-func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, data any) {
+func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter) {
 	writeHeaders(w)
 	w.WriteHeader(http.StatusNoContent)
 
 	r.logger.Info("success request")
-	if err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data}); err != nil {
-		r.logger.Error(err)
-	}
 }
 
 func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error) {

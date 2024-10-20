@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type DB interface {
@@ -100,6 +101,10 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
+	}
+
+	if len(friends) == 0 {
+		return nil, myErr.ErrNoMoreContent
 	}
 
 	posts, err := s.db.GetFriendsPosts(ctx, friends, lastID)
