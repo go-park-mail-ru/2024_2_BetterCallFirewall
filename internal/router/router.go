@@ -33,8 +33,11 @@ type ProfileController interface {
 
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
+	Unsubscribe(w http.ResponseWriter, r *http.Request)
 	RemoveFromFriends(w http.ResponseWriter, r *http.Request)
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
+	GetAllSubs(w http.ResponseWriter, r *http.Request)
+	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRouter(
@@ -55,9 +58,11 @@ func NewRouter(
 	mux.HandleFunc("api/v1/profile/delete", profileControl.DeleteProfile).Methods(http.MethodDelete)
 	mux.HandleFunc("/api/v1/profile/friend/subscribe/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/profile/friend/accept/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.RemoveFromFriends).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/profile/friend/remove/{id}", profileControl.RemoveFromFriends).Methods(http.MethodPost)
+	mux.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.Unsubscribe).Methods(http.MethodPost)
+	mux.HandleFunc("/api/v1/profile/friend/remove/{id}", profileControl.RemoveFromFriends).Methods(http.MethodDelete)
 	mux.HandleFunc("/api/v1/profile/friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/profile/subscribers/{id}", profileControl.GetAllSubs).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/profile/subscriptions/{id}", profileControl.GetAllSubscriptions).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut)

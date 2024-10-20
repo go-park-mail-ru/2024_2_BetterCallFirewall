@@ -17,4 +17,6 @@ type ProfileUsecase interface {
 	RemoveFromFriends(who uint32, whose uint32) error
 	Unsubscribe(who uint32, whose uint32) error
 	GetAllFriends(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
+	GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
+	GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
 }
