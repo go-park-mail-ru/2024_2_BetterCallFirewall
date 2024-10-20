@@ -13,5 +13,6 @@ type ProfileHandler interface {
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
 	RemoveFromFriends(w http.ResponseWriter, r *http.Request)
+	Unsubscribe(w http.ResponseWriter, r *http.Request)
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 }

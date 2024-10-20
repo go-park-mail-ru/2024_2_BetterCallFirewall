@@ -247,6 +247,18 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	h.Responder.OutputJSON(w, "success", reqID)
 }
 
+func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	whose, who, err := GetReceiverAndSender(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err)
+	}
+	err = h.ProfileManager.Unsubscribe(who, whose)
+	if err != nil {
+		h.Responder.ErrorInternal(w, err)
+	}
+	h.Responder.OutputJSON(w, "success")
+}
+
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
