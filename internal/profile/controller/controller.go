@@ -177,7 +177,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err)
 	}
-	err = h.ProfileManager.RemoveFromFriends(r.Context(), who, whose)
+	err = h.ProfileManager.RemoveFromFriends(who, whose)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}
@@ -202,6 +202,30 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err)
 	}
 	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id)
+	if err != nil {
+		h.Responder.ErrorInternal(w, err)
+	}
+	h.Responder.OutputJSON(w, profiles)
+}
+
+func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http.Request) {
+	id, err := GetIdFromQuery(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err)
+	}
+	profiles, err := h.ProfileManager.GetAllSubs(r.Context(), id)
+	if err != nil {
+		h.Responder.ErrorInternal(w, err)
+	}
+	h.Responder.OutputJSON(w, profiles)
+}
+
+func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
+	id, err := GetIdFromQuery(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err)
+	}
+	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err)
 	}

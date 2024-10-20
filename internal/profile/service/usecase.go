@@ -113,6 +113,22 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self ui
 	return res, nil
 }
 
+func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubs(self, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get all subs usecase: %w", err)
+	}
+	return res, nil
+}
+
+func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubscriptions(self, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
+	}
+	return res, nil
+}
+
 func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
 	res, err := p.repo.GetFriendsID(userID, ctx)
 	if err != nil {

@@ -17,6 +17,8 @@ type Repository interface {
 	MoveToSubs(who uint32, whom uint32) error
 	RemoveSub(who uint32, whom uint32) error
 	GetAllFriends(uint32, context.Context) ([]*models.ShortProfile, error)
+	GetAllSubs(uint32, context.Context) ([]*models.ShortProfile, error)
+	GetAllSubscriptions(uint32, context.Context) ([]*models.ShortProfile, error)
 
 	GetFriendsID(uint32, context.Context) ([]uint32, error)
 	GetHeader(uint32) (*models.Header, error)

@@ -15,4 +15,6 @@ type ProfileHandler interface {
 	RemoveFromFriends(w http.ResponseWriter, r *http.Request)
 	Unsubscribe(w http.ResponseWriter, r *http.Request)
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
+	GetAllSubs(w http.ResponseWriter, r *http.Request)
+	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 }
