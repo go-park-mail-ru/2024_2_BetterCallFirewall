@@ -115,15 +115,6 @@ func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.Sh
 	return res, nil
 }
 
-func (p *ProfileRepo) CheckStatus(u1 uint32, u2 uint32, ctx context.Context) (int, error) {
-	var status int
-	err := p.DB.QueryRowContext(ctx, CheckFriendReq, u1, u2).Scan(&status)
-	if err != nil {
-		return status, fmt.Errorf("check status db: %w", err)
-	}
-	return status, nil
-}
-
 func (p *ProfileRepo) GetFriendsID(u uint32, ctx context.Context) ([]uint32, error) {
 	res := make([]uint32, 0)
 	rows, err := p.DB.QueryContext(ctx, GetFriendsID, u)
