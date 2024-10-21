@@ -53,7 +53,7 @@ func (s *PostServiceImpl) Get(ctx context.Context, postID uint32) (*models.Post,
 
 	header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 	if err != nil {
-		return nil, fmt.Errorf("get author: %w", err)
+		return post, fmt.Errorf("get author:%w: %w", myErr.ErrAnotherService, err)
 	}
 	post.Header = header
 

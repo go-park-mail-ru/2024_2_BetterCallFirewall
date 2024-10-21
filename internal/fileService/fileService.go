@@ -49,6 +49,6 @@ func (f *FileService) Upload(file multipart.File) (*models.Picture, error) {
 }
 
 // TODO realize
-func (f *FileService) GetPostPicture(postID uint32) (*models.Picture, error) {
-	return nil, nil
+func (f *FileService) GetPostPicture(postID uint32) *models.Picture {
+	return nil
 }

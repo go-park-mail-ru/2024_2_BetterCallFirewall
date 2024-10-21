@@ -43,7 +43,7 @@ type Responder interface {
 
 type FileService interface {
 	Upload(file multipart.File) (*models.Picture, error)
-	GetPostPicture(postID uint32) (*models.Picture, error)
+	GetPostPicture(postID uint32) *models.Picture
 }
 
 type PostController struct {
@@ -69,7 +69,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 	id, err := pc.postService.Create(r.Context(), newPost)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, fmt.Errorf("create controller: %w", err))
+		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err))
 		return
 	}
 	newPost.ID = id
@@ -86,14 +86,17 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	post, err := pc.postService.Get(r.Context(), postID)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err)
+			return
+		}
+		if !errors.Is(err, myErr.ErrAnotherService) {
+			pc.responder.ErrorInternal(w, err)
+			return
+		}
 	}
-	post.PostContent.File, err = pc.fileService.GetPostPicture(postID)
-	if err != nil {
-		pc.responder.ErrorInternal(w, err)
-		return
-	}
+
+	post.PostContent.File = pc.fileService.GetPostPicture(postID)
 
 	pc.responder.OutputJSON(w, post)
 }
@@ -105,13 +108,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
-	}
-
-	userID := sess.UserID
+	userID := post.Header.AuthorID
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
@@ -129,7 +126,11 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err)
+			return
+		}
+		pc.responder.ErrorInternal(w, err)
 		return
 	}
 
@@ -167,7 +168,11 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := pc.postService.Delete(r.Context(), postID); err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err)
+			return
+		}
+		pc.responder.ErrorInternal(w, err)
 		return
 	}
 
@@ -222,11 +227,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	for _, p := range posts {
-		p.PostContent.File, err = pc.fileService.GetPostPicture(p.ID)
-		if err != nil {
-			pc.responder.ErrorInternal(w, err)
-			return
-		}
+		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
 	}
 
 	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) {
