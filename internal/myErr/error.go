@@ -20,4 +20,6 @@ var (
 	ErrInternal             = errors.New("internal error")
 	ErrWrongOwner           = errors.New("wrong owner")
 	ErrSameUser             = errors.New("same user")
+	ErrEmptyId              = errors.New("empty id")
+	ErrBigId                = errors.New("id is too big")
 )
