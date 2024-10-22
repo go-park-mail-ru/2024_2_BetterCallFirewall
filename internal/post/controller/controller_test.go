@@ -64,13 +64,27 @@ func (m *mockPostService) Delete(ctx context.Context, postID uint32) error {
 }
 
 func (m *mockPostService) GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error) {
-	//TODO implement me
-	panic("implement me")
+	data := ctx.Value("query")
+	if data == "internalError" {
+		return nil, errMock
+	}
+	if data == "1 post" {
+		return []*models.Post{{ID: 1}}, myErr.ErrNoMoreContent
+	}
+
+	return []*models.Post{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}, {ID: 8}}, nil
 }
 
 func (m *mockPostService) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
-	//TODO implement me
-	panic("implement me")
+	data := ctx.Value("query")
+	if data == "internalError" {
+		return nil, errMock
+	}
+	if data == "1 post" {
+		return []*models.Post{{ID: 1}}, myErr.ErrNoMoreContent
+	}
+
+	return []*models.Post{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}, {ID: 8}}, nil
 }
 
 func (m *mockPostService) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
@@ -110,8 +124,7 @@ func (m *mockResponder) ErrorBadRequest(w http.ResponseWriter, err error) {
 type mockFileService struct{}
 
 func (m *mockFileService) Upload(file multipart.File) (*models.Picture, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
 func (m *mockFileService) GetPostPicture(postID uint32) *models.Picture {
@@ -128,10 +141,12 @@ type TestCase struct {
 var controller = NewPostController(&mockPostService{}, &mockResponder{}, &mockFileService{})
 
 func TestCreate(t *testing.T) {
-	post1, _ := json.Marshal(&models.Post{PostContent: models.Content{Text: "post 1"}})
-	badPost, _ := json.Marshal(&models.Post{PostContent: models.Content{Text: "wrong post"}})
-	sessGoodUser, _ := models.NewSession(1)
-	ctxSess := models.ContextWithSession(context.Background(), sessGoodUser)
+	var (
+		post1, _        = json.Marshal(&models.Post{PostContent: models.Content{Text: "post 1"}})
+		badPost, _      = json.Marshal(&models.Post{PostContent: models.Content{Text: "wrong post"}})
+		sessGoodUser, _ = models.NewSession(1)
+		ctxSess         = models.ContextWithSession(context.Background(), sessGoodUser)
+	)
 
 	tests := []TestCase{
 		{
@@ -194,13 +209,13 @@ func TestGetOne(t *testing.T) {
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        mux.SetURLVars(httptest.NewRequest(http.MethodGet, "/api/v1/feed/1", nil), badIDNotFound),
+			r:        mux.SetURLVars(httptest.NewRequest(http.MethodGet, "/api/v1/feed/100", nil), badIDNotFound),
 			wantCode: http.StatusBadRequest,
 			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        mux.SetURLVars(httptest.NewRequest(http.MethodGet, "/api/v1/feed/1", nil), badIDInternal),
+			r:        mux.SetURLVars(httptest.NewRequest(http.MethodGet, "/api/v1/feed/200", nil), badIDInternal),
 			wantCode: http.StatusInternalServerError,
 			wantBody: "internal server error",
 		},
@@ -224,16 +239,18 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	post1, _ := json.Marshal(&models.Post{ID: 1, PostContent: models.Content{Text: "post 1"}})
-	post2, _ := json.Marshal(&models.Post{ID: 2, PostContent: models.Content{Text: "post 2"}})
-	post3, _ := json.Marshal(&models.Post{ID: 1, PostContent: models.Content{Text: "bad text in post"}})
-	badPost, _ := json.Marshal(&models.Post{PostContent: models.Content{Text: "wrong post"}})
-	notFoundPost, _ := json.Marshal(&models.Post{ID: 100, PostContent: models.Content{Text: "not found"}})
-	internalErrorPost, _ := json.Marshal(&models.Post{ID: 200, PostContent: models.Content{Text: "internal error"}})
-	sessGoodUser, _ := models.NewSession(1)
-	ctxSess := models.ContextWithSession(context.Background(), sessGoodUser)
-	sessBadUser, _ := models.NewSession(2)
-	ctxSessBad := models.ContextWithSession(context.Background(), sessBadUser)
+	var (
+		post1, _             = json.Marshal(&models.Post{ID: 1, PostContent: models.Content{Text: "post 1"}})
+		post2, _             = json.Marshal(&models.Post{ID: 2, PostContent: models.Content{Text: "post 2"}})
+		post3, _             = json.Marshal(&models.Post{ID: 1, PostContent: models.Content{Text: "bad text in post"}})
+		badPost, _           = json.Marshal(&models.Post{PostContent: models.Content{Text: "wrong post"}})
+		notFoundPost, _      = json.Marshal(&models.Post{ID: 100, PostContent: models.Content{Text: "not found"}})
+		internalErrorPost, _ = json.Marshal(&models.Post{ID: 200, PostContent: models.Content{Text: "internal error"}})
+		sessGoodUser, _      = models.NewSession(1)
+		ctxSess              = models.ContextWithSession(context.Background(), sessGoodUser)
+		sessBadUser, _       = models.NewSession(2)
+		ctxSessBad           = models.ContextWithSession(context.Background(), sessBadUser)
+	)
 
 	tests := []TestCase{
 		{
@@ -250,13 +267,13 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(notFoundPost)).WithContext(ctxSessBad),
+			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/100", bytes.NewBuffer(notFoundPost)).WithContext(ctxSessBad),
 			wantCode: http.StatusBadRequest,
 			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(internalErrorPost)).WithContext(ctxSessBad),
+			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/200", bytes.NewBuffer(internalErrorPost)).WithContext(ctxSessBad),
 			wantCode: http.StatusInternalServerError,
 			wantBody: "internal server error",
 		},
@@ -268,7 +285,7 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(post2)).WithContext(ctxSess),
+			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/2", bytes.NewBuffer(post2)).WithContext(ctxSess),
 			wantCode: http.StatusBadRequest,
 			wantBody: "bad request",
 		},
@@ -299,18 +316,17 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	var (
-		badID          = map[string]string{"id": "-1"}
-		badIDNotFound  = map[string]string{"id": "100"}
-		badIDInternal  = map[string]string{"id": "200"}
-		badIDNotFound2 = map[string]string{"id": "300"}
-		badIDInternal2 = map[string]string{"id": "400"}
-		goodID         = map[string]string{"id": "1"}
+		badID           = map[string]string{"id": "-1"}
+		badIDNotFound   = map[string]string{"id": "100"}
+		badIDInternal   = map[string]string{"id": "200"}
+		badIDNotFound2  = map[string]string{"id": "300"}
+		badIDInternal2  = map[string]string{"id": "400"}
+		goodID          = map[string]string{"id": "1"}
+		sessGoodUser, _ = models.NewSession(1)
+		ctxSess         = models.ContextWithSession(context.Background(), sessGoodUser)
+		sessBadUser, _  = models.NewSession(2)
+		ctxSessBad      = models.ContextWithSession(context.Background(), sessBadUser)
 	)
-
-	sessGoodUser, _ := models.NewSession(1)
-	ctxSess := models.ContextWithSession(context.Background(), sessGoodUser)
-	sessBadUser, _ := models.NewSession(2)
-	ctxSessBad := models.ContextWithSession(context.Background(), sessBadUser)
 
 	tests := []TestCase{
 		{
@@ -375,6 +391,115 @@ func TestDelete(t *testing.T) {
 		}
 		if strings.TrimSpace(tt.w.Body.String()) != tt.wantBody {
 			t.Errorf("Delete() body = %s, want %s", tt.w.Body.String(), tt.wantBody)
+		}
+	}
+}
+
+func TestGetBatch(t *testing.T) {
+	var (
+		sessGoodUser, _      = models.NewSession(1)
+		ctxSess              = models.ContextWithSession(context.Background(), sessGoodUser)
+		reqWithBadCookie     = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
+		reqWithNoMoreContent = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
+		reqNewReq            = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
+	)
+	reqWithBadCookie.AddCookie(&http.Cookie{
+		Name:  "postID",
+		Value: "wrong id",
+	})
+	reqWithNoMoreContent.AddCookie(&http.Cookie{
+		Name:  "postID",
+		Value: "0",
+	})
+	reqNewReq.AddCookie(&http.Cookie{
+		Name:  "postID",
+		Value: "-1",
+	})
+
+	tests := []TestCase{
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=false", nil),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil).
+				WithContext(context.WithValue(context.Background(), "query", "internalError")),
+			wantCode: http.StatusInternalServerError,
+			wantBody: "internal server error",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend", nil),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend", nil),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil).
+				WithContext(context.WithValue(context.Background(), "query", "1 post")),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil).
+				WithContext(context.WithValue(context.Background(), "query", "many posts")),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend", nil).
+				WithContext(context.WithValue(context.Background(), "query", "1 post")).
+				WithContext(ctxSess),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend", nil).
+				WithContext(context.WithValue(context.Background(), "query", "many posts")).
+				WithContext(ctxSess),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithBadCookie,
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithNoMoreContent,
+			wantCode: http.StatusNoContent,
+			wantBody: "no more content",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: reqNewReq.
+				WithContext(context.WithValue(context.Background(), "query", "1 post")),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
+	}
+
+	for _, tt := range tests {
+		controller.GetBatchPosts(tt.w, tt.r)
+		if tt.w.Code != tt.wantCode {
+			t.Errorf("GetBatch() code = %d, want %d", tt.w.Code, tt.wantCode)
+		}
+		if strings.TrimSpace(tt.w.Body.String()) != tt.wantBody {
+			t.Errorf("GetBatch() body = %s, want %s", tt.w.Body.String(), "Ok")
 		}
 	}
 }

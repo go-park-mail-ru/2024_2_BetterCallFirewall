@@ -226,13 +226,13 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	for _, p := range posts {
-		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
-	}
-
 	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) {
 		pc.responder.ErrorInternal(w, err)
 		return
+	}
+
+	for _, p := range posts {
+		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
 	}
 
 	var newLastID string
