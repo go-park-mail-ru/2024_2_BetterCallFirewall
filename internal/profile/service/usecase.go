@@ -69,11 +69,11 @@ func (p ProfileUsecaseImplementation) DeleteProfile(u uint32) error {
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) SendFriendReq(reciever uint32, sender uint32) error {
-	if reciever == sender {
+func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint32) error {
+	if receiver == sender {
 		return myErr.ErrSameUser
 	}
-	err := p.repo.AddFriendsReq(reciever, sender)
+	err := p.repo.AddFriendsReq(receiver, sender)
 	if err != nil {
 		return fmt.Errorf("add friend req usecase: %w", err)
 	}
@@ -82,6 +82,9 @@ func (p ProfileUsecaseImplementation) SendFriendReq(reciever uint32, sender uint
 }
 
 func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) error {
+	if who == whose {
+		return myErr.ErrSameUser
+	}
 	err := p.repo.AcceptFriendsReq(who, whose)
 	if err != nil {
 		return fmt.Errorf("accept friend req usecase: %w", err)
@@ -90,6 +93,9 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 }
 
 func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
+	if who == whom {
+		return myErr.ErrSameUser
+	}
 	err := p.repo.RemoveSub(who, whom)
 	if err != nil {
 		return fmt.Errorf("remove sub usecase: %w", err)
@@ -98,6 +104,9 @@ func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32)
 }
 
 func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error {
+	if who == whom {
+		return myErr.ErrSameUser
+	}
 	err := p.repo.MoveToSubs(who, whom)
 	if err != nil {
 		return fmt.Errorf("unsub usecase: %w", err)
