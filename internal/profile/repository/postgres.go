@@ -115,13 +115,38 @@ func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.Sh
 	return res, nil
 }
 
-func (p *ProfileRepo) CheckStatus(u1 uint32, u2 uint32, ctx context.Context) (int, error) {
-	var status int
-	err := p.DB.QueryRowContext(ctx, CheckFriendReq, u1, u2).Scan(&status)
+func (p *ProfileRepo) GetAllSubs(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+	res := make([]*models.ShortProfile, 0)
+	rows, err := p.DB.QueryContext(ctx, GetAllSubs, u)
 	if err != nil {
-		return status, fmt.Errorf("check status db: %w", err)
+		return nil, fmt.Errorf("get all subs db: %w", err)
 	}
-	return status, nil
+	for rows.Next() {
+		profile := models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
+		if err != nil {
+			return nil, fmt.Errorf("get all subs db: %w", err)
+		}
+		res = append(res, &profile)
+	}
+	return res, nil
+}
+
+func (p *ProfileRepo) GetAllSubscriptions(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+	res := make([]*models.ShortProfile, 0)
+	rows, err := p.DB.QueryContext(ctx, GetAllSubscriptions, u)
+	if err != nil {
+		return nil, fmt.Errorf("get all subscriptions db: %w", err)
+	}
+	for rows.Next() {
+		profile := models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
+		if err != nil {
+			return nil, fmt.Errorf("get all subscriptions db: %w", err)
+		}
+		res = append(res, &profile)
+	}
+	return res, nil
 }
 
 func (p *ProfileRepo) GetFriendsID(u uint32, ctx context.Context) ([]uint32, error) {

@@ -89,19 +89,18 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) RemoveFromFriends(ctx context.Context, who uint32, whom uint32) error {
-	status, err := p.repo.CheckStatus(who, whom, ctx)
-	if err != nil {
-		return fmt.Errorf("check status usecase: %w", err)
-	}
-
-	if status == 0 {
-		err = p.repo.MoveToSubs(who, whom)
-	} else {
-		err = p.repo.RemoveSub(who, whom)
-	}
+func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
+	err := p.repo.RemoveSub(who, whom)
 	if err != nil {
 		return fmt.Errorf("remove sub usecase: %w", err)
+	}
+	return nil
+}
+
+func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error {
+	err := p.repo.MoveToSubs(who, whom)
+	if err != nil {
+		return fmt.Errorf("unsub usecase: %w", err)
 	}
 	return nil
 }
@@ -110,6 +109,22 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self ui
 	res, err := p.repo.GetAllFriends(self, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
+	}
+	return res, nil
+}
+
+func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubs(self, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get all subs usecase: %w", err)
+	}
+	return res, nil
+}
+
+func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubscriptions(self, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
 	}
 	return res, nil
 }

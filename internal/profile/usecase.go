@@ -14,6 +14,9 @@ type ProfileUsecase interface {
 
 	SendFriendReq(receiver uint32, sender uint32) error
 	AcceptFriendReq(who uint32, whose uint32) error
-	RemoveFromFriends(ctx context.Context, who uint32, whose uint32) error
+	RemoveFromFriends(who uint32, whose uint32) error
+	Unsubscribe(who uint32, whose uint32) error
 	GetAllFriends(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
+	GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
+	GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error)
 }
