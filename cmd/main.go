@@ -50,7 +50,13 @@ func main() {
 		log.Fatalf("Error creating session table: %v", err)
 	}
 	authServ := service.NewAuthServiceImpl(repo)
+
 	logger := logrus.New()
+	logger.SetFormatter(&logrus.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+	})
+
 	responder := router.NewResponder(logger)
 	sessionManager := service.NewSessionManager(repo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
