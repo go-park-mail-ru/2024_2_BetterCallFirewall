@@ -20,4 +20,5 @@ var (
 	ErrInternal             = errors.New("internal error")
 	ErrWrongOwner           = errors.New("wrong owner")
 	ErrSameUser             = errors.New("same user")
+	ErrResNotOK             = errors.New("result not OK")
 )
