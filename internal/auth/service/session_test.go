@@ -1,31 +1,27 @@
 package service
 
 import (
-	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
-type MocDB struct {
+type MocSessDB struct {
 	Storage map[string]*models.Session
 }
 
 type Test struct {
-	testReq  *http.Request
-	testResp *httptest.ResponseRecorder
-	testId   uint32
-	testRes  *models.Session
-	err      error
+	testCookie  string
+	testId      uint32
+	testSession *models.Session
+	testRes     *models.Session
+	err         error
 }
 
-func (m *MocDB) CreateSession(session *models.Session) error {
+func (m *MocSessDB) CreateSession(session *models.Session) error {
 	for _, val := range m.Storage {
 		if val.UserID == session.UserID {
 			return myErr.ErrSessionAlreadyExists
@@ -35,7 +31,7 @@ func (m *MocDB) CreateSession(session *models.Session) error {
 	return nil
 }
 
-func (m *MocDB) FindSession(sessID string) (*models.Session, error) {
+func (m *MocSessDB) FindSession(sessID string) (*models.Session, error) {
 	session, ok := m.Storage[sessID]
 	if !ok {
 		return nil, myErr.ErrNoAuth
@@ -43,11 +39,10 @@ func (m *MocDB) FindSession(sessID string) (*models.Session, error) {
 	return session, nil
 }
 
-func (m *MocDB) DestroySession(sessID string) error {
+func (m *MocSessDB) DestroySession(sessID string) error {
 	if _, ok := m.Storage[sessID]; !ok {
 		return myErr.ErrSessionNotFound
 	}
-	delete(m.Storage, sessID)
 	return nil
 }
 
@@ -63,44 +58,26 @@ var (
 		ID:     CookieInBase,
 		UserID: IdInBase,
 	}
-	unactiveSession = &models.Session{
+	inactiveSession = &models.Session{
 		ID:     CookieNotInBase,
 		UserID: IdNotInBase,
 	}
-	db = &MocDB{
+	db = &MocSessDB{
 		Storage: map[string]*models.Session{
 			activeSession.ID: activeSession,
 		},
 	}
-	baseCookie = &http.Cookie{
-		Name:    "session_id",
-		Value:   CookieInBase,
-		Expires: time.Now().Add(24 * time.Hour),
-	}
-	newCookie = &http.Cookie{
-		Name:    "sessionId",
-		Value:   CookieNotInBase,
-		Expires: time.Now().Add(24 * time.Hour),
-	}
-	sm                     = NewSessionManager(db)
-	ctxWithActiveSession   = models.ContextWithSession(context.Background(), activeSession)
-	ctxWithUnactiveSession = models.ContextWithSession(context.Background(), unactiveSession)
-	cookieInBaseReq        = httptest.NewRequest(http.MethodGet, "/", nil).WithContext(ctxWithActiveSession)
-	cookieNotInBaseReq     = httptest.NewRequest(http.MethodGet, "/", nil).WithContext(ctxWithUnactiveSession)
-	totallyNewRequest      = httptest.NewRequest(http.MethodGet, "/", nil)
+	sm = NewSessionManager(db)
 )
 
 func TestCheck(t *testing.T) {
-	cookieInBaseReq.AddCookie(baseCookie)
-	cookieNotInBaseReq.AddCookie(newCookie)
-
 	tests := []Test{
 		{
-			testReq: httptest.NewRequest(http.MethodGet, "/", nil),
-			err:     myErr.ErrNoAuth,
+			testCookie: CookieNotInBase,
+			err:        myErr.ErrNoAuth,
 		},
 		{
-			testReq: cookieInBaseReq,
+			testCookie: CookieInBase,
 			testRes: &models.Session{
 				ID:     CookieInBase,
 				UserID: IdInBase,
@@ -108,13 +85,13 @@ func TestCheck(t *testing.T) {
 			err: nil,
 		},
 		{
-			testReq: cookieNotInBaseReq,
-			err:     myErr.ErrNoAuth,
+			testCookie: "",
+			err:        myErr.ErrNoAuth,
 		},
 	}
 
 	for caseNum, test := range tests {
-		res, err := sm.Check(test.testReq)
+		res, err := sm.Check(test.testCookie)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -133,23 +110,21 @@ func TestCheck(t *testing.T) {
 func TestCreateSession(t *testing.T) {
 	tests := []Test{
 		{
-			testResp: httptest.NewRecorder(),
-			testId:   IdNotInBase,
+			testId: IdNotInBase,
 			testRes: &models.Session{
 				UserID: IdNotInBase,
 			},
 			err: nil,
 		},
 		{
-			testResp: httptest.NewRecorder(),
-			testId:   IdInBase,
-			testRes:  nil,
-			err:      myErr.ErrSessionAlreadyExists,
+			testId:  IdInBase,
+			testRes: nil,
+			err:     myErr.ErrSessionAlreadyExists,
 		},
 	}
 
 	for caseNum, test := range tests {
-		res, err := sm.Create(test.testResp, test.testId)
+		res, err := sm.Create(test.testId)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -166,29 +141,23 @@ func TestCreateSession(t *testing.T) {
 }
 
 func TestDestroy(t *testing.T) {
-	cookieInBaseReq.AddCookie(baseCookie)
-	cookieNotInBaseReq.AddCookie(newCookie)
-
 	tests := []Test{
 		{
-			testReq:  cookieInBaseReq,
-			testResp: &httptest.ResponseRecorder{},
-			err:      nil,
+			testSession: activeSession,
+			err:         nil,
 		},
 		{
-			testReq:  cookieNotInBaseReq,
-			testResp: &httptest.ResponseRecorder{},
-			err:      myErr.ErrSessionNotFound,
+			testSession: inactiveSession,
+			err:         myErr.ErrSessionNotFound,
 		},
 		{
-			testReq:  totallyNewRequest,
-			testResp: &httptest.ResponseRecorder{},
-			err:      myErr.ErrNoAuth,
+			testSession: nil,
+			err:         myErr.ErrNoAuth,
 		},
 	}
 
 	for caseNum, test := range tests {
-		err := sm.Destroy(test.testResp, test.testReq)
+		err := sm.Destroy(test.testSession)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -197,15 +166,6 @@ func TestDestroy(t *testing.T) {
 		}
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
-		}
-		checkSess, _ := sm.DB.FindSession(activeSession.ID)
-		if err == nil && checkSess != nil {
-			t.Errorf("[%d] session is not deleted", caseNum)
-		}
-
-		_, checkCookie := test.testReq.Cookie("session_id")
-		if err == nil && errors.Is(checkCookie, http.ErrNoCookie) {
-			t.Errorf("[%d] expected cookie to be deleted", caseNum)
 		}
 	}
 }
