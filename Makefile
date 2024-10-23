@@ -3,3 +3,6 @@ test:
 
 start:
 	docker compose up --build
+
+migrate:
+	migrate -source file://DB/migrations -database postgres://$(DB_USER):$(DB_PASSWORD)@localhost:$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE) up 1
