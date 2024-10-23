@@ -26,12 +26,11 @@ type SessionManager interface {
 }
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any, requestID string)
+	OutputJSON(w http.ResponseWriter, data any)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
-	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
-	ErrorInternal(w http.ResponseWriter, err error, requestID string)
-	LogError(err error, requestID string)
+	ErrorWrongMethod(w http.ResponseWriter, err error)
+	ErrorBadRequest(w http.ResponseWriter, err error)
+	ErrorInternal(w http.ResponseWriter, err error)
 }
 
 type AuthController struct {
@@ -49,98 +48,83 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
 		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
 	user.ID, err = c.serviceAuth.Register(user, r.Context())
 	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
-		c.responder.ErrorBadRequest(w, err, reqID)
+		c.responder.ErrorBadRequest(w, err)
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
 	_, err = c.SessionManager.Create(w, user.ID)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
 	}
 
-	c.responder.OutputJSON(w, "user create successful", reqID)
+	c.responder.OutputJSON(w, "user create successful")
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
 		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
 	id, err := c.serviceAuth.Auth(user, r.Context())
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
 	_, err = c.SessionManager.Create(w, id)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
 
-	c.responder.OutputJSON(w, "user auth", reqID)
+	c.responder.OutputJSON(w, "user auth")
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
 		return
 	}
 
 	err := c.SessionManager.Destroy(w, r)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err), reqID)
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err))
 		return
 	}
 
-	c.responder.OutputJSON(w, "user logout", reqID)
+	c.responder.OutputJSON(w, "user logout")
 }

@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/2024_2_BetterCallFirewall/internal/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -14,13 +16,7 @@ var noAuthUrls = map[string]struct{}{
 	"/api/v1/auth/login":    {},
 }
 
-type SessionManager interface {
-	Check(r *http.Request) (*models.Session, error)
-	Create(w http.ResponseWriter, userID uint32) (*models.Session, error)
-	Destroy(w http.ResponseWriter, r *http.Request) error
-}
-
-func Auth(sm SessionManager, next http.Handler) http.Handler {
+func Auth(sm auth.SessionManager, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodOptions {
 			w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
@@ -34,14 +30,28 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 			return
 		}
 
-		sess, err := sm.Check(r)
+		sessionCookie, err := r.Cookie("session_id")
+		if errors.Is(err, http.ErrNoCookie) {
+			log.Println(http.ErrNoCookie)
+			return
+		}
+		sess, err := sm.Check(sessionCookie.Value)
 
 		if _, ok := noAuthUrls[r.URL.Path]; ok {
 			if err == nil {
-				err := sm.Destroy(w, r.WithContext(models.ContextWithSession(r.Context(), sess)))
+				//TODO подумать над использованием /logout
+				err := sm.Destroy(sess)
 				if err != nil {
 					log.Println(r.Context().Value("requestID"), err)
 				}
+				cookie := &http.Cookie{
+					Name:     "session_id",
+					Value:    sess.ID,
+					Path:     "/",
+					HttpOnly: true,
+					Expires:  time.Now().AddDate(0, 0, -1),
+				}
+				http.SetCookie(w, cookie)
 			}
 			next.ServeHTTP(w, r)
 			return
