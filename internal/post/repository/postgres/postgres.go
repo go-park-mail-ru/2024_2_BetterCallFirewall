@@ -14,12 +14,12 @@ import (
 // TODO добавить сообщества
 const (
 	createPost      = `INSERT INTO post (author_id, content) VALUES ($1, $2) RETURNING id;`
-	getPost         = `SELECT (id, author_id, content, created_at)  FROM post WHERE id = $1;`
+	getPost         = `SELECT id, author_id, content, created_at  FROM post WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
 	updatePost      = `UPDATE post SET content = $1, updated_at = $2 WHERE id = $3;`
-	getPostBatch    = `SELECT (id, author_id, content, created_at)  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
-	getProfilePosts = `SELECT (id, content, created_at) FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
-	getFriendsPost  = `SELECT (id, author_id, content, created_at) FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
+	getPostBatch    = `SELECT id, author_id, content, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
+	getProfilePosts = `SELECT id, content, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
+	getFriendsPost  = `SELECT id, author_id, content, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
 )
 

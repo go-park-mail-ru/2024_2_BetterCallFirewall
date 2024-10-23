@@ -81,23 +81,33 @@ func (s *PostServiceImpl) Update(ctx context.Context, post *models.Post) error {
 }
 
 func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error) {
+	var (
+		err    error
+		header models.Header
+	)
+
 	posts, err := s.db.GetPosts(ctx, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
 	}
 
 	for _, post := range posts {
-		header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
+		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {
-			return nil, fmt.Errorf("get author: %w", err)
+			err = fmt.Errorf("get header:%w: %w", myErr.ErrAnotherService, err)
 		}
 		post.Header = header
 	}
 
-	return posts, nil
+	return posts, err
 }
 
 func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
+	var (
+		err    error
+		header models.Header
+	)
+
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
@@ -113,14 +123,14 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 	}
 
 	for _, post := range posts {
-		header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
+		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {
-			return nil, fmt.Errorf("get author: %w", err)
+			err = fmt.Errorf("get header:%w: %w", myErr.ErrAnotherService, err)
 		}
 		post.Header = header
 	}
 
-	return posts, nil
+	return posts, err
 }
 
 func (s *PostServiceImpl) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {

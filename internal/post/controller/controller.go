@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"mime/multipart"
 	"net/http"
@@ -226,9 +227,13 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) {
+	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) && !errors.Is(err, myErr.ErrAnotherService) {
 		pc.responder.ErrorInternal(w, err)
 		return
+	}
+
+	if errors.Is(err, myErr.ErrAnotherService) {
+		log.Println(err)
 	}
 
 	for _, p := range posts {
