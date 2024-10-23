@@ -35,11 +35,11 @@ type PostService interface {
 }
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any)
-	OutputNoMoreContentJSON(w http.ResponseWriter)
+	OutputJSON(w http.ResponseWriter, data any, requestId string)
+	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
 
-	ErrorInternal(w http.ResponseWriter, err error)
-	ErrorBadRequest(w http.ResponseWriter, err error)
+	ErrorInternal(w http.ResponseWriter, err error, requestId string)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestId string)
 }
 
 type FileService interface {
@@ -62,50 +62,56 @@ func NewPostController(service PostService, responder Responder, fileService Fil
 }
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	newPost, err := pc.getPostFromBody(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	id, err := pc.postService.Create(r.Context(), newPost)
 	if err != nil {
-		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err))
+		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
 		return
 	}
 	newPost.ID = id
 
-	pc.responder.OutputJSON(w, newPost)
+	pc.responder.OutputJSON(w, newPost, reqID)
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	postID, err := getIDFromQuery(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	post, err := pc.postService.Get(r.Context(), postID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 		if !errors.Is(err, myErr.ErrAnotherService) {
-			pc.responder.ErrorInternal(w, err)
+			pc.responder.ErrorInternal(w, err, reqID)
 			return
 		}
 	}
 
 	post.PostContent.File = pc.fileService.GetPostPicture(postID)
 
-	pc.responder.OutputJSON(w, post)
+	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	post, err := pc.getPostFromBody(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -113,41 +119,43 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
 		return
 	}
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	pc.responder.OutputJSON(w, post)
+	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
 	postID, err := getIDFromQuery(r)
+
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -155,32 +163,33 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), postID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
 		return
 	}
 
 	if err := pc.postService.Delete(r.Context(), postID); err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	pc.responder.OutputJSON(w, postID)
+	pc.responder.OutputJSON(w, postID, reqID)
 }
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
 	section := r.URL.Query().Get("section")
 
 	var (
@@ -195,11 +204,11 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	} else {
 		lastID, err = strconv.Atoi(cookie.Value)
 		if err != nil {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 		if lastID == 0 {
-			pc.responder.OutputNoMoreContentJSON(w)
+			pc.responder.OutputNoMoreContentJSON(w, reqID)
 			return
 		}
 		if lastID < 0 {
@@ -212,7 +221,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		{
 			sess, errSession := models.SessionFromContext(r.Context())
 			if errSession != nil {
-				pc.responder.ErrorBadRequest(w, err)
+				pc.responder.ErrorBadRequest(w, err, reqID)
 				return
 			}
 
@@ -223,17 +232,17 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 			posts, err = pc.postService.GetBatch(r.Context(), uint32(lastID))
 		}
 	default:
-		pc.responder.ErrorBadRequest(w, errors.New("invalid query params"))
+		pc.responder.ErrorBadRequest(w, errors.New("invalid query params"), reqID)
 		return
 	}
 
 	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) && !errors.Is(err, myErr.ErrAnotherService) {
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	if errors.Is(err, myErr.ErrAnotherService) {
-		log.Println(err)
+		log.Printf("req: %s: erranother: %v", reqID, err)
 	}
 
 	for _, p := range posts {
@@ -257,7 +266,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 
 	http.SetCookie(w, cookie)
 
-	pc.responder.OutputJSON(w, posts)
+	pc.responder.OutputJSON(w, posts, reqID)
 }
 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {

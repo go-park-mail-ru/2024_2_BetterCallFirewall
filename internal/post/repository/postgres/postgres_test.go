@@ -200,7 +200,7 @@ func TestGetPostAuthor(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(getPostAuthor)).
 			WithArgs(test.postID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(test.wantAuthorID)).
-			WillReturnError(test.wantErr)
+			WillReturnError(test.dbErr)
 
 		id, err := repo.GetPostAuthor(context.Background(), test.postID)
 		assert.Equalf(t, test.wantAuthorID, id, "results not match,\n want %v\n have %v", test.wantAuthorID, id)

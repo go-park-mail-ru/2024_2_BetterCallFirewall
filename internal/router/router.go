@@ -37,7 +37,7 @@ type ProfileController interface {
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager) http.Handler {
+func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager, logger *logrus.Logger) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
@@ -59,7 +59,7 @@ func NewRouter(authControl AuthController, profileControl ProfileController, pos
 	router.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
 
 	res := middleware.Auth(sm, router)
-	res = middleware.AccessLog(logrus.New(), res)
+	res = middleware.AccessLog(logger, res)
 
 	return res
 }

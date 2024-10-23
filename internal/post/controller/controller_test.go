@@ -101,22 +101,22 @@ func (m *mockPostService) GetPostAuthorID(ctx context.Context, postID uint32) (u
 type mockResponder struct {
 }
 
-func (m *mockResponder) OutputJSON(w http.ResponseWriter, data any) {
+func (m *mockResponder) OutputJSON(w http.ResponseWriter, data any, _ string) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("Ok"))
 }
 
-func (m *mockResponder) OutputNoMoreContentJSON(w http.ResponseWriter) {
+func (m *mockResponder) OutputNoMoreContentJSON(w http.ResponseWriter, _ string) {
 	w.WriteHeader(http.StatusNoContent)
 	_, _ = w.Write([]byte("no more content"))
 }
 
-func (m *mockResponder) ErrorInternal(w http.ResponseWriter, err error) {
+func (m *mockResponder) ErrorInternal(w http.ResponseWriter, err error, _ string) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write([]byte("internal server error"))
 }
 
-func (m *mockResponder) ErrorBadRequest(w http.ResponseWriter, err error) {
+func (m *mockResponder) ErrorBadRequest(w http.ResponseWriter, err error, _ string) {
 	w.WriteHeader(http.StatusBadRequest)
 	_, _ = w.Write([]byte("bad request"))
 }

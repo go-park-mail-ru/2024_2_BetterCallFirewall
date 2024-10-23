@@ -163,7 +163,7 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 
 	if err := a.db.QueryRowContext(ctx, getPostAuthor, postID).Scan(&authorID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, myErr.ErrNoMoreContent
+			return 0, myErr.ErrPostNotFound
 		}
 		return 0, fmt.Errorf("postgres get post author: %w", err)
 	}

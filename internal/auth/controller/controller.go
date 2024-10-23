@@ -26,11 +26,11 @@ type SessionManager interface {
 }
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any)
+	OutputJSON(w http.ResponseWriter, data any, requestID string)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error)
-	ErrorBadRequest(w http.ResponseWriter, err error)
-	ErrorInternal(w http.ResponseWriter, err error)
+	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
+	ErrorInternal(w http.ResponseWriter, err error, requestID string)
 }
 
 type AuthController struct {
@@ -48,83 +48,89 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
 		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
 	user.ID, err = c.serviceAuth.Register(user, r.Context())
 	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
-		c.responder.ErrorBadRequest(w, err)
+		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
 	_, err = c.SessionManager.Create(w, user.ID)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
-	c.responder.OutputJSON(w, "user create successful")
+	c.responder.OutputJSON(w, "user create successful", reqID)
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
 		return
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
 	id, err := c.serviceAuth.Auth(user, r.Context())
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
 	_, err = c.SessionManager.Create(w, id)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
-	c.responder.OutputJSON(w, "user auth")
+	c.responder.OutputJSON(w, "user auth", reqID)
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
+	reqID := r.Context().Value("requestID").(string)
+
 	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
+		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
 		return
 	}
 
 	err := c.SessionManager.Destroy(w, r)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err), reqID)
 		return
 	}
 
-	c.responder.OutputJSON(w, "user logout")
+	c.responder.OutputJSON(w, "user logout", reqID)
 }
