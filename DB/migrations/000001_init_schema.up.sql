@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS message (
                                        receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        sender INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                       is_read BOOLEAN DEFAULT FALSE,
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
