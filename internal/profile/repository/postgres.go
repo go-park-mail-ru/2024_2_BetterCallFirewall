@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
@@ -22,10 +24,13 @@ func NewProfileRepo(db *sql.DB) profile.Repository {
 	return repo
 }
 
-func (p *ProfileRepo) GetProfileById(id uint32, ctx context.Context) (*models.FullProfile, error) {
+func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.FullProfile, error) {
 	res := &models.FullProfile{}
 	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrProfileNotFound
+		}
 		return nil, fmt.Errorf("get profile by id db: %w", err)
 	}
 	return res, nil
@@ -50,7 +55,7 @@ func (p *ProfileRepo) GetAll(self uint32, ctx context.Context) ([]*models.ShortP
 }
 
 func (p *ProfileRepo) UpdateProfile(profile *models.FullProfile) error {
-	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.Avatar, profile.ID)
+	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.ID)
 	if err != nil {
 		return fmt.Errorf("update profile %w", err)
 	}

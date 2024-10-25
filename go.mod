@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/http-swagger v1.3.4
 	golang.org/x/crypto v0.27.0
 )

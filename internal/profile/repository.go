@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	GetProfileById(uint32, context.Context) (*models.FullProfile, error)
+	GetProfileById(context.Context, uint32) (*models.FullProfile, error)
 	GetAll(self uint32, ctx context.Context) ([]*models.ShortProfile, error)
 	UpdateProfile(*models.FullProfile) error
 	DeleteProfile(uint32) error
