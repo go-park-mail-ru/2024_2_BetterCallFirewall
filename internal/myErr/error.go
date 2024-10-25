@@ -22,4 +22,5 @@ var (
 	ErrSameUser             = errors.New("same user")
 	ErrEmptyId              = errors.New("empty id")
 	ErrBigId                = errors.New("id is too big")
+	ErrProfileNotFound      = errors.New("profile not found")
 )
