@@ -92,3 +92,7 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error, requestID stri
 		r.logger.Errorf("req: %s: %v", requestID, err)
 	}
 }
+
+func (r *Respond) LogError(err error, requestID string) {
+	r.logger.Errorf("req: %s: %v", requestID, err)
+}

@@ -122,6 +122,7 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 		return nil, fmt.Errorf("get posts: %w", err)
 	}
 
+	//TODO поправить
 	for _, post := range posts {
 		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {

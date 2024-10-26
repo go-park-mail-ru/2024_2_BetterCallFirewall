@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 
@@ -40,6 +38,7 @@ type Responder interface {
 
 	ErrorInternal(w http.ResponseWriter, err error, requestId string)
 	ErrorBadRequest(w http.ResponseWriter, err error, requestId string)
+	LogError(err error, requestId string)
 }
 
 type FileService interface {
@@ -62,7 +61,10 @@ func NewPostController(service PostService, responder Responder, fileService Fil
 }
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	newPost, err := pc.getPostFromBody(r)
 	if err != nil {
@@ -81,7 +83,10 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	postID, err := getIDFromQuery(r)
 	if err != nil {
@@ -107,7 +112,10 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	post, err := pc.getPostFromBody(r)
 	if err != nil {
@@ -145,8 +153,14 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	postID, err := getIDFromQuery(r)
+	var (
+		reqID, ok   = r.Context().Value("requestID").(string)
+		postID, err = getIDFromQuery(r)
+	)
+
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
@@ -189,30 +203,25 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	section := r.URL.Query().Get("section")
-
 	var (
-		posts  []*models.Post
-		err    error
-		lastID int
+		reqID, ok = r.Context().Value("requestID").(string)
+		section   = r.URL.Query().Get("section")
+		lastID    = r.URL.Query().Get("id")
+		posts     []*models.Post
+		intLastID uint64
+		err       error
 	)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
-	cookie, err := r.Cookie("postID")
-	if err != nil {
-		lastID = math.MaxInt32
+	if lastID == "" {
+		intLastID = math.MaxInt32
 	} else {
-		lastID, err = strconv.Atoi(cookie.Value)
+		intLastID, err = strconv.ParseUint(lastID, 10, 32)
 		if err != nil {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
-		}
-		if lastID == 0 {
-			pc.responder.OutputNoMoreContentJSON(w, reqID)
-			return
-		}
-		if lastID < 0 {
-			lastID = math.MaxInt32
 		}
 	}
 
@@ -225,14 +234,14 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 
-			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(lastID))
+			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(intLastID))
 		}
 	case "":
 		{
-			posts, err = pc.postService.GetBatch(r.Context(), uint32(lastID))
+			posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID))
 		}
 	default:
-		pc.responder.ErrorBadRequest(w, errors.New("invalid query params"), reqID)
+		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
 		return
 	}
 
@@ -242,29 +251,17 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if errors.Is(err, myErr.ErrAnotherService) {
-		log.Printf("req: %s: erranother: %v", reqID, err)
+		pc.responder.LogError(myErr.ErrAnotherService, reqID)
 	}
 
 	for _, p := range posts {
 		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
 	}
 
-	var newLastID string
-
 	if errors.Is(err, myErr.ErrNoMoreContent) {
-		newLastID = "0"
-	} else {
-		newLastID = strconv.Itoa(int(posts[len(posts)-1].ID))
+		pc.responder.OutputNoMoreContentJSON(w, reqID)
+		return
 	}
-
-	cookie = &http.Cookie{
-		Name:    "postID",
-		Path:    "/api/v1/feed",
-		Value:   newLastID,
-		Expires: time.Now().Add(time.Hour),
-	}
-
-	http.SetCookie(w, cookie)
 
 	pc.responder.OutputJSON(w, posts, reqID)
 }

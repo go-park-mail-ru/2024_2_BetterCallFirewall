@@ -68,8 +68,11 @@ func (m *mockPostService) GetBatch(ctx context.Context, lastID uint32) ([]*model
 	if data == "internalError" {
 		return nil, errMock
 	}
-	if data == "1 post" {
-		return []*models.Post{{ID: 1}}, myErr.ErrNoMoreContent
+	if data == "0 post" {
+		return nil, myErr.ErrNoMoreContent
+	}
+	if data == "another err" {
+		return nil, myErr.ErrAnotherService
 	}
 
 	return []*models.Post{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}, {ID: 8}}, nil
@@ -121,6 +124,10 @@ func (m *mockResponder) ErrorBadRequest(w http.ResponseWriter, err error, _ stri
 	_, _ = w.Write([]byte("bad request"))
 }
 
+func (m *mockResponder) LogError(err error, _ string) {
+	return
+}
+
 type mockFileService struct{}
 
 func (m *mockFileService) Upload(file multipart.File) (*models.Picture, error) {
@@ -138,7 +145,9 @@ type TestCase struct {
 	wantCode int
 }
 
-var controller = NewPostController(&mockPostService{}, &mockResponder{}, &mockFileService{})
+var (
+	controller = NewPostController(&mockPostService{}, &mockResponder{}, &mockFileService{})
+)
 
 func TestCreate(t *testing.T) {
 	var (
@@ -397,24 +406,9 @@ func TestDelete(t *testing.T) {
 
 func TestGetBatch(t *testing.T) {
 	var (
-		sessGoodUser, _      = models.NewSession(1)
-		ctxSess              = models.ContextWithSession(context.Background(), sessGoodUser)
-		reqWithBadCookie     = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
-		reqWithNoMoreContent = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
-		reqNewReq            = httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil)
+		sessGoodUser, _ = models.NewSession(1)
+		ctxSess         = models.ContextWithSession(context.Background(), sessGoodUser)
 	)
-	reqWithBadCookie.AddCookie(&http.Cookie{
-		Name:  "postID",
-		Value: "wrong id",
-	})
-	reqWithNoMoreContent.AddCookie(&http.Cookie{
-		Name:  "postID",
-		Value: "0",
-	})
-	reqNewReq.AddCookie(&http.Cookie{
-		Name:  "postID",
-		Value: "-1",
-	})
 
 	tests := []TestCase{
 		{
@@ -445,7 +439,14 @@ func TestGetBatch(t *testing.T) {
 		{
 			w: httptest.NewRecorder(),
 			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil).
-				WithContext(context.WithValue(context.Background(), "query", "1 post")),
+				WithContext(context.WithValue(context.Background(), "query", "0 post")),
+			wantCode: http.StatusNoContent,
+			wantBody: "no more content",
+		},
+		{
+			w: httptest.NewRecorder(),
+			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed", nil).
+				WithContext(context.WithValue(context.Background(), "query", "another err")),
 			wantCode: http.StatusOK,
 			wantBody: "Ok",
 		},
@@ -467,29 +468,21 @@ func TestGetBatch(t *testing.T) {
 		{
 			w: httptest.NewRecorder(),
 			r: httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend", nil).
-				WithContext(context.WithValue(context.Background(), "query", "many posts")).
 				WithContext(ctxSess),
 			wantCode: http.StatusOK,
 			wantBody: "Ok",
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        reqWithBadCookie,
+			r:        httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend&id=-1", nil).WithContext(ctxSess),
 			wantCode: http.StatusBadRequest,
 			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
-			r:        reqWithNoMoreContent,
-			wantCode: http.StatusNoContent,
-			wantBody: "no more content",
-		},
-		{
-			w: httptest.NewRecorder(),
-			r: reqNewReq.
-				WithContext(context.WithValue(context.Background(), "query", "1 post")),
-			wantCode: http.StatusOK,
-			wantBody: "Ok",
+			r:        httptest.NewRequest(http.MethodGet, "/api/v1/feed?section=friend&id=aaaa", nil).WithContext(ctxSess),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 	}
 
