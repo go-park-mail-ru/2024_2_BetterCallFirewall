@@ -314,7 +314,7 @@ func TestGetPosts(t *testing.T) {
 		{
 			lastID:   3,
 			wantPost: expect[:3],
-			wantErr:  myErr.ErrNoMoreContent,
+			wantErr:  nil,
 			dbErr:    nil,
 		},
 		{
@@ -399,9 +399,10 @@ func TestGetFriendsPosts(t *testing.T) {
 	tests := []GetFriendsPosts{
 		{lastID: 0, friendsID: []uint32{}, wantPost: nil, wantErr: myErr.ErrNoMoreContent, dbErr: sql.ErrNoRows},
 		{lastID: 1, friendsID: []uint32{}, wantPost: nil, wantErr: errMockDB, dbErr: errMockDB},
-		{lastID: 3, friendsID: []uint32{1, 2}, wantPost: expect[:3], wantErr: myErr.ErrNoMoreContent, dbErr: nil},
-		{lastID: 11, friendsID: []uint32{3, 6, 4}, wantPost: expect[4:7], wantErr: myErr.ErrNoMoreContent, dbErr: nil},
+		{lastID: 3, friendsID: []uint32{1, 2}, wantPost: expect[:3], wantErr: nil, dbErr: nil},
+		{lastID: 11, friendsID: []uint32{3, 6, 4}, wantPost: expect[4:7], wantErr: nil, dbErr: nil},
 		{lastID: 11, friendsID: []uint32{1, 2, 5, 3, 6, 4}, wantPost: expect[1:], wantErr: nil, dbErr: nil},
+		{lastID: 11, friendsID: []uint32{}, wantPost: nil, wantErr: myErr.ErrNoMoreContent, dbErr: nil},
 	}
 
 	for _, test := range tests {

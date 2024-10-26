@@ -182,7 +182,7 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 		posts = append(posts, &post)
 	}
 
-	if len(posts) < 10 {
+	if len(posts) == 0 {
 		return posts, myErr.ErrNoMoreContent
 	}
 
