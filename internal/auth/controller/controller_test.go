@@ -20,7 +20,7 @@ var (
 
 type MockAuthService struct{}
 
-func (m MockAuthService) Register(user models.User) (uint32, error) {
+func (m MockAuthService) Register(user models.User, ctx context.Context) (uint32, error) {
 	if user.ID == 1 {
 		return user.ID, myErr.ErrUserAlreadyExists
 	}
@@ -32,7 +32,7 @@ func (m MockAuthService) Register(user models.User) (uint32, error) {
 	return user.ID, nil
 }
 
-func (m MockAuthService) Auth(user models.User) (uint32, error) {
+func (m MockAuthService) Auth(user models.User, ctx context.Context) (uint32, error) {
 	if user.ID == 1 {
 		return user.ID, myErr.ErrWrongEmailOrPassword
 	}
@@ -69,27 +69,27 @@ func (m MockSessionManager) Destroy(w http.ResponseWriter, r *http.Request) erro
 
 type MockResponder struct{}
 
-func (r *MockResponder) OutputJSON(w http.ResponseWriter, data any) {
+func (r *MockResponder) OutputJSON(w http.ResponseWriter, data any, _ string) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-func (r *MockResponder) ErrorWrongMethod(w http.ResponseWriter, _ error) {
+func (r *MockResponder) ErrorWrongMethod(w http.ResponseWriter, _ error, _ string) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	_, _ = w.Write([]byte("wrong method error"))
 }
 
-func (r *MockResponder) ErrorUnAuthorized(w http.ResponseWriter, _ error) {
+func (r *MockResponder) ErrorUnAuthorized(w http.ResponseWriter, _ error, _ string) {
 	w.WriteHeader(http.StatusUnauthorized)
 	_, _ = w.Write([]byte("unauthorized error"))
 }
 
-func (r *MockResponder) ErrorBadRequest(w http.ResponseWriter, _ error) {
+func (r *MockResponder) ErrorBadRequest(w http.ResponseWriter, _ error, _ string) {
 	w.WriteHeader(http.StatusBadRequest)
 	_, _ = w.Write([]byte("bad request error"))
 }
 
-func (r *MockResponder) ErrorInternal(w http.ResponseWriter, _ error) {
+func (r *MockResponder) ErrorInternal(w http.ResponseWriter, _ error, _ string) {
 	w.WriteHeader(http.StatusInternalServerError)
 	_, _ = w.Write([]byte("internal error"))
 
@@ -100,6 +100,8 @@ func (r *MockResponder) ErrorForbidden(w http.ResponseWriter, _ error) {
 	_, _ = w.Write([]byte("forbidden error"))
 
 }
+
+func (r *MockResponder) LogError(err error, requestID string) { return }
 
 type TestCase struct {
 	w        *httptest.ResponseRecorder

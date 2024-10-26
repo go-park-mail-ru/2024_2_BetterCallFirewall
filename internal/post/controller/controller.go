@@ -9,7 +9,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -32,17 +33,17 @@ type PostService interface {
 }
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any)
-	OutputNoMoreContentJSON(w http.ResponseWriter, data any)
+	OutputJSON(w http.ResponseWriter, data any, requestId string)
+	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
 
-	ErrorInternal(w http.ResponseWriter, err error)
-	ErrorWrongMethod(w http.ResponseWriter, err error)
-	ErrorBadRequest(w http.ResponseWriter, err error)
+	ErrorInternal(w http.ResponseWriter, err error, requestId string)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestId string)
+	LogError(err error, requestId string)
 }
 
 type FileService interface {
 	Upload(file multipart.File) (*models.Picture, error)
-	GetPostPicture(postID uint32) (*models.Picture, error)
+	GetPostPicture(postID uint32) *models.Picture
 }
 
 type PostController struct {
@@ -60,111 +61,115 @@ func NewPostController(service PostService, responder Responder, fileService Fil
 }
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
 	newPost, err := pc.getPostFromBody(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	id, err := pc.postService.Create(r.Context(), newPost)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, fmt.Errorf("create controller: %w", err))
+		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
 		return
 	}
 	newPost.ID = id
 
-	pc.responder.OutputJSON(w, newPost)
+	pc.responder.OutputJSON(w, newPost, reqID)
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
 	postID, err := getIDFromQuery(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	post, err := pc.postService.Get(r.Context(), postID)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
-	}
-	post.PostContent.File, err = pc.fileService.GetPostPicture(postID)
-	if err != nil {
-		pc.responder.ErrorInternal(w, err)
-		return
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		if !errors.Is(err, myErr.ErrAnotherService) {
+			pc.responder.ErrorInternal(w, err, reqID)
+			return
+		}
 	}
 
-	pc.responder.OutputJSON(w, post)
+	post.PostContent.File = pc.fileService.GetPostPicture(postID)
+
+	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
 	post, err := pc.getPostFromBody(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
-		return
-	}
-
-	userID := sess.UserID
+	userID := post.Header.AuthorID
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
 		return
 	}
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	pc.responder.OutputJSON(w, post)
+	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	var (
+		reqID, ok   = r.Context().Value("requestID").(string)
+		postID, err = getIDFromQuery(r)
+	)
+
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	postID, err := getIDFromQuery(r)
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -172,52 +177,51 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), postID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
 
-		pc.responder.ErrorInternal(w, err)
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied)
+		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
 		return
 	}
 
 	if err := pc.postService.Delete(r.Context(), postID); err != nil {
-		pc.responder.ErrorBadRequest(w, err)
+		if errors.Is(err, myErr.ErrPostNotFound) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	pc.responder.OutputJSON(w, postID)
+	pc.responder.OutputJSON(w, postID, reqID)
 }
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		pc.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		section   = r.URL.Query().Get("section")
+		lastID    = r.URL.Query().Get("id")
+		posts     []*models.Post
+		intLastID uint64
+		err       error
+	)
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	section := r.URL.Query().Get("section")
-
-	var (
-		posts  []*models.Post
-		err    error
-		lastID int
-	)
-
-	cookie, err := r.Cookie("postID")
-	if err != nil {
-		lastID = math.MaxUint32
+	if lastID == "" {
+		intLastID = math.MaxInt32
 	} else {
-		lastID, err = strconv.Atoi(cookie.Value)
+		intLastID, err = strconv.ParseUint(lastID, 10, 32)
 		if err != nil {
-			pc.responder.ErrorBadRequest(w, err)
+			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
-		}
-		if lastID < 0 {
-			lastID = math.MaxUint32
 		}
 	}
 
@@ -226,49 +230,40 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		{
 			sess, errSession := models.SessionFromContext(r.Context())
 			if errSession != nil {
-				pc.responder.ErrorBadRequest(w, err)
+				pc.responder.ErrorBadRequest(w, err, reqID)
 				return
 			}
 
-			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(lastID))
+			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(intLastID))
 		}
 	case "":
 		{
-			posts, err = pc.postService.GetBatch(r.Context(), uint32(lastID))
+			posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID))
 		}
 	default:
-		pc.responder.ErrorBadRequest(w, errors.New("invalid query params"))
+		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
 		return
+	}
+
+	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) && !errors.Is(err, myErr.ErrAnotherService) {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if errors.Is(err, myErr.ErrAnotherService) {
+		pc.responder.LogError(myErr.ErrAnotherService, reqID)
 	}
 
 	for _, p := range posts {
-		p.PostContent.File, err = pc.fileService.GetPostPicture(p.ID)
-		if err != nil {
-			pc.responder.ErrorInternal(w, err)
-			return
-		}
+		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
 	}
 
 	if errors.Is(err, myErr.ErrNoMoreContent) {
-		pc.responder.OutputNoMoreContentJSON(w, posts)
+		pc.responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
 
-	if err != nil {
-		pc.responder.ErrorInternal(w, err)
-		return
-	}
-
-	cookie = &http.Cookie{
-		Name:    "postID",
-		Value:   strconv.Itoa(int(posts[len(posts)-1].ID)),
-		Path:    "/api/v1/feed/",
-		Expires: time.Now().Add(time.Hour),
-	}
-
-	http.SetCookie(w, cookie)
-
-	pc.responder.OutputJSON(w, posts)
+	pc.responder.OutputJSON(w, posts, reqID)
 }
 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
@@ -285,50 +280,21 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	//defer r.MultipartForm.RemoveAll()
-	//if err := r.ParseMultipartForm(1024 * 1024 * 8 * 5); err != nil {
-	//	return nil, myErr.ErrToLargeFile
-	//}
-	//
-	//file, _, err := r.FormFile("file")
-	//defer file.Close()
-	//if errors.Is(err, http.ErrMissingFile) {
-	//	return newPost, nil
-	//}
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//_, format, err := image.Decode(file)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//if _, ok := fileFormat[format]; !ok {
-	//	return nil, myErr.ErrWrongFiletype
-	//}
-	//
-	//pic, err := pc.fileService.Upload(file)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//newPost.PostContent.File = pic
-
 	return newPost, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
-	id := r.URL.Query().Get("id")
+	vars := mux.Vars(r)
 
+	id := vars["id"]
 	if id == "" {
-		return 0, errors.New("wrong id")
+		return 0, errors.New("id is empty")
 	}
 
-	postID, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
-		return 0, errors.New("wrong id")
+		return 0, err
 	}
 
-	return uint32(postID), nil
+	return uint32(uid), nil
 }

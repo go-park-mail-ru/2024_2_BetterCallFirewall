@@ -20,4 +20,7 @@ var (
 	ErrInternal             = errors.New("internal error")
 	ErrWrongOwner           = errors.New("wrong owner")
 	ErrSameUser             = errors.New("same user")
+	ErrAnotherService       = errors.New("another service")
+	ErrInvalidQuery         = errors.New("invalid query parameter")
+	ErrInvalidContext       = errors.New("invalid context parameter")
 )
