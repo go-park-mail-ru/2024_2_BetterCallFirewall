@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -10,18 +11,21 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
-var errMock = errors.New("something with DB")
+var (
+	errMock = errors.New("something with DB")
+	baseCtx = context.Background()
+)
 
 type MockDB struct{}
 
-func (m MockDB) Create(user *models.User) (uint32, error) {
+func (m MockDB) Create(user *models.User, ctx context.Context) (uint32, error) {
 	if user.ID == 0 {
 		return user.ID, myErr.ErrUserNotFound
 	}
 	return user.ID, nil
 }
 
-func (m MockDB) GetByEmail(email string) (*models.User, error) {
+func (m MockDB) GetByEmail(email string, ctx context.Context) (*models.User, error) {
 	if email == "email@wrong.com" {
 		return nil, myErr.ErrUserNotFound
 	}
@@ -54,7 +58,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		_, err := serv.Register(testCase.user)
+		_, err := serv.Register(testCase.user, baseCtx)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Register() error = %v, wantErr %v", err, testCase.wantError)
 		}
@@ -73,7 +77,7 @@ func TestAuth(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		_, err := serv.Auth(testCase.user)
+		_, err := serv.Auth(testCase.user, baseCtx)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Auth() error = %v, wantErr %v", err, testCase.wantError)
 		}

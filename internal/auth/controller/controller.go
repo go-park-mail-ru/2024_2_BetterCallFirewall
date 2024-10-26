@@ -31,6 +31,7 @@ type Responder interface {
 	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
 	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
 	ErrorInternal(w http.ResponseWriter, err error, requestID string)
+	LogError(err error, requestID string)
 }
 
 type AuthController struct {
@@ -48,7 +49,10 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if r.Method != http.MethodPost {
 		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
@@ -83,7 +87,10 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if r.Method != http.MethodPost {
 		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)
@@ -119,7 +126,10 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if r.Method != http.MethodPost {
 		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"), reqID)

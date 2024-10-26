@@ -101,6 +101,8 @@ func (r *MockResponder) ErrorForbidden(w http.ResponseWriter, _ error) {
 
 }
 
+func (r *MockResponder) LogError(err error, requestID string) { return }
+
 type TestCase struct {
 	w        *httptest.ResponseRecorder
 	r        *http.Request

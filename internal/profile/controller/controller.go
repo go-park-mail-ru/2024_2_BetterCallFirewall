@@ -28,7 +28,10 @@ func NewProfileController(manager profile.ProfileUsecase, responder controller.R
 }
 
 func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
@@ -45,7 +48,10 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 }
 
 func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
@@ -62,7 +68,10 @@ func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *
 }
 
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	newProfile := models.FullProfile{}
 	err := json.NewDecoder(r.Body).Decode(&newProfile)
@@ -86,8 +95,14 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 }
 
 func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	sess, err := models.SessionFromContext(r.Context())
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		sess, err = models.SessionFromContext(r.Context())
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
@@ -115,8 +130,14 @@ func GetIdFromQuery(r *http.Request) (uint32, error) {
 }
 
 func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	id, err := GetIdFromQuery(r)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
@@ -130,8 +151,14 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 }
 
 func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	sess, err := models.SessionFromContext(r.Context())
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		sess, err = models.SessionFromContext(r.Context())
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
@@ -159,8 +186,14 @@ func GetReceiverAndSender(r *http.Request) (uint32, uint32, error) {
 }
 
 func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	receiver, sender, err := GetReceiverAndSender(r)
+	var (
+		reqID, ok             = r.Context().Value("requestID").(string)
+		receiver, sender, err = GetReceiverAndSender(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
@@ -175,8 +208,14 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 }
 
 func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	whose, who, err := GetReceiverAndSender(r)
+	var (
+		reqID, ok       = r.Context().Value("requestID").(string)
+		whose, who, err = GetReceiverAndSender(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
@@ -189,8 +228,14 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 }
 
 func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	whose, who, err := GetReceiverAndSender(r)
+	var (
+		reqID, ok       = r.Context().Value("requestID").(string)
+		whose, who, err = GetReceiverAndSender(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
@@ -203,8 +248,14 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 }
 
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
-	reqID := r.Context().Value("requestID").(string)
-	id, err := GetIdFromQuery(r)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
