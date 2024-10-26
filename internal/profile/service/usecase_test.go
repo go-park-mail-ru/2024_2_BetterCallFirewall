@@ -79,7 +79,7 @@ var (
 
 var ErrExec = errors.New("execution error")
 
-func (m MockProfileDB) GetProfileById(u uint32, ctx context.Context) (*models.FullProfile, error) {
+func (m MockProfileDB) GetProfileById(ctx context.Context, u uint32) (*models.FullProfile, error) {
 	if u == 1 {
 		return exampleProfileWithPost, nil
 	}
@@ -89,7 +89,7 @@ func (m MockProfileDB) GetProfileById(u uint32, ctx context.Context) (*models.Fu
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAll(self uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
 	if self == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
@@ -132,35 +132,35 @@ func (m MockProfileDB) RemoveSub(who uint32, whom uint32) error {
 	return nil
 }
 
-func (m MockProfileDB) GetAllFriends(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllFriends(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAllSubs(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllSubs(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAllSubscriptions(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllSubscriptions(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetFriendsID(u uint32, ctx context.Context) ([]uint32, error) {
+func (m MockProfileDB) GetFriendsID(ctx context.Context, u uint32) ([]uint32, error) {
 	if u == 3 {
 		return []uint32{1, 2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetHeader(u uint32) (*models.Header, error) {
+func (m MockProfileDB) GetHeader(ctx context.Context, u uint32) (*models.Header, error) {
 	if u == 1 {
 		return &models.Header{AuthorID: u, Author: "Andrew Savvateev"}, nil
 	}

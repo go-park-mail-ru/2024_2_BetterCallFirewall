@@ -26,7 +26,4 @@ var (
 	ErrAnotherService       = errors.New("another service")
 	ErrInvalidQuery         = errors.New("invalid query parameter")
 	ErrInvalidContext       = errors.New("invalid context parameter")
-	ErrEmptyId              = errors.New("empty id")
-	ErrBigId                = errors.New("id is too big")
-	ErrProfileNotFound      = errors.New("profile not found")
 )

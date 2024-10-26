@@ -15,6 +15,15 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
+type Responder interface {
+	OutputJSON(w http.ResponseWriter, data any, requestID string)
+
+	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
+	ErrorInternal(w http.ResponseWriter, err error, requestID string)
+	LogError(err error, requestID string)
+}
+
 type ProfileHandlerImplementation struct {
 	ProfileManager profile.ProfileUsecase
 	Responder      controller.Responder
@@ -248,15 +257,23 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 }
 
 func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
 	whose, who, err := GetReceiverAndSender(r)
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 	}
 	err = h.ProfileManager.Unsubscribe(who, whose)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 	}
-	h.Responder.OutputJSON(w, "success")
+	h.Responder.OutputJSON(w, "success", reqID)
 }
 
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
@@ -280,25 +297,43 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 }
 
 func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http.Request) {
-	id, err := GetIdFromQuery(r)
-	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
 	}
+
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
+
 	profiles, err := h.ProfileManager.GetAllSubs(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 	}
-	h.Responder.OutputJSON(w, profiles)
+	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
 func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
-	id, err := GetIdFromQuery(r)
-	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
 	}
+
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
+
 	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 	}
-	h.Responder.OutputJSON(w, profiles)
+	h.Responder.OutputJSON(w, profiles, reqID)
 }

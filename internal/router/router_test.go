@@ -58,6 +58,18 @@ func (m mockProfileController) GetAllFriends(w http.ResponseWriter, r *http.Requ
 	return
 }
 
+func (m mockProfileController) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
+func (m mockProfileController) GetAllSubs(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
+func (m mockProfileController) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
 type mockPostController struct{}
 
 func (m mockPostController) Create(w http.ResponseWriter, r *http.Request) {
