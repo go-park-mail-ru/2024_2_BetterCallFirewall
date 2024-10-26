@@ -195,7 +195,7 @@ func TestPostServiceGet(t *testing.T) {
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
-		assert.Equal(t, tt.wantPost, gotPost, "#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
+		assert.Equalf(t, tt.wantPost, gotPost, "#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
 	}
 }
 
