@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
@@ -22,16 +24,19 @@ func NewProfileRepo(db *sql.DB) profile.Repository {
 	return repo
 }
 
-func (p *ProfileRepo) GetProfileById(id uint32, ctx context.Context) (*models.FullProfile, error) {
+func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.FullProfile, error) {
 	res := &models.FullProfile{}
 	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrProfileNotFound
+		}
 		return nil, fmt.Errorf("get profile by id db: %w", err)
 	}
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAll(self uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.QueryContext(ctx, GetAllProfiles, self)
 	if err != nil {
@@ -39,7 +44,7 @@ func (p *ProfileRepo) GetAll(self uint32, ctx context.Context) ([]*models.ShortP
 	}
 	for rows.Next() {
 		profile := &models.ShortProfile{}
-		err = rows.Scan(profile.ID, profile.FirstName, profile.LastName, profile.Avatar)
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
 		if err != nil {
 			return nil, fmt.Errorf("get all profiles db: %w", err)
 		}
@@ -50,7 +55,7 @@ func (p *ProfileRepo) GetAll(self uint32, ctx context.Context) ([]*models.ShortP
 }
 
 func (p *ProfileRepo) UpdateProfile(profile *models.FullProfile) error {
-	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.Avatar, profile.ID)
+	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.ID)
 	if err != nil {
 		return fmt.Errorf("update profile %w", err)
 	}
@@ -98,7 +103,7 @@ func (p *ProfileRepo) RemoveSub(who uint32, whom uint32) error {
 	return nil
 }
 
-func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAllFriends(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.QueryContext(ctx, GetAllFriends, u)
 	if err != nil {
@@ -106,7 +111,7 @@ func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.Sh
 	}
 	for rows.Next() {
 		profile := models.ShortProfile{}
-		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
 		if err != nil {
 			return nil, fmt.Errorf("get all friends db: %w", err)
 		}
@@ -115,7 +120,7 @@ func (p *ProfileRepo) GetAllFriends(u uint32, ctx context.Context) ([]*models.Sh
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAllSubs(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAllSubs(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.QueryContext(ctx, GetAllSubs, u)
 	if err != nil {
@@ -123,7 +128,7 @@ func (p *ProfileRepo) GetAllSubs(u uint32, ctx context.Context) ([]*models.Short
 	}
 	for rows.Next() {
 		profile := models.ShortProfile{}
-		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
 		if err != nil {
 			return nil, fmt.Errorf("get all subs db: %w", err)
 		}
@@ -132,7 +137,7 @@ func (p *ProfileRepo) GetAllSubs(u uint32, ctx context.Context) ([]*models.Short
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAllSubscriptions(u uint32, ctx context.Context) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAllSubscriptions(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.QueryContext(ctx, GetAllSubscriptions, u)
 	if err != nil {
@@ -140,7 +145,7 @@ func (p *ProfileRepo) GetAllSubscriptions(u uint32, ctx context.Context) ([]*mod
 	}
 	for rows.Next() {
 		profile := models.ShortProfile{}
-		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName)
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
 		if err != nil {
 			return nil, fmt.Errorf("get all subscriptions db: %w", err)
 		}
@@ -149,7 +154,7 @@ func (p *ProfileRepo) GetAllSubscriptions(u uint32, ctx context.Context) ([]*mod
 	return res, nil
 }
 
-func (p *ProfileRepo) GetFriendsID(u uint32, ctx context.Context) ([]uint32, error) {
+func (p *ProfileRepo) GetFriendsID(ctx context.Context, u uint32) ([]uint32, error) {
 	res := make([]uint32, 0)
 	rows, err := p.DB.QueryContext(ctx, GetFriendsID, u)
 	if err != nil {
@@ -166,9 +171,9 @@ func (p *ProfileRepo) GetFriendsID(u uint32, ctx context.Context) ([]uint32, err
 	return res, nil
 }
 
-func (p *ProfileRepo) GetHeader(u uint32) (*models.Header, error) {
+func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, error) {
 	profile := &models.Header{AuthorID: u}
-	err := p.DB.QueryRowContext(context.Background(), GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
+	err := p.DB.QueryRowContext(ctx, GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
 	if err != nil {
 		return nil, fmt.Errorf("get short profile db: %w", err)
 	}

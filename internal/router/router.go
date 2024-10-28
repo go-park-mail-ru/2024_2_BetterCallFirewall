@@ -52,12 +52,10 @@ func NewRouter(
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost)
 
-	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost)
-	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet)
-	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut)
-	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete)
-	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet)
-
+	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profile/update", profileControl.UpdateProfile).Methods(http.MethodPut)
+	router.HandleFunc("api/v1/profile/delete", profileControl.DeleteProfile).Methods(http.MethodDelete)
 	mux.HandleFunc("/api/v1/profile/friend/subscribe/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/profile/friend/accept/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.Unsubscribe).Methods(http.MethodPost)
@@ -66,8 +64,14 @@ func NewRouter(
 	mux.HandleFunc("/api/v1/profile/subscribers/{id}", profileControl.GetAllSubs).Methods(http.MethodGet)
 	mux.HandleFunc("/api/v1/profile/subscriptions/{id}", profileControl.GetAllSubscriptions).Methods(http.MethodGet)
 
+	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete)
+	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet)
+
 	res := middleware.Auth(sm, router)
-	res = middleware.AccessLog(logger, res)
+	res = middleware.AccessLog(logrus.New(), res)
 
 	return res
 }

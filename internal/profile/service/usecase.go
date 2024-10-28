@@ -19,7 +19,7 @@ func NewProfileUsecase(profileRepo profile.Repository, postRepo profile.PostGett
 }
 
 func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint32) (*models.FullProfile, error) {
-	profile, err := p.repo.GetProfileById(u, ctx)
+	profile, err := p.repo.GetProfileById(ctx, u)
 	if err != nil {
 		return nil, fmt.Errorf("get profile by id usecase: %w", err)
 	}
@@ -39,7 +39,7 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 }
 
 func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	profiles, err := p.repo.GetAll(self, ctx)
+	profiles, err := p.repo.GetAll(ctx, self)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles usecase: %w", err)
 	}
@@ -69,11 +69,11 @@ func (p ProfileUsecaseImplementation) DeleteProfile(u uint32) error {
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) SendFriendReq(reciever uint32, sender uint32) error {
-	if reciever == sender {
+func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint32) error {
+	if receiver == sender {
 		return myErr.ErrSameUser
 	}
-	err := p.repo.AddFriendsReq(reciever, sender)
+	err := p.repo.AddFriendsReq(receiver, sender)
 	if err != nil {
 		return fmt.Errorf("add friend req usecase: %w", err)
 	}
@@ -82,6 +82,9 @@ func (p ProfileUsecaseImplementation) SendFriendReq(reciever uint32, sender uint
 }
 
 func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) error {
+	if who == whose {
+		return myErr.ErrSameUser
+	}
 	err := p.repo.AcceptFriendsReq(who, whose)
 	if err != nil {
 		return fmt.Errorf("accept friend req usecase: %w", err)
@@ -90,6 +93,9 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 }
 
 func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
+	if who == whom {
+		return myErr.ErrSameUser
+	}
 	err := p.repo.RemoveSub(who, whom)
 	if err != nil {
 		return fmt.Errorf("remove sub usecase: %w", err)
@@ -98,6 +104,10 @@ func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32)
 }
 
 func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error {
+	if who == whom {
+		return myErr.ErrSameUser
+	}
+
 	err := p.repo.MoveToSubs(who, whom)
 	if err != nil {
 		return fmt.Errorf("unsub usecase: %w", err)
@@ -106,7 +116,7 @@ func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error
 }
 
 func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllFriends(self, ctx)
+	res, err := p.repo.GetAllFriends(ctx, self)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
 	}
@@ -114,7 +124,8 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self ui
 }
 
 func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllSubs(self, ctx)
+	res, err := p.repo.GetAllSubs(ctx, self)
+
 	if err != nil {
 		return nil, fmt.Errorf("get all subs usecase: %w", err)
 	}
@@ -122,7 +133,8 @@ func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint3
 }
 
 func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllSubscriptions(self, ctx)
+	res, err := p.repo.GetAllSubscriptions(ctx, self)
+  
 	if err != nil {
 		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
 	}
@@ -130,7 +142,7 @@ func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, s
 }
 
 func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
-	res, err := p.repo.GetFriendsID(userID, ctx)
+	res, err := p.repo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends id usecase: %w", err)
 	}
@@ -138,7 +150,7 @@ func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID u
 }
 
 func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
-	header, err := p.repo.GetHeader(userID)
+	header, err := p.repo.GetHeader(ctx, userID)
 	if err != nil {
 		return models.Header{}, fmt.Errorf("get header usecase: %w", err)
 	}

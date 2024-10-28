@@ -16,11 +16,12 @@ import (
 )
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any)
+	OutputJSON(w http.ResponseWriter, data any, requestID string)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error)
-	ErrorBadRequest(w http.ResponseWriter, err error)
-	ErrorInternal(w http.ResponseWriter, err error)
+	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
+	ErrorInternal(w http.ResponseWriter, err error, requestID string)
+	LogError(err error, requestID string)
 }
 
 type ProfileHandlerImplementation struct {
@@ -91,14 +92,14 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound)
+		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
 		return
 	}
 	userId := sess.UserID
 
 	err = h.ProfileManager.UpdateProfile(userId, &newProfile)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
   
@@ -116,7 +117,7 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound)
+		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
 		return
 	}
   
@@ -126,6 +127,7 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 		h.Responder.ErrorInternal(w, err)
 		return
 		h.Responder.ErrorInternal(w, err, reqID)
+		return
 	}
   
 	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
@@ -160,13 +162,13 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, profile, reqID)
@@ -183,13 +185,13 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	uid := sess.UserID
 	profiles, err := h.ProfileManager.GetAll(r.Context(), uid)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, profiles, reqID)
@@ -220,13 +222,13 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	err = h.ProfileManager.SendFriendReq(receiver, sender)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, "success", reqID)
@@ -244,12 +246,12 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	err = h.ProfileManager.AcceptFriendReq(who, whose)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, "success", reqID)
@@ -266,26 +268,34 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	err = h.ProfileManager.RemoveFromFriends(who, whose)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-	h.Responder.OutputJSON(w, "success")
+	h.Responder.OutputJSON(w, "success", reqID)
 }
 
 func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
 	whose, who, err := GetReceiverAndSender(r)
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	err = h.ProfileManager.Unsubscribe(who, whose)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, "success", reqID)
@@ -302,40 +312,58 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-	h.Responder.OutputJSON(w, profiles)
+	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
 func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http.Request) {
-	id, err := GetIdFromQuery(r)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllSubs(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-	h.Responder.OutputJSON(w, profiles)
+	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
 func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
-	id, err := GetIdFromQuery(r)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromQuery(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, err)
+		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id)
 	if err != nil {
-		h.Responder.ErrorInternal(w, err)
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	h.Responder.OutputJSON(w, profiles, reqID)
