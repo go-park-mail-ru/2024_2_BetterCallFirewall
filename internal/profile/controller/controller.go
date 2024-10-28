@@ -56,26 +56,6 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	h.Responder.OutputJSON(w, userProfile, reqID)
 }
 
-func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
-		return
-	}
-	userId := sess.UserID
-	profiles, err := h.ProfileManager.GetAll(r.Context(), userId)
-	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
-		return
-	}
-	h.Responder.OutputJSON(w, profiles, reqID)
-}
-
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
@@ -171,6 +151,18 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 	h.Responder.OutputJSON(w, profile, reqID)
 }
 
+func GetLastId(r *http.Request) (uint32, error) {
+	strlastId := r.URL.Query().Get("last_id")
+	if strlastId == "" {
+		return 0, myErr.ErrEmptyId
+	}
+	lastId, err := strconv.ParseUint(strlastId, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(lastId), nil
+}
+
 func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
@@ -185,8 +177,13 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
+	lastId, err := GetLastId(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
 	uid := sess.UserID
-	profiles, err := h.ProfileManager.GetAll(r.Context(), uid)
+	profiles, err := h.ProfileManager.GetAll(r.Context(), uid, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
@@ -312,7 +309,12 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id)
+
+	lastId, err := GetLastId(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
+	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
@@ -335,7 +337,11 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 		return
 	}
 
-	profiles, err := h.ProfileManager.GetAllSubs(r.Context(), id)
+	lastId, err := GetLastId(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
+	profiles, err := h.ProfileManager.GetAllSubs(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
@@ -358,7 +364,11 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 		return
 	}
 
-	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id)
+	lastId, err := GetLastId(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+	}
+	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
