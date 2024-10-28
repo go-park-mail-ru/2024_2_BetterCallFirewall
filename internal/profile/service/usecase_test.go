@@ -89,7 +89,7 @@ func (m MockProfileDB) GetProfileById(ctx context.Context, u uint32) (*models.Fu
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error) {
 	if self == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
@@ -132,21 +132,21 @@ func (m MockProfileDB) RemoveSub(who uint32, whom uint32) error {
 	return nil
 }
 
-func (m MockProfileDB) GetAllFriends(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllFriends(ctx context.Context, u uint32, lastId uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAllSubs(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllSubs(ctx context.Context, u uint32, lastId uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) GetAllSubscriptions(ctx context.Context, u uint32) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetAllSubscriptions(ctx context.Context, u uint32, u2 uint32) ([]*models.ShortProfile, error) {
 	if u == 3 {
 		return []*models.ShortProfile{shortExample1, shortExample2}, nil
 	}
@@ -231,7 +231,7 @@ func TestGetAll(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		res, err := pu.GetAll(test.ctx, test.userID)
+		res, err := pu.GetAll(test.ctx, test.userID, 0)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -461,7 +461,7 @@ func TestGetAllFriends(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		res, err := pu.GetAllFriends(test.ctx, test.userID)
+		res, err := pu.GetAllFriends(test.ctx, test.userID, 0)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -493,7 +493,7 @@ func TestGetAllSubs(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		res, err := pu.GetAllSubs(test.ctx, test.userID)
+		res, err := pu.GetAllSubs(test.ctx, test.userID, 0)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -525,7 +525,7 @@ func TestGetAllSubscriptions(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		res, err := pu.GetAllSubscriptions(test.ctx, test.userID)
+		res, err := pu.GetAllSubscriptions(test.ctx, test.userID, 0)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}

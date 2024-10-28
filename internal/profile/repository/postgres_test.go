@@ -145,14 +145,14 @@ func TestGetAll(t *testing.T) {
 	ProfileManager := NewProfileRepo(db)
 	for casenum, test := range tests {
 		if casenum == 2 {
-			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfiles)).
+			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfilesBatch)).
 				WithArgs(test.inputID).WillReturnRows(errRows)
 		} else {
-			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfiles)).
+			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfilesBatch)).
 				WithArgs(test.inputID).WillReturnRows(rows).
 				WillReturnError(test.dbError)
 		}
-		profiles, err := ProfileManager.GetAll(context.Background(), test.inputID)
+		profiles, err := ProfileManager.GetAll(context.Background(), test.inputID, 0)
 
 		if casenum == 2 {
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -488,7 +488,7 @@ func TestGetAllFriends(t *testing.T) {
 				WillReturnError(test.dbError)
 		}
 
-		profiles, err := ProfileManager.GetAllFriends(context.Background(), test.inputID)
+		profiles, err := ProfileManager.GetAllFriends(context.Background(), test.inputID, 0)
 		if casenum == 2 {
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -568,7 +568,7 @@ func TestGetAllSubs(t *testing.T) {
 				WillReturnError(test.dbError)
 		}
 
-		profiles, err := ProfileManager.GetAllSubs(context.Background(), test.inputID)
+		profiles, err := ProfileManager.GetAllSubs(context.Background(), test.inputID, 0)
 		if casenum == 2 {
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -648,7 +648,7 @@ func TestGetAllSubscriptions(t *testing.T) {
 				WillReturnError(test.dbError)
 		}
 
-		profiles, err := ProfileManager.GetAllSubscriptions(context.Background(), test.inputID)
+		profiles, err := ProfileManager.GetAllSubscriptions(context.Background(), test.inputID, 0)
 		if casenum == 2 {
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
