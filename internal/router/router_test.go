@@ -12,85 +12,47 @@ import (
 
 type MockAuthController struct{}
 
-func (m MockAuthController) Register(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m MockAuthController) Register(w http.ResponseWriter, r *http.Request) {}
 
-func (m MockAuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m MockAuthController) Auth(w http.ResponseWriter, r *http.Request) {}
 
-func (m MockAuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m MockAuthController) Logout(w http.ResponseWriter, r *http.Request) {}
 
 type mockProfileController struct{}
 
-func (m mockProfileController) GetProfileById(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) GetProfileById(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) GetAll(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) GetAll(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) UpdateProfile(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) DeleteProfile(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) DeleteProfile(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) SendFriendReq(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) SendFriendReq(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) RemoveFromFriends(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) RemoveFromFriends(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) GetAllFriends(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) GetAllFriends(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) Unsubscribe(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) Unsubscribe(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) GetAllSubs(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) GetAllSubs(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockProfileController) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {}
 
 type mockPostController struct{}
 
-func (m mockPostController) Create(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockPostController) Create(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockPostController) GetOne(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockPostController) GetOne(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockPostController) Update(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockPostController) Update(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockPostController) Delete(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockPostController) Delete(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockPostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
-	return
-}
+func (m mockPostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {}
 
 type mockMiddleware struct{}
 

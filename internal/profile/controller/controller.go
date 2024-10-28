@@ -102,7 +102,7 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-  
+
 	h.Responder.OutputJSON(w, newProfile, reqID)
 }
 
@@ -120,18 +120,15 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
 		return
 	}
-  
+
 	userId := sess.UserID
 	err = h.ProfileManager.DeleteProfile(userId)
-  if err != nil {
-		h.Responder.ErrorInternal(w, err)
-		return
+	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-  
+
 	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
-	return
 }
 
 func GetIdFromQuery(r *http.Request) (uint32, error) {

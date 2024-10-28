@@ -124,9 +124,7 @@ func (m *mockResponder) ErrorBadRequest(w http.ResponseWriter, err error, _ stri
 	_, _ = w.Write([]byte("bad request"))
 }
 
-func (m *mockResponder) LogError(err error, _ string) {
-	return
-}
+func (m *mockResponder) LogError(err error, _ string) {}
 
 type mockFileService struct{}
 
