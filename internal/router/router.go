@@ -33,8 +33,11 @@ type ProfileController interface {
 
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
+	Unsubscribe(w http.ResponseWriter, r *http.Request)
 	RemoveFromFriends(w http.ResponseWriter, r *http.Request)
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
+	GetAllSubs(w http.ResponseWriter, r *http.Request)
+	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRouter(
@@ -55,14 +58,13 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet)
 
-	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
-	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)
-	router.HandleFunc("/api/v1/update_profile", profileControl.UpdateProfile).Methods(http.MethodPut)
-	router.HandleFunc("api/v1/delete_profile", profileControl.DeleteProfile).Methods(http.MethodDelete)
-	router.HandleFunc("/api/v1/send_friend_request/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
-	router.HandleFunc("/api/v1/accept_friend_request/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
-	router.HandleFunc("/api/v1/remove_friend/{id}", profileControl.RemoveFromFriends).Methods(http.MethodPost)
-	router.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/profile/friend/subscribe/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
+	mux.HandleFunc("/api/v1/profile/friend/accept/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
+	mux.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.Unsubscribe).Methods(http.MethodPost)
+	mux.HandleFunc("/api/v1/profile/friend/remove/{id}", profileControl.RemoveFromFriends).Methods(http.MethodDelete)
+	mux.HandleFunc("/api/v1/profile/friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/profile/subscribers/{id}", profileControl.GetAllSubs).Methods(http.MethodGet)
+	mux.HandleFunc("/api/v1/profile/subscriptions/{id}", profileControl.GetAllSubscriptions).Methods(http.MethodGet)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)
