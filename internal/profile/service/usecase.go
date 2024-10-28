@@ -107,6 +107,7 @@ func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error
 	if who == whom {
 		return myErr.ErrSameUser
 	}
+
 	err := p.repo.MoveToSubs(who, whom)
 	if err != nil {
 		return fmt.Errorf("unsub usecase: %w", err)
@@ -124,6 +125,7 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self ui
 
 func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllSubs(ctx, self)
+
 	if err != nil {
 		return nil, fmt.Errorf("get all subs usecase: %w", err)
 	}
@@ -132,6 +134,7 @@ func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint3
 
 func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllSubscriptions(ctx, self)
+  
 	if err != nil {
 		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
 	}

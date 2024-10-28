@@ -2,8 +2,8 @@ package controller
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -29,7 +29,7 @@ type ProfileHandlerImplementation struct {
 	Responder      controller.Responder
 }
 
-func NewProfileController(manager profile.ProfileUsecase, responder controller.Responder) *ProfileHandlerImplementation {
+func NewProfileController(manager profile.ProfileUsecase, responder Responder) *ProfileHandlerImplementation {
 	return &ProfileHandlerImplementation{
 		ProfileManager: manager,
 		Responder:      responder,
@@ -40,7 +40,6 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -61,7 +60,6 @@ func (h *ProfileHandlerImplementation) GetAllProfiles(w http.ResponseWriter, r *
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -82,7 +80,6 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	newProfile := models.FullProfile{}
@@ -105,6 +102,7 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
+  
 	h.Responder.OutputJSON(w, newProfile, reqID)
 }
 
@@ -116,19 +114,22 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
 		return
 	}
+  
 	userId := sess.UserID
 	err = h.ProfileManager.DeleteProfile(userId)
-	if err != nil {
+  if err != nil {
+		h.Responder.ErrorInternal(w, err)
+		return
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
+  
 	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
 	return
 }
@@ -137,11 +138,15 @@ func GetIdFromQuery(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
-		return 0, errors.New("id is empty")
+		return 0, myErr.ErrEmptyId
 	}
+
 	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		return 0, err
+	}
+	if uid > math.MaxInt {
+		return 0, myErr.ErrBigId
 	}
 	return uint32(uid), nil
 }
@@ -154,7 +159,6 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -178,7 +182,6 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -216,7 +219,6 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -241,7 +243,6 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -264,7 +265,6 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -286,7 +286,6 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	whose, who, err := GetReceiverAndSender(r)
@@ -310,7 +309,6 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -333,7 +331,6 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
@@ -357,7 +354,6 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
-		return
 	}
 
 	if err != nil {
