@@ -147,19 +147,9 @@ func (p ProfileUsecaseImplementation) setStatuses(ctx context.Context, profiles 
 	}
 	selfId := sess.UserID
 
-	friends, err := p.repo.GetFriendsID(ctx, selfId)
+	friends, subs, subscriptions, err := p.repo.GetStatuses(ctx, selfId)
 	if err != nil {
-		return fmt.Errorf("get self friends usecase: %w", err)
-	}
-
-	subs, err := p.repo.GetSubscribersID(ctx, selfId)
-	if err != nil {
-		return fmt.Errorf("get self friends usecase: %w", err)
-	}
-
-	subscriptions, err := p.repo.GetSubscriptionsID(ctx, selfId)
-	if err != nil {
-		return fmt.Errorf("get self friends usecase: %w", err)
+		return fmt.Errorf("get status usecase: %w", err)
 	}
 
 	for _, profile := range profiles {

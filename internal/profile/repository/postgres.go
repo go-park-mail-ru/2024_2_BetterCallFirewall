@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	_ "github.com/jackc/pgx"
+	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -45,6 +46,20 @@ func (p *ProfileRepo) GetStatus(ctx context.Context, self uint32, profile uint32
 		return 0, err
 	}
 	return status, nil
+}
+
+func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, []uint32, []uint32, error) {
+	var (
+		friends       []uint32
+		subscribers   []uint32
+		subscriptions []uint32
+	)
+	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(pq.Array(&friends), pq.Array(&subscribers), pq.Array(&subscriptions))
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("get all statuses: %w", err)
+	}
+	return friends, subscribers, subscriptions, nil
+
 }
 
 func (p *ProfileRepo) GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error) {
