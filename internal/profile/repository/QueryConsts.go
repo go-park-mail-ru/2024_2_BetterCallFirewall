@@ -16,5 +16,5 @@ const (
 	DeleteFriendship = "DELETE FROM friend WHERE (sender = $1 AND receiver = $2) OR (receiver = $1 AND sender = $2);"
 
 	GetFriendsID    = "SELECT sender AS friend FROM friend WHERE (receiver = $1 AND status = 0) UNION SELECT receiver AS friend FROM friend WHERE (sender = $1 AND status = 0)"
-	GetShortProfile = "SELECT first_name || ' ' || last_name AS name, file_path FROM profile LEFT JOIN file ON avatar=file.id  WHERE id = $1 LIMIT 1;"
+	GetShortProfile = "SELECT first_name || ' ' || last_name AS name, file_path FROM profile LEFT JOIN file ON avatar=file.id  WHERE profile.id = $1 LIMIT 1;"
 )
