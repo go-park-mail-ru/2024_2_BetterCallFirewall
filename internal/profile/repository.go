@@ -24,6 +24,7 @@ type Repository interface {
 	GetFriendsID(context.Context, uint32) ([]uint32, error)
 	GetSubscriptionsID(context.Context, uint32) ([]uint32, error)
 	GetSubscribersID(context.Context, uint32) ([]uint32, error)
+	GetStatuses(context.Context, uint32) ([]uint32, []uint32, []uint32, error)
 	GetHeader(context.Context, uint32) (*models.Header, error)
 }
 
