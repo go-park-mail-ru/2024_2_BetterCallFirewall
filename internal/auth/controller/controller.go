@@ -44,11 +44,6 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -67,17 +62,10 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := c.SessionManager.Create(user.ID)
+	cookie, err := c.SessionManager.Create(user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
-	}
-	cookie := &http.Cookie{
-		Name:     "session_id",
-		Value:    sess.ID,
-		Path:     "/",
-		HttpOnly: true,
-		Expires:  time.Now().Add(24 * time.Hour),
 	}
 	http.SetCookie(w, cookie)
 
@@ -109,11 +97,12 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = c.SessionManager.Create(id)
+	cookie, err := c.SessionManager.Create(id)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
 	}
+	http.SetCookie(w, cookie)
 
 	c.responder.OutputJSON(w, "user auth")
 }
