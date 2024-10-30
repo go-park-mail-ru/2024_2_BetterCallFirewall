@@ -111,7 +111,7 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
 }
 
-func GetIdFromQuery(r *http.Request) (uint32, error) {
+func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
@@ -131,7 +131,7 @@ func GetIdFromQuery(r *http.Request) (uint32, error) {
 func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = GetIdFromQuery(r)
+		id, err   = GetIdFromURL(r)
 	)
 
 	if !ok {
@@ -152,11 +152,11 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 }
 
 func GetLastId(r *http.Request) (uint32, error) {
-	strlastId := r.URL.Query().Get("last_id")
-	if strlastId == "" {
-		return 0, myErr.ErrEmptyId
+	strLastId := r.URL.Query().Get("last_id")
+	if strLastId == "" {
+		return 0, nil
 	}
-	lastId, err := strconv.ParseUint(strlastId, 10, 32)
+	lastId, err := strconv.ParseUint(strLastId, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -192,7 +192,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 }
 
 func GetReceiverAndSender(r *http.Request) (uint32, uint32, error) {
-	id, err := GetIdFromQuery(r)
+	id, err := GetIdFromURL(r)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -298,7 +298,7 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = GetIdFromQuery(r)
+		id, err   = GetIdFromURL(r)
 	)
 
 	if !ok {
@@ -325,7 +325,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = GetIdFromQuery(r)
+		id, err   = GetIdFromURL(r)
 	)
 
 	if !ok {
@@ -352,7 +352,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = GetIdFromQuery(r)
+		id, err   = GetIdFromURL(r)
 	)
 
 	if !ok {
