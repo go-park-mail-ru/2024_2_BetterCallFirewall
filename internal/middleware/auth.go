@@ -68,10 +68,11 @@ func Auth(sm auth.SessionManager, next http.Handler) http.Handler {
 		}
 
 		if sess.CreatedAt <= time.Now().Add(-12*time.Hour).Unix() {
-			sess, err = sm.Create(w, sess.UserID)
+			cookie, err := sm.Create(sess.UserID)
 			if err != nil {
 				log.Println(r.Context().Value("requestID"), err)
 			}
+			http.SetCookie(w, cookie)
 		}
 
 		ctx := models.ContextWithSession(r.Context(), sess)

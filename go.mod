@@ -6,6 +6,7 @@ toolchain go1.22.8
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx v3.6.2+incompatible

@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -27,7 +29,7 @@ func (sm *SessionManagerImpl) Check(cookie string) (*models.Session, error) {
 	return sess, nil
 }
 
-func (sm *SessionManagerImpl) Create(userID uint32) (*models.Session, error) {
+func (sm *SessionManagerImpl) Create(userID uint32) (*http.Cookie, error) {
 	sess, err := models.NewSession(userID)
 	if err != nil {
 		return nil, fmt.Errorf("create session: %w", err)
@@ -36,7 +38,15 @@ func (sm *SessionManagerImpl) Create(userID uint32) (*models.Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("session creation: %w", err)
 	}
-	return sess, nil
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(24 * time.Hour),
+	}
+
+	return cookie, nil
 }
 
 func (sm *SessionManagerImpl) Destroy(sess *models.Session) error {
