@@ -23,7 +23,6 @@ func NewAdapter(db *sql.DB) *Adapter {
 	adapter := &Adapter{
 		db: db,
 	}
-	go adapter.startSessionGC()
 	return adapter
 }
 
@@ -51,83 +50,6 @@ func (a *Adapter) GetByEmail(email string, ctx context.Context) (*models.User, e
 	}
 
 	return user, nil
-}
-
-func (a *Adapter) CreateNewSessionTable() error {
-	_, err := a.db.Exec(CreateNewSessionTable)
-	if err != nil {
-		return fmt.Errorf("postgres create session table: %w", err)
-	}
-
-	return nil
-}
-
-func (a *Adapter) CreateSession(sess *models.Session) error {
-	res, err := a.db.Exec(CreateSession, sess.ID, sess.UserID, sess.CreatedAt)
-	if err != nil {
-		return fmt.Errorf("postgres create session table: %w", err)
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("postgres create session table: %w", err)
-	}
-	if rows == 0 {
-		return fmt.Errorf("postgres create session: %w", myErr.ErrSessionAlreadyExists)
-	}
-
-	return nil
-}
-
-func (a *Adapter) FindSession(sessID string) (*models.Session, error) {
-	res := a.db.QueryRow(FindSession, sessID)
-	var sess models.Session
-	err := res.Scan(&sess.ID, &sess.UserID, &sess.CreatedAt)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("postgres find session: %w", myErr.ErrSessionNotFound)
-		}
-		return nil, fmt.Errorf("postgres find session table: %w", err)
-	}
-
-	return &sess, nil
-}
-
-func (a *Adapter) DestroySession(sessID string) error {
-	res, err := a.db.Exec(DeleteSession, sessID)
-	if err != nil {
-		return fmt.Errorf("postgres delete session table: %w", err)
-	}
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("postgres delete session table: %w", err)
-	}
-	if rows == 0 {
-		return fmt.Errorf("postgres delete session: %w", myErr.ErrSessionNotFound)
-	}
-
-	return nil
-}
-
-func (a *Adapter) destroyOutdatedSession() error {
-	destroyTime := time.Now().Add(-24 * time.Hour).Unix()
-	_, err := a.db.Exec(DeleteOutdatedSession, destroyTime)
-	if err != nil {
-		return fmt.Errorf("postgres destroy outdated session table: %w", err)
-	}
-
-	return nil
-}
-
-func (a *Adapter) startSessionGC() {
-	ticker := time.NewTicker(24 * time.Hour)
-	for {
-		<-ticker.C
-		err := a.destroyOutdatedSession()
-		if err != nil {
-			log.Println(err)
-		}
-	}
 }
 
 func StartPostgres(connStr string) (*sql.DB, error) {
