@@ -53,25 +53,32 @@ func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, [
 		friends          []uint32
 		subscribers      []uint32
 		subscriptions    []uint32
-		tmpFriends       string
-		tmpSubscribers   string
-		tmpSubscriptions string
+		tmpFriends       sql.NullString
+		tmpSubscribers   sql.NullString
+		tmpSubscriptions sql.NullString
 	)
 	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(&tmpFriends, &tmpSubscribers, &tmpSubscriptions)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("get all statuses query: %w", err)
 	}
-	err = json.Unmarshal([]byte(tmpFriends), &friends)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+
+	if tmpFriends.Valid {
+		err = json.Unmarshal([]byte(tmpFriends.String), &friends)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+		}
 	}
-	err = json.Unmarshal([]byte(tmpSubscribers), &subscribers)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+	if tmpSubscribers.Valid {
+		err = json.Unmarshal([]byte(tmpSubscribers.String), &subscribers)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+		}
 	}
-	err = json.Unmarshal([]byte(tmpSubscriptions), &subscriptions)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+	if tmpSubscriptions.Valid {
+		err = json.Unmarshal([]byte(tmpSubscriptions.String), &subscriptions)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+		}
 	}
 
 	return friends, subscribers, subscriptions, nil
