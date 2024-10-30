@@ -10,7 +10,8 @@ type Repository interface {
 	GetProfileById(context.Context, uint32) (*models.FullProfile, error)
 	GetStatus(context.Context, uint32, uint32) (int, error)
 	GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error)
-	UpdateProfile(*models.FullProfile) error
+	UpdateProfile(context.Context, *models.FullProfile) error
+	UpdateWithAvatar(context.Context, *models.FullProfile) error
 	DeleteProfile(uint32) error
 
 	AddFriendsReq(receiver uint32, sender uint32) error

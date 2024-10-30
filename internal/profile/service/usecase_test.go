@@ -264,7 +264,7 @@ func TestUpdateProfile(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		err := pu.UpdateProfile(test.userID, test.inputProfile)
+		err := pu.UpdateProfile(nil, test.userID, test.inputProfile)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}

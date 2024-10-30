@@ -9,7 +9,7 @@ import (
 type ProfileUsecase interface {
 	GetProfileById(context.Context, uint32) (*models.FullProfile, error)
 	GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error)
-	UpdateProfile(uint32, *models.FullProfile) error
+	UpdateProfile(context.Context, uint32, *models.FullProfile) error
 	DeleteProfile(uint32) error
 
 	SendFriendReq(receiver uint32, sender uint32) error

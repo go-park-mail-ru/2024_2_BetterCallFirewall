@@ -5,6 +5,7 @@ import (
 )
 
 type ProfileHandler interface {
+	GetProfile(w http.ResponseWriter, r *http.Request)
 	GetProfileById(w http.ResponseWriter, r *http.Request)
 	GetAll(w http.ResponseWriter, r *http.Request)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)

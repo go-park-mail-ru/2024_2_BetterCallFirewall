@@ -210,7 +210,7 @@ func TestUpdateProfile(t *testing.T) {
 			WithArgs(test.inputProfile.FirstName, test.inputProfile.LastName, test.inputProfile.Bio, test.inputProfile.ID).
 			WillReturnResult(test.execResult).
 			WillReturnError(test.dbError)
-		err := ProfileManager.UpdateProfile(test.inputProfile)
+		err := ProfileManager.UpdateProfile(nil, test.inputProfile)
 		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("case [%d]: errors must match, have %v, want %v", casenum, err, test.expectedErr)
 		}
