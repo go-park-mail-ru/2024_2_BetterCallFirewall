@@ -103,10 +103,19 @@ func (p *ProfileRepo) GetAll(ctx context.Context, self uint32, lastId uint32) ([
 	return res, nil
 }
 
-func (p *ProfileRepo) UpdateProfile(profile *models.FullProfile) error {
-	_, err := p.DB.Exec(UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.ID)
+func (p *ProfileRepo) UpdateProfile(ctx context.Context, profile *models.FullProfile) error {
+	_, err := p.DB.ExecContext(ctx, UpdateProfile, profile.FirstName, profile.LastName, profile.Bio, profile.ID)
 	if err != nil {
 		return fmt.Errorf("update profile %w", err)
+	}
+
+	return nil
+}
+
+func (p *ProfileRepo) UpdateWithAvatar(ctx context.Context, newProfile *models.FullProfile) error {
+	_, err := p.DB.ExecContext(ctx, UpdateProfileAvatar, newProfile.ID, newProfile.Avatar, newProfile.FirstName, newProfile.LastName, newProfile.Bio)
+	if err != nil {
+		return fmt.Errorf("update profile with avatar %w", err)
 	}
 
 	return nil
@@ -125,6 +134,7 @@ func (p *ProfileRepo) AddFriendsReq(receiver uint32, sender uint32) error {
 	if err != nil {
 		return fmt.Errorf("add friend db: %w", err)
 	}
+
 	return nil
 }
 

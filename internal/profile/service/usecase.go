@@ -75,11 +75,16 @@ func validateOwner(ownerId uint32, profile *models.FullProfile) bool {
 	return ownerId == profile.ID
 }
 
-func (p ProfileUsecaseImplementation) UpdateProfile(owner uint32, newProfile *models.FullProfile) error {
+func (p ProfileUsecaseImplementation) UpdateProfile(ctx context.Context, owner uint32, newProfile *models.FullProfile) error {
 	if !validateOwner(owner, newProfile) {
 		return myErr.ErrWrongOwner
 	}
-	err := p.repo.UpdateProfile(newProfile)
+	var err error
+	if newProfile.Avatar != "" {
+		err = p.repo.UpdateWithAvatar(ctx, newProfile)
+	} else {
+		err = p.repo.UpdateProfile(ctx, newProfile)
+	}
 	if err != nil {
 		return fmt.Errorf("update profile usecase: %w", err)
 	}
@@ -167,6 +172,9 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, id uint
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
 	}
 
+	if res == nil {
+		return res, nil
+	}
 	err = p.setStatuses(ctx, res)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)

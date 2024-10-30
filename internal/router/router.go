@@ -26,6 +26,7 @@ type PostController interface {
 }
 
 type ProfileController interface {
+	GetProfile(w http.ResponseWriter, r *http.Request)
 	GetProfileById(w http.ResponseWriter, r *http.Request)
 	GetAll(w http.ResponseWriter, r *http.Request)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)
@@ -52,6 +53,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost)
 
+	router.HandleFunc("/api/v1/profile/", profileControl.GetProfile).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)
 	router.HandleFunc("/api/v1/profile/update", profileControl.UpdateProfile).Methods(http.MethodPut)
