@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	_ "github.com/jackc/pgx"
-	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -50,14 +50,30 @@ func (p *ProfileRepo) GetStatus(ctx context.Context, self uint32, profile uint32
 
 func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, []uint32, []uint32, error) {
 	var (
-		friends       []uint32
-		subscribers   []uint32
-		subscriptions []uint32
+		friends          []uint32
+		subscribers      []uint32
+		subscriptions    []uint32
+		tmpFriends       string
+		tmpSubscribers   string
+		tmpSubscriptions string
 	)
-	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(pq.Array(&friends), pq.Array(&subscribers), pq.Array(&subscriptions))
+	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(&tmpFriends, &tmpSubscribers, &tmpSubscriptions)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("get all statuses: %w", err)
+		return nil, nil, nil, fmt.Errorf("get all statuses query: %w", err)
 	}
+	err = json.Unmarshal([]byte(tmpFriends), &friends)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+	}
+	err = json.Unmarshal([]byte(tmpSubscribers), &subscribers)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+	}
+	err = json.Unmarshal([]byte(tmpSubscriptions), &subscriptions)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("get all statuses json parsing: %w", err)
+	}
+
 	return friends, subscribers, subscriptions, nil
 
 }
