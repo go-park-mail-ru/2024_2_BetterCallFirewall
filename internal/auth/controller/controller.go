@@ -62,22 +62,26 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := c.SessionManager.Create(user.ID)
+	sess, err := c.SessionManager.Create(user.ID)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
 		return
 	}
+
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, 1),
+	}
+
 	http.SetCookie(w, cookie)
 
 	c.responder.OutputJSON(w, "user create successful")
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -97,10 +101,17 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := c.SessionManager.Create(id)
+	sess, err := c.SessionManager.Create(id)
 	if err != nil {
 		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
 		return
+	}
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, 1),
 	}
 	http.SetCookie(w, cookie)
 
@@ -108,11 +119,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
-	}
-
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
 		c.responder.ErrorBadRequest(w, myErr.ErrNoAuth)

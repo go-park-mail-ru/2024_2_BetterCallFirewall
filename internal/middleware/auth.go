@@ -68,9 +68,16 @@ func Auth(sm auth.SessionManager, next http.Handler) http.Handler {
 		}
 
 		if sess.CreatedAt <= time.Now().Add(-12*time.Hour).Unix() {
-			cookie, err := sm.Create(sess.UserID)
+			sess, err = sm.Create(sess.UserID)
 			if err != nil {
 				log.Println(r.Context().Value("requestID"), err)
+			}
+			cookie := &http.Cookie{
+				Name:     "session_id",
+				Value:    sess.ID,
+				Path:     "/",
+				HttpOnly: true,
+				Expires:  time.Now().AddDate(0, 0, 1),
 			}
 			http.SetCookie(w, cookie)
 		}
