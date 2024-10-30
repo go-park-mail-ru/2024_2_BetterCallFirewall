@@ -9,6 +9,7 @@ import (
 	_ "github.com/swaggo/http-swagger"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 type AuthController interface {
@@ -37,7 +38,13 @@ type ProfileController interface {
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager) http.Handler {
+type SessionManager interface {
+	Check(string) (*models.Session, error)
+	Create(userID uint32) (*models.Session, error)
+	Destroy(sess *models.Session) error
+}
+
+func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm SessionManager) http.Handler {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
 	mux.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
