@@ -62,6 +62,7 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -85,6 +86,7 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	newProfile := models.FullProfile{}
@@ -119,6 +121,7 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -161,6 +164,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -200,6 +204,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -247,6 +252,7 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -271,6 +277,7 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -293,6 +300,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -314,6 +322,7 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	whose, who, err := GetReceiverAndSender(r)
@@ -337,6 +346,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -370,6 +380,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
@@ -402,6 +413,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 
 	if !ok {
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		return
 	}
 
 	if err != nil {
