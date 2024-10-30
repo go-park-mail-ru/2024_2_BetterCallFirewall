@@ -15,7 +15,7 @@ FROM alpine:latest
 
 WORKDIR /app
 
-EXPOSE 8080, 6379
+EXPOSE 8080
 
 COPY .env .
 
