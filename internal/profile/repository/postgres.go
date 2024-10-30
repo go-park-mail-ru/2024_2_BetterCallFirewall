@@ -61,7 +61,7 @@ func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, [
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("get all statuses query: %w", err)
 	}
-
+	fmt.Println(tmpFriends, " ", tmpSubscribers, " ", tmpSubscriptions)
 	if tmpFriends.Valid {
 		err = json.Unmarshal([]byte(tmpFriends.String), &friends)
 		if err != nil {
