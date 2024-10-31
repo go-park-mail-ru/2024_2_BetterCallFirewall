@@ -33,28 +33,45 @@ type ProfileController interface {
 
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
+	Unsubscribe(w http.ResponseWriter, r *http.Request)
 	RemoveFromFriends(w http.ResponseWriter, r *http.Request)
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
+	GetAllSubs(w http.ResponseWriter, r *http.Request)
+	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(authControl AuthController, profileControl ProfileController, postControl PostController, sm middleware.SessionManager) http.Handler {
-	mux := mux.NewRouter()
-	mux.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/post", postControl.Create).Methods(http.MethodPost)
+func NewRouter(
+	authControl AuthController,
+	profileControl ProfileController,
+	postControl PostController,
+	sm middleware.SessionManager,
+	logger *logrus.Logger,
+) http.Handler {
+	router := mux.NewRouter()
+	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost)
 
-	mux.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
-	mux.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)
-	mux.HandleFunc("/api/v1/update_profile", profileControl.UpdateProfile).Methods(http.MethodPut)
-	mux.HandleFunc("api/v1/delete_profile", profileControl.DeleteProfile).Methods(http.MethodDelete)
-	mux.HandleFunc("/api/v1/send_friend_request/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/accept_friend_request/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/remove_friend/{id}", profileControl.RemoveFromFriends).Methods(http.MethodPost)
-	mux.HandleFunc("/api/v1/get_friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profile/update", profileControl.UpdateProfile).Methods(http.MethodPut)
+	router.HandleFunc("api/v1/profile/delete", profileControl.DeleteProfile).Methods(http.MethodDelete)
+	router.HandleFunc("/api/v1/profile/friend/subscribe/{id}", profileControl.SendFriendReq).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/profile/friend/accept/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.Unsubscribe).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/profile/friend/remove/{id}", profileControl.RemoveFromFriends).Methods(http.MethodDelete)
+	router.HandleFunc("/api/v1/profile/friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profile/subscribers/{id}", profileControl.GetAllSubs).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/profile/subscriptions/{id}", profileControl.GetAllSubscriptions).Methods(http.MethodGet)
 
-	res := middleware.Auth(sm, mux)
-	res = middleware.AccessLog(logrus.New(), res)
+	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut)
+	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete)
+	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet)
+
+	res := middleware.Auth(sm, router)
+	res = middleware.AccessLog(logger, res)
 
 	return res
 }
