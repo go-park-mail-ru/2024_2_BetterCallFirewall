@@ -77,28 +77,6 @@ func TestOutputNoMoreContent(t *testing.T) {
 	}
 }
 
-func TestErrorWrongMethod(t *testing.T) {
-	tests := []TestRouter{
-		{
-			testResponse: httptest.NewRecorder(),
-			testErr:      TestError,
-			expectedCode: http.StatusMethodNotAllowed,
-			expectedBody: TestDataWrongMethod,
-			testReqID:    uuid.New().String(),
-		},
-	}
-
-	for caseNum, test := range tests {
-		TestResponder.ErrorWrongMethod(test.testResponse, test.testErr, test.testReqID)
-		if test.testResponse.Code != test.expectedCode {
-			t.Errorf("[%d} wrong status code, expected %d, got %d", caseNum, test.expectedCode, test.testResponse.Code)
-		}
-		if strings.Compare(test.expectedBody, strings.TrimSpace(test.testResponse.Body.String())) != 0 {
-			t.Errorf("[%d] wrong body, expected %s, got %s", caseNum, test.expectedBody, test.testResponse.Body.String())
-		}
-	}
-}
-
 func TestErrorBadRequest(t *testing.T) {
 	tests := []TestRouter{
 		{

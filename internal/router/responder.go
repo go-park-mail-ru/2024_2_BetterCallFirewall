@@ -59,16 +59,6 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 	r.logger.Infof("req: %s: success request", requestID)
 }
 
-func (r *Respond) ErrorWrongMethod(w http.ResponseWriter, err error, requestID string) {
-	r.logger.Warnf("req: %s: %v", requestID, err)
-	writeHeaders(w)
-	w.WriteHeader(http.StatusMethodNotAllowed)
-
-	if err := json.NewEncoder(w).Encode(&Response{Success: false, Data: fullUnwrap(err).Error(), Message: "method not allowed"}); err != nil {
-		r.logger.Errorf("req: %s: %v", requestID, err)
-	}
-}
-
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error, requestID string) {
 	r.logger.Warnf("req: %s: %v", requestID, err)
 	writeHeaders(w)
