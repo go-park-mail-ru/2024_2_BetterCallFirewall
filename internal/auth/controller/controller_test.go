@@ -46,23 +46,23 @@ func (m MockAuthService) Auth(user models.User, ctx context.Context) (uint32, er
 
 type MockSessionManager struct{}
 
-func (m MockSessionManager) Check(r *http.Request) (*models.Session, error) {
-	if r.URL.Path == "/auth/login" {
-		return nil, nil
+func (m MockSessionManager) Check(str string) (*models.Session, error) {
+	if len(str) > 0 {
+		return models.NewSession(10)
 	}
 	return nil, mockErrorInternal
 }
 
-func (m MockSessionManager) Create(w http.ResponseWriter, userID uint32) (*models.Session, error) {
+func (m MockSessionManager) Create(userID uint32) (*models.Session, error) {
 	if userID == 2 {
 		return nil, mockErrorInternal
 	}
-	return nil, nil
+	return models.NewSession(10)
 }
 
-func (m MockSessionManager) Destroy(w http.ResponseWriter, r *http.Request) error {
-	if _, err := models.SessionFromContext(r.Context()); err != nil {
-		return err
+func (m MockSessionManager) Destroy(sess *models.Session) error {
+	if sess.UserID == 0 {
+		return mockErrorInternal
 	}
 	return nil
 }
@@ -72,11 +72,6 @@ type MockResponder struct{}
 func (r *MockResponder) OutputJSON(w http.ResponseWriter, data any, _ string) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(data)
-}
-
-func (r *MockResponder) ErrorWrongMethod(w http.ResponseWriter, _ error, _ string) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
-	_, _ = w.Write([]byte("wrong method error"))
 }
 
 func (r *MockResponder) ErrorUnAuthorized(w http.ResponseWriter, _ error, _ string) {
@@ -118,12 +113,6 @@ func TestRegister(t *testing.T) {
 	jsonUser3, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
-		{
-			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodGet, "/", nil),
-			wantCode: http.StatusMethodNotAllowed,
-			wantBody: "wrong method error",
-		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer([]byte("wrong json"))),
@@ -175,12 +164,6 @@ func TestAuth(t *testing.T) {
 	jsonUser3, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
-		{
-			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodGet, "/", nil),
-			wantCode: http.StatusMethodNotAllowed,
-			wantBody: "wrong method error",
-		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer([]byte("wrong json"))),
@@ -235,18 +218,15 @@ var (
 	ctxWithSession    = models.ContextWithSession(context.Background(), session)
 	reqWithSession    = httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctxWithSession)
 	reqWithoutSession = httptest.NewRequest(http.MethodPost, "/", nil)
+	badSession, _     = models.NewSession(0)
+	ctxBadSession     = models.ContextWithSession(context.Background(), badSession)
+	reqWithBadSession = httptest.NewRequest(http.MethodPost, "/", nil).WithContext(ctxBadSession)
 )
 
 func TestLogout(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
 
 	testCases := []TestCase{
-		{
-			w:        httptest.NewRecorder(),
-			r:        httptest.NewRequest(http.MethodGet, "/", nil),
-			wantCode: http.StatusMethodNotAllowed,
-			wantBody: "wrong method error",
-		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        reqWithoutSession,
@@ -258,6 +238,12 @@ func TestLogout(t *testing.T) {
 			r:        reqWithSession,
 			wantCode: http.StatusOK,
 			wantBody: `"user logout"`,
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithBadSession,
+			wantCode: http.StatusBadRequest,
+			wantBody: `"bad request error"`,
 		},
 	}
 

@@ -24,7 +24,6 @@ type AuthService interface {
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
 	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
 	ErrorInternal(w http.ResponseWriter, err error, requestID string)
 	LogError(err error, requestID string)
@@ -49,7 +48,6 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
-
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -136,12 +134,12 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-  sess, err := models.SessionFromContext(r.Context())
+	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		c.responder.ErrorBadRequest(w, myErr.ErrNoAuth)
-    return
-  }
-  
+		c.responder.ErrorBadRequest(w, myErr.ErrNoAuth, "")
+		return
+	}
+
 	err = c.SessionManager.Destroy(sess)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err), reqID)
