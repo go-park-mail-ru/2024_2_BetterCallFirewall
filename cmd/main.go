@@ -7,12 +7,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgx"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
+	redismy "github.com/2024_2_BetterCallFirewall/internal/auth/repository/redis"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
 	"github.com/2024_2_BetterCallFirewall/internal/fileService"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
@@ -38,6 +40,11 @@ func main() {
 	dbSSLMode := os.Getenv("DB_SSLMODE")
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
 
+	redisConn, err := redis.Dial("tcp", "redis:6379")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	postgresDB, err := postgres.StartPostgres(connStr)
 	if err != nil {
 		log.Fatalf("Error starting postgres: %v", err)
@@ -45,10 +52,6 @@ func main() {
 
 	repo := postgres.NewAdapter(postgresDB)
 	profileRepo := profileRepository.NewProfileRepo(postgresDB)
-	err = repo.CreateNewSessionTable()
-	if err != nil {
-		log.Fatalf("Error creating session table: %v", err)
-	}
 	authServ := service.NewAuthServiceImpl(repo)
 
 	logger := logrus.New()
@@ -60,7 +63,8 @@ func main() {
 	}
 
 	responder := router.NewResponder(logger)
-	sessionManager := service.NewSessionManager(repo)
+	sessionRepo := redismy.NewSessionRedisRepository(redisConn)
+	sessionManager := service.NewSessionManager(sessionRepo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
 	postRepo := postgresProfile.NewAdapter(postgresDB)

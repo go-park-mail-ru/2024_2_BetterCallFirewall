@@ -220,7 +220,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	} else {
 		intLastID, err = strconv.ParseUint(lastID, 10, 32)
 		if err != nil {
-			pc.responder.ErrorBadRequest(w, err, reqID)
+			pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
 			return
 		}
 	}
@@ -230,7 +230,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		{
 			sess, errSession := models.SessionFromContext(r.Context())
 			if errSession != nil {
-				pc.responder.ErrorBadRequest(w, err, reqID)
+				pc.responder.ErrorBadRequest(w, errSession, reqID)
 				return
 			}
 

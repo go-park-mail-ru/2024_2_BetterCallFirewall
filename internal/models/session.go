@@ -28,9 +28,9 @@ func NewSession(userID uint32) (*Session, error) {
 	}, nil
 }
 
-var (
-	SessionKey string = "sessionKey"
-)
+type sessKey string
+
+var SessionKey sessKey = "sessionKey"
 
 func SessionFromContext(ctx context.Context) (*Session, error) {
 	sess, ok := ctx.Value(SessionKey).(*Session)
