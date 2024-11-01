@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS profile (
                                        email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50),
                                        hashed_password TEXT NOT NULL,
                                        bio TEXT CONSTRAINT bio_length CHECK (CHAR_LENGTH(bio) <= 255) DEFAULT 'description',
-                                       avatar INT DEFAULT NULL,
+                                       avatar INT DEFAULT 1,
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS file (
                                     comment_id INT DEFAULT NULL,
                                     profile_id INT DEFAULT NULL,
                                     file_path TEXT DEFAULT '/default',
-                                    likes INT DEFAULT 0,
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -51,25 +50,24 @@ CREATE TABLE IF NOT EXISTS post (
                                     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
                                     community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT NULL,
                                     content TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
-                                    likes INT DEFAULT 0,
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS message (
-                                       receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
-                                       sender INT REFERENCES profile(id) ON DELETE CASCADE ,
-                                       content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
-                                       is_read BOOLEAN DEFAULT FALSE,
-                                       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                                    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                    receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
+                                    sender INT REFERENCES profile(id) ON DELETE CASCADE ,
+                                    content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                    is_read BOOLEAN DEFAULT FALSE,
+                                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS comment (
                                        id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                        user_id INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        post_id INT REFERENCES post(id) ON DELETE CASCADE ,
-                                       likes INT DEFAULT 0,
                                        content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -97,5 +95,7 @@ ALTER TABLE file
     ADD FOREIGN KEY ("post_id") REFERENCES post(id) ON DELETE NO ACTION,
     ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE NO ACTION,
     ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE NO ACTION;
+
+INSERT INTO file(file_path) VALUES ('/default');
 
 
