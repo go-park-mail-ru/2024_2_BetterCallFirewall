@@ -31,7 +31,7 @@ func (a *Adapter) Create(user *models.User, ctx context.Context) (uint32, error)
 	err := a.db.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, fmt.Errorf("postgres create user rows affected: %w", err)
+			return 0, fmt.Errorf("postgres create user: %w", myErr.ErrUserAlreadyExists)
 		}
 		return 0, fmt.Errorf("postgres create user: %w", err)
 	}
