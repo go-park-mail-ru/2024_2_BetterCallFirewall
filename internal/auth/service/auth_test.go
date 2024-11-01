@@ -11,7 +11,10 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
-var errMock = errors.New("something with DB")
+var (
+	errMock = errors.New("something with DB")
+	baseCtx = context.Background()
+)
 
 type MockDB struct{}
 
@@ -55,7 +58,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		_, err := serv.Register(testCase.user, context.Background())
+		_, err := serv.Register(testCase.user, baseCtx)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Register() error = %v, wantErr %v", err, testCase.wantError)
 		}
@@ -74,7 +77,7 @@ func TestAuth(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		_, err := serv.Auth(testCase.user, context.Background())
+		_, err := serv.Auth(testCase.user, baseCtx)
 		if !errors.Is(err, testCase.wantError) {
 			t.Errorf("Auth() error = %v, wantErr %v", err, testCase.wantError)
 		}

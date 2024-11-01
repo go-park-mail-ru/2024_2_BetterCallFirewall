@@ -53,7 +53,15 @@ func main() {
 	repo := postgres.NewAdapter(postgresDB)
 	profileRepo := profileRepository.NewProfileRepo(postgresDB)
 	authServ := service.NewAuthServiceImpl(repo)
+
 	logger := logrus.New()
+	logger.Formatter = &logrus.TextFormatter{
+		FullTimestamp:   true,
+		DisableColors:   false,
+		TimestampFormat: "2006-01-02 15:04:05",
+		ForceColors:     true,
+	}
+
 	responder := router.NewResponder(logger)
 	sessionRepo := redismy.NewSessionRedisRepository(redisConn)
 	sessionManager := service.NewSessionManager(sessionRepo)
@@ -68,7 +76,7 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, sessionManager)
+	rout := router.NewRouter(control, profileControl, postControl, sessionManager, logger)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 var (
@@ -106,7 +107,7 @@ func (m *mockDB) GetPostAuthor(ctx context.Context, postID uint32) (uint32, erro
 
 type profileRepositoryMock struct{}
 
-func (p *profileRepositoryMock) GetHeader(userID uint32) (models.Header, error) {
+func (p *profileRepositoryMock) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
 	if userID == 0 {
 		return models.Header{}, errMockProfile
 	}
@@ -114,9 +115,12 @@ func (p *profileRepositoryMock) GetHeader(userID uint32) (models.Header, error) 
 	return models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
 }
 
-func (p *profileRepositoryMock) GetFriendsID(userID uint32) ([]uint32, error) {
+func (p *profileRepositoryMock) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
 	if userID == 0 {
 		return nil, errMockProfile
+	}
+	if userID == 1 {
+		return nil, nil
 	}
 
 	var (
@@ -191,7 +195,7 @@ func TestPostServiceGet(t *testing.T) {
 		if !errors.Is(err, tt.wantErr) {
 			t.Errorf("#%d: error mismatch: exp=%v got=%v", i, tt.wantErr, err)
 		}
-		assert.Equal(t, tt.wantPost, gotPost, "#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
+		assert.Equalf(t, tt.wantPost, gotPost, "#%d: post mismatch:\n exp=%v\n got=%v", i, tt.wantPost, gotPost)
 	}
 }
 
@@ -292,6 +296,7 @@ func TestPostServiceGetBatchFromFriend(t *testing.T) {
 		{lastId: 10, userId: 10, wantPosts: nil, wantErr: errMockDB},
 		{lastId: 1, userId: 0, wantPosts: nil, wantErr: errMockProfile},
 		{lastId: 1, userId: 10, wantPosts: nil, wantErr: errMockProfile},
+		{lastId: 1, userId: 1, wantPosts: nil, wantErr: myErr.ErrNoMoreContent},
 		{lastId: 3, userId: 5, wantPosts: Posts[:3], wantErr: nil},
 		{lastId: 5, userId: 5, wantPosts: Posts[:], wantErr: nil},
 		{lastId: 2, userId: 3, wantPosts: Posts[:2], wantErr: nil},
