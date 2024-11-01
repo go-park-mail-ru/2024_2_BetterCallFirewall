@@ -40,11 +40,17 @@ type ProfileController interface {
 	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 }
 
+type SessionManager interface {
+	Check(string) (*models.Session, error)
+	Create(userID uint32) (*models.Session, error)
+	Destroy(sess *models.Session) error
+}
+
 func NewRouter(
 	authControl AuthController,
 	profileControl ProfileController,
 	postControl PostController,
-	sm middleware.SessionManager,
+	sm SessionManager,
 	logger *logrus.Logger,
 ) http.Handler {
 	router := mux.NewRouter()

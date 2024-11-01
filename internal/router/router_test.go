@@ -56,15 +56,13 @@ func (m mockPostController) GetBatchPosts(w http.ResponseWriter, r *http.Request
 
 type mockMiddleware struct{}
 
-func (m mockMiddleware) Check(r *http.Request) (*models.Session, error) {
+func (m mockMiddleware) Check(str string) (*models.Session, error) { return nil, nil }
+
+func (m mockMiddleware) Create(userID uint32) (*models.Session, error) {
 	return nil, nil
 }
 
-func (m mockMiddleware) Create(w http.ResponseWriter, userID uint32) (*models.Session, error) {
-	return nil, nil
-}
-
-func (m mockMiddleware) Destroy(w http.ResponseWriter, r *http.Request) error {
+func (m mockMiddleware) Destroy(sess *models.Session) error {
 	return nil
 }
 
