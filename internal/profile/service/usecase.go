@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -24,6 +27,28 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 		return nil, fmt.Errorf("get profile by id usecase: %w", err)
 	}
 
+	sess, err := models.SessionFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get session usecase: %w", myErr.ErrSessionNotFound)
+	}
+
+	self := sess.UserID
+	if u == self {
+		profile.IsAuthor = true
+	} else {
+		status, err := p.repo.GetStatus(ctx, self, u)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return nil, fmt.Errorf("get status usecase: %w", err)
+			}
+		} else {
+			profile.IsFriend = status == 0
+			profile.IsSubscription = status == 1
+			profile.IsSubscriber = status == -1
+
+		}
+	}
+
 	header := models.Header{
 		AuthorID: profile.ID,
 		Author:   profile.FirstName + " " + profile.LastName,
@@ -38,8 +63,8 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 	return profile, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	profiles, err := p.repo.GetAll(ctx, self)
+func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error) {
+	profiles, err := p.repo.GetAll(ctx, self, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles usecase: %w", err)
 	}
@@ -50,11 +75,16 @@ func validateOwner(ownerId uint32, profile *models.FullProfile) bool {
 	return ownerId == profile.ID
 }
 
-func (p ProfileUsecaseImplementation) UpdateProfile(owner uint32, newProfile *models.FullProfile) error {
+func (p ProfileUsecaseImplementation) UpdateProfile(ctx context.Context, owner uint32, newProfile *models.FullProfile) error {
 	if !validateOwner(owner, newProfile) {
 		return myErr.ErrWrongOwner
 	}
-	err := p.repo.UpdateProfile(newProfile)
+	var err error
+	if newProfile.Avatar != "" {
+		err = p.repo.UpdateWithAvatar(ctx, newProfile)
+	} else {
+		err = p.repo.UpdateProfile(ctx, newProfile)
+	}
 	if err != nil {
 		return fmt.Errorf("update profile usecase: %w", err)
 	}
@@ -115,29 +145,69 @@ func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllFriends(ctx, self)
+func (p ProfileUsecaseImplementation) setStatuses(ctx context.Context, profiles []*models.ShortProfile) error {
+	sess, err := models.SessionFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("get self session usecase: %w", myErr.ErrSessionNotFound)
+	}
+	selfId := sess.UserID
+
+	friends, subs, subscriptions, err := p.repo.GetStatuses(ctx, selfId)
+	if err != nil {
+		return fmt.Errorf("get status usecase: %w", err)
+	}
+
+	for _, profile := range profiles {
+		profile.IsFriend = slices.Contains(friends, profile.ID)
+		profile.IsSubscriber = slices.Contains(subs, profile.ID)
+		profile.IsSubscription = slices.Contains(subscriptions, profile.ID)
+		profile.IsAuthor = profile.ID == selfId
+	}
+	return nil
+}
+
+func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllFriends(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
 	}
+
+	if res == nil {
+		return res, nil
+	}
+	err = p.setStatuses(ctx, res)
+	if err != nil {
+		return nil, fmt.Errorf("get all friends usecase: %w", err)
+	}
+
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllSubs(ctx, self)
-
+func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubs(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all subs usecase: %w", err)
 	}
+
+	err = p.setStatuses(ctx, res)
+	if err != nil {
+		return nil, fmt.Errorf("get all friends usecase: %w", err)
+	}
+
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, self uint32) ([]*models.ShortProfile, error) {
-	res, err := p.repo.GetAllSubscriptions(ctx, self)
-  
+func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+	res, err := p.repo.GetAllSubscriptions(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
 	}
+
+	err = p.setStatuses(ctx, res)
+	if err != nil {
+		return nil, fmt.Errorf("get all friends usecase: %w", err)
+	}
+
 	return res, nil
 }
 

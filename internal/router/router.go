@@ -27,6 +27,7 @@ type PostController interface {
 }
 
 type ProfileController interface {
+	GetProfile(w http.ResponseWriter, r *http.Request)
 	GetProfileById(w http.ResponseWriter, r *http.Request)
 	GetAll(w http.ResponseWriter, r *http.Request)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)
@@ -59,17 +60,19 @@ func NewRouter(
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost, http.MethodOptions)
 
+	router.HandleFunc("/api/v1/profile/", profileControl.GetProfile).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/update", profileControl.UpdateProfile).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("api/v1/profile/delete", profileControl.DeleteProfile).Methods(http.MethodDelete, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/friend/subscribe/{id}", profileControl.SendFriendReq).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/friend/accept/{id}", profileControl.AcceptFriendReq).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/friend/unsubscribe/{id}", profileControl.Unsubscribe).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/friend/remove/{id}", profileControl.RemoveFromFriends).Methods(http.MethodDelete, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/friends/{id}", profileControl.GetAllFriends).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/subscribers/{id}", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/subscriptions/{id}", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/subscribe", profileControl.SendFriendReq).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/accept", profileControl.AcceptFriendReq).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/unsubscribe", profileControl.Unsubscribe).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/remove", profileControl.RemoveFromFriends).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friends", profileControl.GetAllFriends).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
+
 
 	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet, http.MethodOptions)
