@@ -10,7 +10,7 @@ type Chat struct {
 }
 
 type Message struct {
+	Sender    uint32    `json:"sender"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }
