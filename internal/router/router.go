@@ -9,6 +9,7 @@ import (
 	_ "github.com/swaggo/http-swagger"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 type AuthController interface {
