@@ -18,7 +18,6 @@ type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error, requestID string)
 	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
 	ErrorInternal(w http.ResponseWriter, err error, requestID string)
 	LogError(err error, requestID string)
