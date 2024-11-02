@@ -32,6 +32,7 @@ type ProfileController interface {
 	GetAll(w http.ResponseWriter, r *http.Request)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)
 	DeleteProfile(w http.ResponseWriter, r *http.Request)
+	GetHeader(w http.ResponseWriter, r *http.Request)
 
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
@@ -68,6 +69,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost, http.MethodOptions)
 
+	router.HandleFunc("/api/v1/profile/header", profileControl.GetHeader).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile", profileControl.GetProfile).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet, http.MethodOptions)

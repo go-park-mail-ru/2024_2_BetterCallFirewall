@@ -35,6 +35,28 @@ func NewProfileController(manager profile.ProfileUsecase, responder Responder) *
 	}
 }
 
+func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		h.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	userId := sess.UserID
+	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
+	if err != nil {
+		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	h.Responder.OutputJSON(w, &header, reqID)
+}
+
 func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
