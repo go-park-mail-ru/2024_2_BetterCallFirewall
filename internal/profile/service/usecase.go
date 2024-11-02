@@ -216,6 +216,7 @@ func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID u
 	if err != nil {
 		return nil, fmt.Errorf("get friends id usecase: %w", err)
 	}
+
 	return res, nil
 }
 
@@ -224,5 +225,6 @@ func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint
 	if err != nil {
 		return models.Header{}, fmt.Errorf("get header usecase: %w", err)
 	}
+
 	return *header, nil
 }
