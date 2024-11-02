@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS file (
                                     post_id INT DEFAULT NULL,
                                     comment_id INT DEFAULT NULL,
                                     profile_id INT DEFAULT NULL,
-                                    file_path TEXT DEFAULT '/default',
+                                    file_path TEXT DEFAULT '/image/default',
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -96,6 +96,4 @@ ALTER TABLE file
     ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE NO ACTION,
     ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE NO ACTION;
 
-INSERT INTO file(file_path) VALUES ('/default');
-
-
+INSERT INTO file(file_path) VALUES ('/image/default');
