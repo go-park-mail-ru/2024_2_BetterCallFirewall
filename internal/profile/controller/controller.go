@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -71,6 +72,9 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	userId := sess.UserID
 	userProfile, err := h.ProfileManager.GetProfileById(r.Context(), userId)
 	if err != nil {
+		if errors.Is(err, myErr.ErrProfileNotFound) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+		}
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
