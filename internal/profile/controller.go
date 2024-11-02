@@ -10,6 +10,7 @@ type ProfileHandler interface {
 	GetAll(w http.ResponseWriter, r *http.Request)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)
 	DeleteProfile(w http.ResponseWriter, r *http.Request)
+	GetHeader(w http.ResponseWriter, r *http.Request)
 
 	SendFriendReq(w http.ResponseWriter, r *http.Request)
 	AcceptFriendReq(w http.ResponseWriter, r *http.Request)
