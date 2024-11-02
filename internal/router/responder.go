@@ -24,7 +24,7 @@ func fullUnwrap(err error) error {
 
 type Response struct {
 	Success bool   `json:"success"`
-	Data    any    `json:"data"`
+	Data    any    `json:"data,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
@@ -64,7 +64,7 @@ func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error, requestID st
 	writeHeaders(w)
 	w.WriteHeader(http.StatusBadRequest)
 
-	if err := json.NewEncoder(w).Encode(&Response{Success: false, Data: fullUnwrap(err).Error(), Message: "bad request"}); err != nil {
+	if err := json.NewEncoder(w).Encode(&Response{Success: false, Message: fullUnwrap(err).Error()}); err != nil {
 		r.logger.Errorf("req: %s: %v", requestID, err)
 	}
 }
@@ -78,7 +78,7 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error, requestID stri
 
 	w.WriteHeader(http.StatusInternalServerError)
 
-	if err := json.NewEncoder(w).Encode(&Response{Success: false, Data: myErr.ErrInternal, Message: "internal server error"}); err != nil {
+	if err := json.NewEncoder(w).Encode(&Response{Success: false, Message: myErr.ErrInternal.Error()}); err != nil {
 		r.logger.Errorf("req: %s: %v", requestID, err)
 	}
 }
