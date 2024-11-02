@@ -40,13 +40,13 @@ func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
 
 func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, error) {
 	mkey := "sessions:" + sessID
-	data, err := redis.Bytes(s.db.Do("GET", mkey))
+	data, err := redis.String(s.db.Do("GET", mkey))
 	if err != nil {
 		return nil, myErr.ErrSessionNotFound
 	}
 
 	sess := &models.Session{}
-	err = json.Unmarshal(data, sess)
+	err = json.Unmarshal([]byte(data), sess)
 	if err != nil {
 		return nil, err
 	}
