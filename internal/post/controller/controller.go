@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"image"
 	"log"
 	"math"
 	"mime/multipart"
@@ -18,9 +17,9 @@ import (
 )
 
 var fileFormat = map[string]struct{}{
-	"jpeg": {},
-	"jpg":  {},
-	"png":  {},
+	"image/jpeg": {},
+	"image/jpg":  {},
+	"image/png":  {},
 }
 
 type PostService interface {
@@ -297,11 +296,13 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	if err != nil {
 		file = nil
 	} else {
-		_, format, err := image.Decode(file)
+		buffer := make([]byte, 512)
+		_, err = file.Read(buffer)
 		if err != nil {
 			log.Println(err)
-			return nil, nil, myErr.ErrWrongMultipartForm
 		}
+
+		format := http.DetectContentType(buffer)
 
 		if _, ok := fileFormat[format]; !ok {
 			return nil, nil, myErr.ErrWrongFiletype
