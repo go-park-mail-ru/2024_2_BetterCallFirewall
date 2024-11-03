@@ -282,7 +282,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 }
 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multipart.File, error) {
-	var newPost *models.Post
+	var newPost models.Post
 
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
 	defer r.MultipartForm.RemoveAll()
@@ -309,7 +309,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	}
 
 	text := r.Form.Get("text")
-	newPost.PostContent.Text = text
+	newPost.PostContent = models.Content{Text: text}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
@@ -317,7 +317,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	return newPost, file, nil
+	return &newPost, file, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
