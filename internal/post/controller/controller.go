@@ -309,7 +309,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	}
 
 	text := r.Form.Get("text")
-	newPost.PostContent = models.Content{Text: text}
+	newPost.PostContent.Text = text
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
