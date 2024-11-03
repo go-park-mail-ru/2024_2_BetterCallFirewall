@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -44,7 +45,7 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 
 	res, err := fc.fileService.Upload(r.Context(), name)
 	if err != nil {
-		fc.responder.ErrorBadRequest(w, myErr.ErrWrongFile, reqID)
+		fc.responder.ErrorBadRequest(w, fmt.Errorf("%w: %w", err, myErr.ErrWrongFile), reqID)
 		return
 	}
 
