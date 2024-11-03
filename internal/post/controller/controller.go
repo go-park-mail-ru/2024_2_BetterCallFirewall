@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"math"
 	"mime/multipart"
 	"net/http"
@@ -299,7 +298,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 		buffer := make([]byte, 512)
 		_, err = file.Read(buffer)
 		if err != nil {
-			log.Println(err)
+			return nil, nil, err
 		}
 
 		format := http.DetectContentType(buffer)
