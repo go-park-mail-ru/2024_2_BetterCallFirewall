@@ -49,10 +49,15 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
+type FileController interface {
+	Upload(w http.ResponseWriter, r *http.Request)
+}
+
 func NewRouter(
 	authControl AuthController,
 	profileControl ProfileController,
 	postControl PostController,
+	fileControl FileController,
 	sm SessionManager,
 	logger *logrus.Logger,
 ) http.Handler {
@@ -80,6 +85,8 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
+
+	router.HandleFunc("/api/v1/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)

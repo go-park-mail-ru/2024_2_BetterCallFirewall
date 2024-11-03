@@ -20,6 +20,10 @@ func (m MockAuthController) Logout(w http.ResponseWriter, r *http.Request) {}
 
 type mockProfileController struct{}
 
+func (m mockProfileController) GetProfile(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockProfileController) GetHeader(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockProfileController) GetProfileById(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) GetAll(w http.ResponseWriter, r *http.Request) {}
@@ -66,7 +70,15 @@ func (m mockMiddleware) Destroy(sess *models.Session) error {
 	return nil
 }
 
+type mockFileController struct{}
+
+func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
+
 func TestNewRouter(t *testing.T) {
-	router := NewRouter(MockAuthController{}, mockProfileController{}, mockPostController{}, mockMiddleware{}, logrus.New())
+	router := NewRouter(MockAuthController{},
+		mockProfileController{},
+		mockPostController{},
+		mockFileController{},
+		mockMiddleware{}, logrus.New())
 	assert.NotNil(t, router)
 }

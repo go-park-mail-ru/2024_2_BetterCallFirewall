@@ -27,4 +27,6 @@ var (
 	ErrAnotherService       = errors.New("another service")
 	ErrInvalidQuery         = errors.New("invalid query parameter")
 	ErrInvalidContext       = errors.New("invalid context parameter")
+	ErrWrongFile            = errors.New("wrong file name")
+	ErrNoFile               = errors.New("file not found")
 )

@@ -243,7 +243,7 @@ func TestLogout(t *testing.T) {
 			w:        httptest.NewRecorder(),
 			r:        reqWithBadSession,
 			wantCode: http.StatusBadRequest,
-			wantBody: `"bad request error"`,
+			wantBody: "bad request error",
 		},
 	}
 

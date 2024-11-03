@@ -16,7 +16,9 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
 	redismy "github.com/2024_2_BetterCallFirewall/internal/auth/repository/redis"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
-	"github.com/2024_2_BetterCallFirewall/internal/fileService"
+	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
+	fileRepo "github.com/2024_2_BetterCallFirewall/internal/fileService/repository"
+	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresProfile "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
@@ -72,11 +74,14 @@ func main() {
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
 
-	fileServ := fileService.NewFileService()
+	fileRepository := fileRepo.NewFileRepo(postgresDB)
+	fileServ := fileservis.NewFileService(fileRepository)
+	fileController := filecontrol.NewFileController(fileServ, responder)
+
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, sessionManager, logger)
+	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,

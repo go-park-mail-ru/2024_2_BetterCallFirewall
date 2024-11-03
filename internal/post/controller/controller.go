@@ -42,8 +42,8 @@ type Responder interface {
 }
 
 type FileService interface {
-	Upload(file multipart.File) (*models.Picture, error)
-	GetPostPicture(postID uint32) *models.Picture
+	Download(ctx context.Context, file multipart.File, postID, profileID uint32) (*models.Picture, error)
+	GetPostPicture(ctx context.Context, postID uint32) *models.Picture
 }
 
 type PostController struct {
@@ -106,7 +106,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	post.PostContent.File = pc.fileService.GetPostPicture(postID)
+	post.PostContent.File = pc.fileService.GetPostPicture(r.Context(), postID)
 
 	pc.responder.OutputJSON(w, post, reqID)
 }
@@ -255,7 +255,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	for _, p := range posts {
-		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
+		p.PostContent.File = pc.fileService.GetPostPicture(r.Context(), p.ID)
 	}
 
 	if errors.Is(err, myErr.ErrNoMoreContent) {

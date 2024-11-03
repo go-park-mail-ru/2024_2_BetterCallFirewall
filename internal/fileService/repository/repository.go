@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type FileRepo struct {
@@ -29,6 +32,9 @@ func (fr FileRepo) GetProfileFiles(ctx context.Context, profileId uint32) ([]*st
 	res := make([]*string, 0)
 	rows, err := fr.DB.QueryContext(ctx, GetProfileFile, profileId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrNoFile
+		}
 		return nil, fmt.Errorf("get file failed db: %w", err)
 	}
 	for rows.Next() {
@@ -43,20 +49,15 @@ func (fr FileRepo) GetProfileFiles(ctx context.Context, profileId uint32) ([]*st
 	return res, nil
 }
 
-func (fr FileRepo) GetPostFiles(ctx context.Context, postId uint32) ([]*string, error) {
-	res := make([]*string, 0)
-	rows, err := fr.DB.QueryContext(ctx, GetPostFile, postId)
-	if err != nil {
-		return nil, fmt.Errorf("get file failed db: %w", err)
-	}
-	for rows.Next() {
-		var file string
-		err := rows.Scan(&file)
-		if err != nil {
-			return nil, fmt.Errorf("get file failed db: %w", err)
+func (fr FileRepo) GetPostFiles(ctx context.Context, postId uint32) (string, error) {
+	var res string
+
+	if err := fr.DB.QueryRowContext(ctx, GetPostFile, postId).Scan(&res); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", myErr.ErrNoFile
 		}
-		res = append(res, &file)
+		return "", fmt.Errorf("get file failed db: %w", err)
 	}
-	rows.Close()
+
 	return res, nil
 }

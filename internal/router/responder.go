@@ -59,6 +59,15 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 	r.logger.Infof("req: %s: success request", requestID)
 }
 
+func (r *Respond) OutputBytes(w http.ResponseWriter, data []byte, requestID string) {
+	writeHeaders(w)
+	w.WriteHeader(http.StatusOK)
+
+	_, _ = w.Write(data)
+
+	r.logger.Infof("req: %s: success request", requestID)
+}
+
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error, requestID string) {
 	r.logger.Warnf("req: %s: %v", requestID, err)
 	writeHeaders(w)
