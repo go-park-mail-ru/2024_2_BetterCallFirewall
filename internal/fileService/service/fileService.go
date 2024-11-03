@@ -13,7 +13,8 @@ import (
 )
 
 type Repo interface {
-	InsertFilePath(ctx context.Context, filePath string, profileId uint32, postId uint32) error
+	InsertPostFilePath(ctx context.Context, filePath string, postId uint32) error
+	InsertProfileFilePath(ctx context.Context, filePath string, profileId uint32) error
 	GetProfileFiles(ctx context.Context, profileId uint32) ([]*string, error)
 	GetPostFiles(ctx context.Context, postId uint32) (string, error)
 }
@@ -41,7 +42,12 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, postId,
 		return fmt.Errorf("save file: %w", err)
 	}
 
-	err = f.repo.InsertFilePath(ctx, fileName, profileId, postId)
+	if profileId == 0 {
+		err = f.repo.InsertPostFilePath(ctx, filePath, postId)
+	} else if postId == 0 {
+		err = f.repo.InsertProfileFilePath(ctx, filePath, profileId)
+	}
+
 	if err != nil {
 		return fmt.Errorf("save file: %w", err)
 	}

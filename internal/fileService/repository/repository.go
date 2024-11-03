@@ -20,8 +20,16 @@ func NewFileRepo(db *sql.DB) *FileRepo {
 	return repo
 }
 
-func (fr FileRepo) InsertFilePath(ctx context.Context, filePath string, profileId uint32, postId uint32) error {
-	_, err := fr.DB.ExecContext(ctx, InsertPostFile, filePath, profileId, postId)
+func (fr FileRepo) InsertPostFilePath(ctx context.Context, filePath string, postId uint32) error {
+	_, err := fr.DB.ExecContext(ctx, InsertPostFile, filePath, postId)
+	if err != nil {
+		return fmt.Errorf("insert file failed: %w", err)
+	}
+	return nil
+}
+
+func (fr FileRepo) InsertProfileFilePath(ctx context.Context, filePath string, profileId uint32) error {
+	_, err := fr.DB.ExecContext(ctx, InsertProfileFile, filePath, profileId)
 	if err != nil {
 		return fmt.Errorf("insert file failed: %w", err)
 	}
