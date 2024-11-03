@@ -128,8 +128,8 @@ func (m *mockResponder) LogError(err error, _ string) {}
 
 type mockFileService struct{}
 
-func (m *mockFileService) Download(ctx context.Context, file multipart.File, postID, profileID uint32) (*models.Picture, error) {
-	return nil, nil
+func (m *mockFileService) Download(ctx context.Context, file multipart.File, postID, profileID uint32) error {
+	return nil
 }
 
 func (m *mockFileService) GetPostPicture(ctx context.Context, postID uint32) *models.Picture {

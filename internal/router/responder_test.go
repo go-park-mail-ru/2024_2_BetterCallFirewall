@@ -28,9 +28,8 @@ var (
 const (
 	TestData              = "Sent data to user"
 	TestDataOutputBody    = `{"success":true,"data":"Sent data to user"}`
-	TestDataWrongMethod   = `{"success":false,"data":"error","message":"method not allowed"}`
-	TestDataBadRequest    = `{"success":false,"data":"error","message":"bad request"}`
-	TestDataInternalError = `{"success":false,"data":{},"message":"internal server error"}`
+	TestDataBadRequest    = `{"success":false,"message":"error"}`
+	TestDataInternalError = `{"success":false,"message":"internal error"}`
 	TestDataNoMoreContent = ``
 )
 
@@ -47,6 +46,27 @@ func TestOutputJSON(t *testing.T) {
 
 	for caseNum, test := range tests {
 		TestResponder.OutputJSON(test.testResponse, test.testData, test.testReqID)
+		if test.testResponse.Code != test.expectedCode {
+			t.Errorf("[%d} wrong status code, expected %d, got %d", caseNum, test.expectedCode, test.testResponse.Code)
+		}
+		if strings.Compare(test.expectedBody, strings.TrimSpace(test.testResponse.Body.String())) != 0 {
+			t.Errorf("[%d] wrong body, expected %s, got %s", caseNum, test.expectedBody, test.testResponse.Body.String())
+		}
+	}
+}
+
+func TestOutputBytes(t *testing.T) {
+	tests := []TestRouter{
+		{
+			testResponse: httptest.NewRecorder(),
+			testData:     []byte("test data"),
+			expectedCode: http.StatusOK,
+			expectedBody: "test data",
+			testReqID:    uuid.New().String(),
+		},
+	}
+	for caseNum, test := range tests {
+		TestResponder.OutputBytes(test.testResponse, test.testData.([]byte), test.testReqID)
 		if test.testResponse.Code != test.expectedCode {
 			t.Errorf("[%d} wrong status code, expected %d, got %d", caseNum, test.expectedCode, test.testResponse.Code)
 		}

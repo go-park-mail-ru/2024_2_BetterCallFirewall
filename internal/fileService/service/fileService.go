@@ -28,27 +28,25 @@ func NewFileService(repo Repo) *FileService {
 	}
 }
 
-func (f *FileService) Download(ctx context.Context, file multipart.File, postId, profileId uint32) (*models.Picture, error) {
+func (f *FileService) Download(ctx context.Context, file multipart.File, postId, profileId uint32) error {
 	fileName := uuid.New().String()
 	filePath := fmt.Sprintf("image/%s", fileName)
 	dst, err := os.Create(filePath)
 	defer dst.Close()
 	if err != nil {
-		return nil, fmt.Errorf("save file: %w", err)
+		return fmt.Errorf("save file: %w", err)
 	}
 
 	if _, err := io.Copy(dst, file); err != nil {
-		return nil, fmt.Errorf("save file: %w", err)
+		return fmt.Errorf("save file: %w", err)
 	}
-
-	pic := models.Picture(filePath)
 
 	err = f.repo.InsertFilePath(ctx, fileName, profileId, postId)
 	if err != nil {
-		return nil, fmt.Errorf("save file: %w", err)
+		return fmt.Errorf("save file: %w", err)
 	}
 
-	return &pic, nil
+	return nil
 }
 
 func (f *FileService) Upload(ctx context.Context, name string) ([]byte, error) {

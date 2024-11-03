@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
 	"math"
 	"mime/multipart"
 	"net/http"
@@ -42,7 +43,7 @@ type Responder interface {
 }
 
 type FileService interface {
-	Download(ctx context.Context, file multipart.File, postID, profileID uint32) (*models.Picture, error)
+	Download(ctx context.Context, file multipart.File, postID, profileID uint32) error
 	GetPostPicture(ctx context.Context, postID uint32) *models.Picture
 }
 
@@ -77,6 +78,13 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
 		return
 	}
+
+	err = pc.saveFileFromMultipart(r, id)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	newPost.ID = id
 
 	pc.responder.OutputJSON(w, newPost, reqID)
@@ -146,6 +154,12 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	err = pc.saveFileFromMultipart(r, post.ID)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -281,6 +295,36 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	newPost.Header.AuthorID = sess.UserID
 
 	return newPost, nil
+}
+
+func (pc *PostController) saveFileFromMultipart(r *http.Request, postID uint32) error {
+	if r.MultipartForm == nil {
+		return nil
+	}
+
+	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
+	if err != nil {
+		return myErr.ErrToLargeFile
+	}
+
+	file, _, err := r.FormFile("file")
+	defer file.Close()
+	if err != nil {
+		return myErr.ErrWrongMultipartForm
+	}
+
+	_, format, err := image.Decode(file)
+	if err != nil {
+		return myErr.ErrWrongMultipartForm
+	}
+
+	if _, ok := fileFormat[format]; !ok {
+		return myErr.ErrWrongFiletype
+	}
+
+	err = pc.fileService.Download(r.Context(), file, postID, 0)
+
+	return err
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
