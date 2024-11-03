@@ -51,7 +51,7 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, postId,
 
 func (f *FileService) Upload(ctx context.Context, name string) ([]byte, error) {
 	var (
-		file, err = os.Open(name)
+		file, err = os.Open(fmt.Sprintf("image/%s", name))
 		res       []byte
 		sl        = make([]byte, 1024)
 	)
