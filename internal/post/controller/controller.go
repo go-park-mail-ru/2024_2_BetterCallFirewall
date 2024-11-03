@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
@@ -283,10 +282,14 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
 	var newPost *models.Post
 
-	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
-		return nil, err
+	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
+	defer r.MultipartForm.RemoveAll()
+	if err != nil {
+		return nil, myErr.ErrToLargeFile
 	}
-	defer r.Body.Close()
+
+	text := r.Form.Get("text")
+	newPost.PostContent.Text = text
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
