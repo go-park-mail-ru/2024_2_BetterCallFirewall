@@ -19,7 +19,7 @@ EXPOSE 8080
 
 COPY .env .
 
-COPY image .
+COPY image ./image
 
 COPY --from=build /app/main /app/main
 
