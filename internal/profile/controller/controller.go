@@ -51,6 +51,10 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 	userId := sess.UserID
 	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
 	if err != nil {
+		if errors.Is(err, myErr.ErrProfileNotFound) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}

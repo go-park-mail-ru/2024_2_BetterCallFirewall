@@ -268,7 +268,10 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	profile := &models.Header{AuthorID: u}
 	err := p.DB.QueryRowContext(ctx, GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
 	if err != nil {
-		return nil, fmt.Errorf("get short profile db: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrProfileNotFound
+		}
+		return nil, fmt.Errorf("get header db: %w", err)
 	}
 	return profile, nil
 }
