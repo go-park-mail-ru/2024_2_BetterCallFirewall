@@ -1,8 +1,8 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -29,9 +29,17 @@ import (
 )
 
 func main() {
+	logger := logrus.New()
+	logger.Formatter = &logrus.TextFormatter{
+		FullTimestamp:   true,
+		DisableColors:   false,
+		TimestampFormat: "2006-01-02 15:04:05",
+		ForceColors:     true,
+	}
+
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file")
 	}
 
 	dbUser := os.Getenv("DB_USER")
@@ -50,22 +58,14 @@ func main() {
 		},
 	}
 
-	postgresDB, err := postgres.StartPostgres(connStr)
+	postgresDB, err := StartPostgres(connStr, logger)
 	if err != nil {
-		log.Fatalf("Error starting postgres: %v", err)
+		logger.Fatalf("Error starting postgres: %v", err)
 	}
 
 	repo := postgres.NewAdapter(postgresDB)
 	profileRepo := profileRepository.NewProfileRepo(postgresDB)
 	authServ := service.NewAuthServiceImpl(repo)
-
-	logger := logrus.New()
-	logger.Formatter = &logrus.TextFormatter{
-		FullTimestamp:   true,
-		DisableColors:   false,
-		TimestampFormat: "2006-01-02 15:04:05",
-		ForceColors:     true,
-	}
 
 	responder := router.NewResponder(logger)
 	sessionRepo := redismy.NewSessionRedisRepository(redisPool)
@@ -91,8 +91,30 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	log.Println("Starting server on port 8080")
+	logger.Info("Starting server on port 8080")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("listen: %s\n", err)
+		logger.Fatalf("listen: %s\n", err)
 	}
+}
+
+func StartPostgres(connStr string, logger *logrus.Logger) (*sql.DB, error) {
+	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("postgres connect: %w", err)
+	}
+	db.SetMaxOpenConns(10)
+
+	retrying := 10
+	i := 1
+	logger.Infof("try ping:%v", i)
+	for err = db.Ping(); err != nil; err = db.Ping() {
+		if i >= retrying {
+			return nil, fmt.Errorf("postgres connect: %w", err)
+		}
+		i++
+		time.Sleep(1 * time.Second)
+		logger.Infof("try ping postgresql: %v", i)
+	}
+
+	return db, nil
 }
