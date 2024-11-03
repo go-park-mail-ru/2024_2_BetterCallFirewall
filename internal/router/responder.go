@@ -61,6 +61,7 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 
 func (r *Respond) OutputBytes(w http.ResponseWriter, data []byte, requestID string) {
 	writeHeaders(w)
+	w.Header().Set("Content-Type", "gzip, deflate")
 	w.WriteHeader(http.StatusOK)
 
 	_, _ = w.Write(data)
