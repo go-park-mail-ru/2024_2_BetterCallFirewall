@@ -21,6 +21,7 @@ func NewSessionRedisRepository(db *redis.Pool) *SessionRedisRepository {
 
 func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
 	conn := s.db.Get()
+	defer conn.Close()
 	dataSerialized, err := json.Marshal(session)
 	if err != nil {
 		return err
@@ -41,6 +42,7 @@ func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
 
 func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, error) {
 	conn := s.db.Get()
+	defer conn.Close()
 	mkey := "sessions:" + sessID
 	data, err := redis.String(conn.Do("GET", mkey))
 	if err != nil {
@@ -58,6 +60,7 @@ func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, er
 
 func (s *SessionRedisRepository) DestroySession(sessID string) error {
 	conn := s.db.Get()
+	defer conn.Close()
 	mkey := "sessions:" + sessID
 	_, err := redis.Int(conn.Do("DEL", mkey))
 	if err != nil {
