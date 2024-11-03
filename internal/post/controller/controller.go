@@ -289,7 +289,6 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
 	defer r.MultipartForm.RemoveAll()
 	if err != nil {
-		log.Println(err)
 		return nil, nil, myErr.ErrToLargeFile
 	}
 
@@ -300,6 +299,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	} else {
 		_, format, err := image.Decode(file)
 		if err != nil {
+			log.Println(err)
 			return nil, nil, myErr.ErrWrongMultipartForm
 		}
 
