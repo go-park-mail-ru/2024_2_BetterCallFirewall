@@ -19,6 +19,7 @@ var fileFormat = map[string]struct{}{
 	"image/jpeg": {},
 	"image/jpg":  {},
 	"image/png":  {},
+	"image/webp": {},
 }
 
 type PostService interface {
