@@ -170,13 +170,14 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 
 	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, myErr.ErrProfileNotFound) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-	if profile == nil {
-		h.Responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
+
 	h.Responder.OutputJSON(w, profile, reqID)
 }
 
