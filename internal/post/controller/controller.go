@@ -66,7 +66,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	newPost, err := pc.getPostFromBody(r)
+	newPost, file, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -78,12 +78,13 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = pc.saveFileFromMultipart(r, id)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
+	if file != nil {
+		err = pc.fileService.Download(r.Context(), file, id, 0)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 	}
-
 	newPost.ID = id
 
 	pc.responder.OutputJSON(w, newPost, reqID)
@@ -124,7 +125,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	post, err := pc.getPostFromBody(r)
+	post, file, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -156,10 +157,12 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = pc.saveFileFromMultipart(r, post.ID)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
+	if file != nil {
+		err = pc.fileService.Download(r.Context(), file, post.ID, 0)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 	}
 
 	pc.responder.OutputJSON(w, post, reqID)
@@ -279,13 +282,28 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	pc.responder.OutputJSON(w, posts, reqID)
 }
 
-func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
+func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multipart.File, error) {
 	var newPost *models.Post
 
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
 	defer r.MultipartForm.RemoveAll()
 	if err != nil {
-		return nil, myErr.ErrToLargeFile
+		return nil, nil, myErr.ErrToLargeFile
+	}
+
+	file, _, err := r.FormFile("file")
+	defer file.Close()
+	if err != nil {
+		file = nil
+	} else {
+		_, format, err := image.Decode(file)
+		if err != nil {
+			return nil, nil, myErr.ErrWrongMultipartForm
+		}
+
+		if _, ok := fileFormat[format]; !ok {
+			return nil, nil, myErr.ErrWrongFiletype
+		}
 	}
 
 	text := r.Form.Get("text")
@@ -293,42 +311,11 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	return newPost, nil
-}
-
-func (pc *PostController) saveFileFromMultipart(r *http.Request, postID uint32) error {
-	if r.MultipartForm == nil {
-		return nil
-	}
-
-	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
-	defer r.MultipartForm.RemoveAll()
-	if err != nil {
-		return myErr.ErrToLargeFile
-	}
-
-	file, _, err := r.FormFile("file")
-	defer file.Close()
-	if err != nil {
-		return myErr.ErrWrongMultipartForm
-	}
-
-	_, format, err := image.Decode(file)
-	if err != nil {
-		return myErr.ErrWrongMultipartForm
-	}
-
-	if _, ok := fileFormat[format]; !ok {
-		return myErr.ErrWrongFiletype
-	}
-
-	err = pc.fileService.Download(r.Context(), file, postID, 0)
-
-	return err
+	return newPost, file, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
