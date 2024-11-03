@@ -42,9 +42,12 @@ func main() {
 	dbSSLMode := os.Getenv("DB_SSLMODE")
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
 
-	redisConn, err := redis.Dial("tcp", "redis:6379")
-	if err != nil {
-		log.Fatal(err)
+	redisPool := &redis.Pool{
+		MaxIdle:   10,
+		MaxActive: 10,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", "redis:6379")
+		},
 	}
 
 	postgresDB, err := postgres.StartPostgres(connStr)
@@ -65,7 +68,7 @@ func main() {
 	}
 
 	responder := router.NewResponder(logger)
-	sessionRepo := redismy.NewSessionRedisRepository(redisConn)
+	sessionRepo := redismy.NewSessionRedisRepository(redisPool)
 	sessionManager := service.NewSessionManager(sessionRepo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
