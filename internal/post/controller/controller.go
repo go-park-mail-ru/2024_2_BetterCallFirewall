@@ -303,6 +303,7 @@ func (pc *PostController) saveFileFromMultipart(r *http.Request, postID uint32) 
 	}
 
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
+	defer r.MultipartForm.RemoveAll()
 	if err != nil {
 		return myErr.ErrToLargeFile
 	}
