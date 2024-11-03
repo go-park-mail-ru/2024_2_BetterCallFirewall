@@ -60,8 +60,9 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 }
 
 func (r *Respond) OutputBytes(w http.ResponseWriter, data []byte, requestID string) {
-	writeHeaders(w)
 	w.Header().Set("Content-Type", "image/avif,image/webp")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusOK)
 
 	_, _ = w.Write(data)
