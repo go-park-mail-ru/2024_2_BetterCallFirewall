@@ -70,7 +70,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 
 	client := &Client{
 		Socket:  socket,
-		Receive: make(chan []byte, messageBufferSize),
+		Receive: cc.Messages,
 	}
 	mapUserConn[sess.UserID] = client
 	defer func() {
