@@ -48,12 +48,20 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
+type ChatController interface {
+	SetConnection(w http.ResponseWriter, r *http.Request)
+	GetChats(w http.ResponseWriter, r *http.Request)
+	GetChatById(w http.ResponseWriter, r *http.Request)
+	SendChatMsg(w http.ResponseWriter, r *http.Request)
+}
+
 func NewRouter(
 	authControl AuthController,
 	profileControl ProfileController,
 	postControl PostController,
 	sm SessionManager,
 	logger *logrus.Logger,
+	chatControl ChatController,
 ) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
@@ -73,12 +81,15 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
 
-
 	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
+
+	router.HandleFunc("/api/v1/messages/chats", chatControl.GetChats).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChatById).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)

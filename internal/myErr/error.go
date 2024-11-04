@@ -26,4 +26,5 @@ var (
 	ErrAnotherService       = errors.New("another service")
 	ErrInvalidQuery         = errors.New("invalid query parameter")
 	ErrInvalidContext       = errors.New("invalid context parameter")
+	ErrWrongDateFormat      = errors.New("wrong date format")
 )
