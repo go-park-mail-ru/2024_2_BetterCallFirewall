@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - file_server:/home/ubuntu/2024_2_BetterCallFirewall/image
+      - ./image:/image
     ports:
       - "8080:8080"
     depends_on:
@@ -51,4 +51,3 @@ services:
     stdin_open: true
 volumes:
   postgres_data:
-  file_server:
