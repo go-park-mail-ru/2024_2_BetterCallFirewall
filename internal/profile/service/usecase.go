@@ -71,7 +71,7 @@ func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32, l
 	return profiles, nil
 }
 
-func (p ProfileUsecaseImplementation) UpdateProfile(ctx context.Context, owner uint32, newProfile *models.FullProfile) error {
+func (p ProfileUsecaseImplementation) UpdateProfile(ctx context.Context, newProfile *models.FullProfile) error {
 	var err error
 
 	if newProfile.Avatar != "" {

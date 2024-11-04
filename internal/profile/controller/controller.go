@@ -115,15 +115,15 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", myErr.ErrSessionNotFound), reqID)
 		return
 	}
-	userId := sess.UserID
 
 	newProfile, err := h.getNewProfile(r)
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+	newProfile.ID = sess.UserID
 
-	err = h.ProfileManager.UpdateProfile(r.Context(), userId, newProfile)
+	err = h.ProfileManager.UpdateProfile(r.Context(), newProfile)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
