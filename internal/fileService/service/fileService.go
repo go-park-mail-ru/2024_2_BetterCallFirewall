@@ -17,6 +17,7 @@ type Repo interface {
 	InsertProfileFilePath(ctx context.Context, filePath string, profileId uint32) error
 	GetProfileFiles(ctx context.Context, profileId uint32) ([]*string, error)
 	GetPostFiles(ctx context.Context, postId uint32) (string, error)
+	UpdatePostFile(ctx context.Context, filepath string, postId uint32) error
 }
 
 type FileService struct {
@@ -29,17 +30,29 @@ func NewFileService(repo Repo) *FileService {
 	}
 }
 
-func (f *FileService) Download(ctx context.Context, file multipart.File, postId, profileId uint32) error {
-	fileName := uuid.New().String()
-	filePath := fmt.Sprintf("image/%s", fileName)
-	dst, err := os.Create(filePath)
+func createFile(file multipart.File) (string, error) {
+	var (
+		fileName = uuid.New().String()
+		filePath = fmt.Sprintf("image/%s", fileName)
+		dst, err = os.Create(filePath)
+	)
+
 	defer dst.Close()
 	if err != nil {
-		return fmt.Errorf("save file: %w", err)
+		return "", fmt.Errorf("save file: %w", err)
 	}
 
 	if _, err := io.Copy(dst, file); err != nil {
-		return fmt.Errorf("save file: %w", err)
+		return "", fmt.Errorf("save file: %w", err)
+	}
+
+	return filePath, nil
+}
+
+func (f *FileService) Download(ctx context.Context, file multipart.File, postId, profileId uint32) error {
+	filePath, err := createFile(file)
+	if err != nil {
+		return err
 	}
 
 	if profileId == 0 {
@@ -48,6 +61,20 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, postId,
 		err = f.repo.InsertProfileFilePath(ctx, filePath, profileId)
 	}
 
+	if err != nil {
+		return fmt.Errorf("save file: %w", err)
+	}
+
+	return nil
+}
+
+func (f *FileService) UpdatePostFile(ctx context.Context, file multipart.File, postId uint32) error {
+	filePath, err := createFile(file)
+	if err != nil {
+		return err
+	}
+
+	err = f.repo.UpdatePostFile(ctx, filePath, postId)
 	if err != nil {
 		return fmt.Errorf("save file: %w", err)
 	}

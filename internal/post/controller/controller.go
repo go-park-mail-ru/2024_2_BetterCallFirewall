@@ -44,6 +44,7 @@ type Responder interface {
 type FileService interface {
 	Download(ctx context.Context, file multipart.File, postID, profileID uint32) error
 	GetPostPicture(ctx context.Context, postID uint32) *models.Picture
+	UpdatePostFile(ctx context.Context, file multipart.File, postID uint32) error
 }
 
 type PostController struct {
@@ -168,7 +169,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if file != nil {
-		err = pc.fileService.Download(r.Context(), file, post.ID, 0)
+		err = pc.fileService.UpdatePostFile(r.Context(), file, post.ID)
 		if err != nil {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
