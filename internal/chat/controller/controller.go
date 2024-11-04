@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/2024_2_BetterCallFirewall/internal/chat"
-	"github.com/2024_2_BetterCallFirewall/internal/entity"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -47,7 +46,7 @@ const (
 
 var (
 	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize}
-	mapUserConn = make(map[uint32]*entity.Client)
+	mapUserConn = make(map[uint32]*chat.Client)
 )
 
 func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +68,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	client := &entity.Client{
+	client := &chat.Client{
 		Socket:  socket,
 		Receive: make(chan []byte, messageBufferSize),
 	}
