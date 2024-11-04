@@ -59,6 +59,17 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 	r.logger.Infof("req: %s: success request", requestID)
 }
 
+func (r *Respond) OutputBytes(w http.ResponseWriter, data []byte, requestID string) {
+	w.Header().Set("Content-Type", "image/avif,image/webp")
+	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.WriteHeader(http.StatusOK)
+
+	_, _ = w.Write(data)
+
+	r.logger.Infof("req: %s: success request", requestID)
+}
+
 func (r *Respond) ErrorBadRequest(w http.ResponseWriter, err error, requestID string) {
 	r.logger.Warnf("req: %s: %v", requestID, err)
 	writeHeaders(w)

@@ -128,7 +128,7 @@ func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastI
 	return createPostBatchFromRows(rows)
 }
 
-func (a *Adapter) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
+func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
 	var posts []*models.Post
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)

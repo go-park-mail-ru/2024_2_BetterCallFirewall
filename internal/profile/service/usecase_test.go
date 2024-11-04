@@ -96,7 +96,7 @@ func (m MockProfileDB) GetAll(ctx context.Context, self uint32, lastId uint32) (
 	return nil, sql.ErrNoRows
 }
 
-func (m MockProfileDB) UpdateProfile(profile *models.FullProfile) error {
+func (m MockProfileDB) UpdateProfile(ctx context.Context, profile *models.FullProfile) error {
 	return nil
 }
 
@@ -165,6 +165,17 @@ func (m MockProfileDB) GetHeader(ctx context.Context, u uint32) (*models.Header,
 		return &models.Header{AuthorID: u, Author: "Andrew Savvateev"}, nil
 	}
 	return nil, sql.ErrNoRows
+}
+
+func (m MockProfileDB) GetStatus(context.Context, uint32, uint32) (int, error) { return 0, nil }
+
+func (m MockProfileDB) UpdateWithAvatar(context.Context, *models.FullProfile) error { return nil }
+
+func (m MockProfileDB) GetSubscriptionsID(context.Context, uint32) ([]uint32, error) { return nil, nil }
+
+func (m MockProfileDB) GetSubscribersID(context.Context, uint32) ([]uint32, error) { return nil, nil }
+func (m MockProfileDB) GetStatuses(context.Context, uint32) ([]uint32, []uint32, []uint32, error) {
+	return nil, nil, nil, nil
 }
 
 func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {

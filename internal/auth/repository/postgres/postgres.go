@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 
@@ -50,26 +48,4 @@ func (a *Adapter) GetByEmail(email string, ctx context.Context) (*models.User, e
 	}
 
 	return user, nil
-}
-
-func StartPostgres(connStr string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("postgres connect: %w", err)
-	}
-	db.SetMaxOpenConns(10)
-
-	retrying := 10
-	i := 1
-	log.Printf("try ping:%v", i)
-	for err = db.Ping(); err != nil; err = db.Ping() {
-		if i >= retrying {
-			return nil, fmt.Errorf("postgres connect: %w", err)
-		}
-		i++
-		time.Sleep(1 * time.Second)
-		log.Printf("try ping postgresql: %v", i)
-	}
-
-	return db, nil
 }

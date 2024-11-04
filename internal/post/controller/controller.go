@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -17,9 +16,10 @@ import (
 )
 
 var fileFormat = map[string]struct{}{
-	"jpeg": {},
-	"jpg":  {},
-	"png":  {},
+	"image/jpeg": {},
+	"image/jpg":  {},
+	"image/png":  {},
+	"image/webp": {},
 }
 
 type PostService interface {
@@ -42,8 +42,9 @@ type Responder interface {
 }
 
 type FileService interface {
-	Upload(file multipart.File) (*models.Picture, error)
-	GetPostPicture(postID uint32) *models.Picture
+	Download(ctx context.Context, file multipart.File, postID, profileID uint32) error
+	GetPostPicture(ctx context.Context, postID uint32) *models.Picture
+	UpdatePostFile(ctx context.Context, file multipart.File, postID uint32) error
 }
 
 type PostController struct {
@@ -66,7 +67,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	newPost, err := pc.getPostFromBody(r)
+	newPost, file, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -76,6 +77,15 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
 		return
+	}
+
+	if file != nil {
+		defer file.Close()
+		err = pc.fileService.Download(r.Context(), file, id, 0)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 	}
 	newPost.ID = id
 
@@ -106,24 +116,34 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	post.PostContent.File = pc.fileService.GetPostPicture(postID)
+	post.PostContent.File = pc.fileService.GetPostPicture(r.Context(), postID)
 
 	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
-	}
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = getIDFromQuery(r)
+	)
 
-	post, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
+	if !ok {
+		pc.responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
+	post, file, err := pc.getPostFromBody(r)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+	post.ID = id
 	userID := post.Header.AuthorID
+
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
@@ -147,6 +167,15 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		}
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
+	}
+
+	if file != nil {
+		defer file.Close()
+		err = pc.fileService.UpdatePostFile(r.Context(), file, post.ID)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 	}
 
 	pc.responder.OutputJSON(w, post, reqID)
@@ -255,7 +284,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	for _, p := range posts {
-		p.PostContent.File = pc.fileService.GetPostPicture(p.ID)
+		p.PostContent.File = pc.fileService.GetPostPicture(r.Context(), p.ID)
 	}
 
 	if errors.Is(err, myErr.ErrNoMoreContent) {
@@ -266,21 +295,36 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	pc.responder.OutputJSON(w, posts, reqID)
 }
 
-func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
-	var newPost *models.Post
+func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multipart.File, error) {
+	var newPost models.Post
 
-	if err := json.NewDecoder(r.Body).Decode(&newPost); err != nil {
-		return nil, err
+	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
+	defer r.MultipartForm.RemoveAll()
+	if err != nil {
+		return nil, nil, myErr.ErrToLargeFile
 	}
-	defer r.Body.Close()
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		file = nil
+	} else {
+		format := header.Header.Get("Content-Type")
+
+		if _, ok := fileFormat[format]; !ok {
+			return nil, nil, myErr.ErrWrongFiletype
+		}
+	}
+
+	text := r.Form.Get("text")
+	newPost.PostContent.Text = text
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	newPost.Header.AuthorID = sess.UserID
 
-	return newPost, nil
+	return &newPost, file, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {

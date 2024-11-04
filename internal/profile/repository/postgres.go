@@ -57,11 +57,11 @@ func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, [
 		tmpSubscribers   sql.NullString
 		tmpSubscriptions sql.NullString
 	)
+
 	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(&tmpFriends, &tmpSubscribers, &tmpSubscriptions)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("get all statuses query: %w", err)
 	}
-	fmt.Println(tmpFriends, " ", tmpSubscribers, " ", tmpSubscriptions)
 	if tmpFriends.Valid {
 		err = json.Unmarshal([]byte(tmpFriends.String), &friends)
 		if err != nil {
@@ -268,7 +268,10 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	profile := &models.Header{AuthorID: u}
 	err := p.DB.QueryRowContext(ctx, GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
 	if err != nil {
-		return nil, fmt.Errorf("get short profile db: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrProfileNotFound
+		}
+		return nil, fmt.Errorf("get header db: %w", err)
 	}
 	return profile, nil
 }

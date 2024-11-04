@@ -51,6 +51,8 @@ func (s *PostServiceImpl) Get(ctx context.Context, postID uint32) (*models.Post,
 		return nil, fmt.Errorf("get post: %w", err)
 	}
 
+	post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
+
 	header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 	if err != nil {
 		return nil, fmt.Errorf("get header:%w", err)
@@ -97,6 +99,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*model
 			return nil, fmt.Errorf("get header: %w", err)
 		}
 		post.Header = header
+		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
 	}
 
 	return posts, nil
@@ -128,6 +131,7 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 			return nil, fmt.Errorf("get header: %w", err)
 		}
 		post.Header = header
+		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
 	}
 
 	return posts, err
@@ -135,4 +139,8 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 
 func (s *PostServiceImpl) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
 	return s.db.GetPostAuthor(ctx, postID)
+}
+
+func convertTime(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
 }

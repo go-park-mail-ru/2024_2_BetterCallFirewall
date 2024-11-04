@@ -10,23 +10,25 @@ import (
 )
 
 type SessionRedisRepository struct {
-	db redis.Conn
+	db *redis.Pool
 }
 
-func NewSessionRedisRepository(db redis.Conn) *SessionRedisRepository {
+func NewSessionRedisRepository(db *redis.Pool) *SessionRedisRepository {
 	return &SessionRedisRepository{
 		db: db,
 	}
 }
 
 func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
+	conn := s.db.Get()
+	defer conn.Close()
 	dataSerialized, err := json.Marshal(session)
 	if err != nil {
 		return err
 	}
 	mkey := "sessions:" + session.ID
 
-	res, err := redis.String(s.db.Do("SET", mkey, dataSerialized, "EX", 86400))
+	res, err := redis.String(conn.Do("SET", mkey, dataSerialized, "EX", 86400))
 	if err != nil {
 		return err
 	}
@@ -39,8 +41,10 @@ func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
 }
 
 func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, error) {
+	conn := s.db.Get()
+	defer conn.Close()
 	mkey := "sessions:" + sessID
-	data, err := redis.String(s.db.Do("GET", mkey))
+	data, err := redis.String(conn.Do("GET", mkey))
 	if err != nil {
 		return nil, myErr.ErrSessionNotFound
 	}
@@ -55,8 +59,10 @@ func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, er
 }
 
 func (s *SessionRedisRepository) DestroySession(sessID string) error {
+	conn := s.db.Get()
+	defer conn.Close()
 	mkey := "sessions:" + sessID
-	_, err := redis.Int(s.db.Do("DEL", mkey))
+	_, err := redis.Int(conn.Do("DEL", mkey))
 	if err != nil {
 		return err
 	}

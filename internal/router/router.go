@@ -56,10 +56,15 @@ type ChatController interface {
 	SendChatMsg(w http.ResponseWriter, r *http.Request)
 }
 
+type FileController interface {
+	Upload(w http.ResponseWriter, r *http.Request)
+}
+
 func NewRouter(
 	authControl AuthController,
 	profileControl ProfileController,
 	postControl PostController,
+	fileControl FileController,
 	sm SessionManager,
 	logger *logrus.Logger,
 	chatControl ChatController,
@@ -92,6 +97,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
 	/*router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)*/
+	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)
