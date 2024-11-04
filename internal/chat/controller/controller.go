@@ -223,5 +223,4 @@ func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cc.responder.OutputJSON(w, messages, reqID)
-	cc.SetConnection(w, r)
 }
