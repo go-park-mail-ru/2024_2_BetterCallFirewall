@@ -78,7 +78,8 @@ func main() {
 	fileServ := fileservis.NewFileService(fileRepository)
 	fileController := filecontrol.NewFileController(fileServ, responder)
 
-	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
+	postsHelper := postServ.NewPostProfileImpl(fileServ, postRepo)
+	profileUsecase := profileService.NewProfileUsecase(profileRepo, postsHelper)
 	profileControl := profileController.NewProfileController(profileUsecase, fileServ, responder)
 
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)

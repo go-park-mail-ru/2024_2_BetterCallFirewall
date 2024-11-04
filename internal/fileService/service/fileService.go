@@ -33,7 +33,7 @@ func NewFileService(repo Repo) *FileService {
 func (f *FileService) CreateFile(file multipart.File) (string, error) {
 	var (
 		fileName = uuid.New().String()
-		filePath = fmt.Sprintf("image/%s", fileName)
+		filePath = fmt.Sprintf("/image/%s", fileName)
 		dst, err = os.Create(filePath)
 	)
 
@@ -84,7 +84,7 @@ func (f *FileService) UpdatePostFile(ctx context.Context, file multipart.File, p
 
 func (f *FileService) Upload(ctx context.Context, name string) ([]byte, error) {
 	var (
-		file, err = os.Open(fmt.Sprintf("image/%s", name))
+		file, err = os.Open(fmt.Sprintf("/image/%s", name))
 		res       []byte
 		sl        = make([]byte, 1024)
 	)

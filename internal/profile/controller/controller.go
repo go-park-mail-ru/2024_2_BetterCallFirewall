@@ -91,10 +91,16 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	if err != nil {
 		if errors.Is(err, myErr.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		if errors.Is(err, myErr.ErrNoMoreContent) {
+			h.Responder.OutputNoMoreContentJSON(w, reqID)
+			return
 		}
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
+
 	h.Responder.OutputJSON(w, userProfile, reqID)
 }
 
