@@ -30,7 +30,7 @@ func NewFileService(repo Repo) *FileService {
 	}
 }
 
-func createFile(file multipart.File) (string, error) {
+func (f *FileService) CreateFile(file multipart.File) (string, error) {
 	var (
 		fileName = uuid.New().String()
 		filePath = fmt.Sprintf("image/%s", fileName)
@@ -50,7 +50,7 @@ func createFile(file multipart.File) (string, error) {
 }
 
 func (f *FileService) Download(ctx context.Context, file multipart.File, postId, profileId uint32) error {
-	filePath, err := createFile(file)
+	filePath, err := f.CreateFile(file)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, postId,
 }
 
 func (f *FileService) UpdatePostFile(ctx context.Context, file multipart.File, postId uint32) error {
-	filePath, err := createFile(file)
+	filePath, err := f.CreateFile(file)
 	if err != nil {
 		return err
 	}

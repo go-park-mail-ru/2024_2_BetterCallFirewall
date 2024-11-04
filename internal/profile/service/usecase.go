@@ -71,15 +71,9 @@ func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32, l
 	return profiles, nil
 }
 
-func validateOwner(ownerId uint32, profile *models.FullProfile) bool {
-	return ownerId == profile.ID
-}
-
 func (p ProfileUsecaseImplementation) UpdateProfile(ctx context.Context, owner uint32, newProfile *models.FullProfile) error {
-	if !validateOwner(owner, newProfile) {
-		return myErr.ErrWrongOwner
-	}
 	var err error
+
 	if newProfile.Avatar != "" {
 		err = p.repo.UpdateWithAvatar(ctx, newProfile)
 	} else {

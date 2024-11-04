@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -15,6 +15,13 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 )
 
+var fileFormat = map[string]struct{}{
+	"image/jpeg": {},
+	"image/jpg":  {},
+	"image/png":  {},
+	"image/webp": {},
+}
+
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
@@ -24,15 +31,21 @@ type Responder interface {
 	LogError(err error, requestID string)
 }
 
+type FileService interface {
+	CreateFile(file multipart.File) (string, error)
+}
+
 type ProfileHandlerImplementation struct {
 	ProfileManager profile.ProfileUsecase
 	Responder      Responder
+	FileService    FileService
 }
 
-func NewProfileController(manager profile.ProfileUsecase, responder Responder) *ProfileHandlerImplementation {
+func NewProfileController(manager profile.ProfileUsecase, fileService FileService, responder Responder) *ProfileHandlerImplementation {
 	return &ProfileHandlerImplementation{
 		ProfileManager: manager,
 		Responder:      responder,
+		FileService:    fileService,
 	}
 }
 
@@ -91,28 +104,61 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 		h.Responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	newProfile := models.FullProfile{}
-	err := json.NewDecoder(r.Body).Decode(&newProfile)
-	r.Body.Close()
-	if err != nil {
-		h.Responder.ErrorBadRequest(w, fmt.Errorf("update error:%w", err), reqID)
-		return
-	}
-
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", myErr.ErrSessionNotFound), reqID)
 		return
 	}
 	userId := sess.UserID
 
-	err = h.ProfileManager.UpdateProfile(r.Context(), userId, &newProfile)
+	newProfile, err := h.getNewProfile(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	err = h.ProfileManager.UpdateProfile(r.Context(), userId, newProfile)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
 	h.Responder.OutputJSON(w, newProfile, reqID)
+}
+
+func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.FullProfile, error) {
+	newProfile := models.FullProfile{}
+
+	err := r.ParseMultipartForm(10 << 20) //10 M byte
+	defer r.MultipartForm.RemoveAll()
+	if err != nil {
+		return nil, fmt.Errorf("update profile: %w", myErr.ErrToLargeFile)
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		file = nil
+	} else {
+		format := header.Header.Get("Content-Type")
+		if _, ok := fileFormat[format]; !ok {
+			return nil, fmt.Errorf("update profile: %w", myErr.ErrWrongFiletype)
+		}
+	}
+
+	filePath := ""
+	if file != nil {
+		filePath, err = h.FileService.CreateFile(file)
+		if err != nil {
+			return nil, fmt.Errorf("update profile: %w", err)
+		}
+	}
+
+	newProfile.FirstName = r.Form.Get("first_name")
+	newProfile.LastName = r.Form.Get("last_name")
+	newProfile.Bio = r.Form.Get("bio")
+	newProfile.Avatar = models.Picture(filePath)
+
+	return &newProfile, nil
 }
 
 func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *http.Request) {
