@@ -46,7 +46,7 @@ const (
 
 var (
 	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize}
-	mapUserConn = make(map[uint32]*chat.Client)
+	mapUserConn = make(map[uint32]*Client)
 )
 
 func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	client := &chat.Client{
+	client := &Client{
 		Socket:  socket,
 		Receive: make(chan []byte, messageBufferSize),
 	}

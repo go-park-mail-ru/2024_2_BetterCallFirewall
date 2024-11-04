@@ -1,15 +1,13 @@
-package chat
+package controller
 
 import (
 	"github.com/gorilla/websocket"
-
-	"github.com/2024_2_BetterCallFirewall/internal/chat/controller"
 )
 
 type Client struct {
 	Socket         *websocket.Conn
 	Receive        chan []byte
-	chatController *controller.ChatController
+	chatController *ChatController
 }
 
 func (c *Client) Read() {
