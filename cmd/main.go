@@ -92,7 +92,7 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger)
+	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger, chatControl)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,
@@ -114,7 +114,7 @@ func StartPostgres(connStr string, logger *logrus.Logger) (*sql.DB, error) {
 
 	retrying := 10
 	i := 1
-	logger.Infof("try ping:%v", i)
+	logger.Infof("try ping postgresql:%v", i)
 	for err = db.Ping(); err != nil; err = db.Ping() {
 		if i >= retrying {
 			return nil, fmt.Errorf("postgres connect: %w", err)

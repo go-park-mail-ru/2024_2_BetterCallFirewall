@@ -15,7 +15,6 @@ var (
 	ErrToLargeFile          = errors.New("file too large")
 	ErrNoMoreContent        = errors.New("no more content")
 	ErrWrongFiletype        = errors.New("wrong type of file")
-	ErrWrongMultipartForm   = errors.New("wrong multipart form")
 	ErrPostNotFound         = errors.New("post not found")
 	ErrAccessDenied         = errors.New("access denied")
 	ErrInternal             = errors.New("internal error")
@@ -30,4 +29,5 @@ var (
 	ErrWrongDateFormat      = errors.New("wrong date format")
 	ErrWrongFile            = errors.New("wrong file name")
 	ErrNoFile               = errors.New("file not found")
+	ErrResNotOK             = errors.New("res not OK")
 )
