@@ -292,7 +292,6 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	}
 
 	file, _, err := r.FormFile("file")
-	defer file.Close()
 	if err != nil {
 		file = nil
 	} else {
@@ -301,6 +300,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 		if err != nil {
 			return nil, nil, err
 		}
+		defer file.Close()
 
 		format := http.DetectContentType(buffer)
 
