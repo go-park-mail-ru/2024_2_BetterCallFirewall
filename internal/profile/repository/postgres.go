@@ -57,11 +57,11 @@ func (p *ProfileRepo) GetStatuses(ctx context.Context, self uint32) ([]uint32, [
 		tmpSubscribers   sql.NullString
 		tmpSubscriptions sql.NullString
 	)
+
 	err := p.DB.QueryRowContext(ctx, GetAllStatuses, self).Scan(&tmpFriends, &tmpSubscribers, &tmpSubscriptions)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("get all statuses query: %w", err)
 	}
-	fmt.Println(tmpFriends, " ", tmpSubscribers, " ", tmpSubscriptions)
 	if tmpFriends.Valid {
 		err = json.Unmarshal([]byte(tmpFriends.String), &friends)
 		if err != nil {
