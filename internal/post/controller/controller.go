@@ -120,7 +120,16 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = getIDFromQuery(r)
+	)
+
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	if !ok {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
@@ -130,8 +139,9 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-
+	post.ID = id
 	userID := post.Header.AuthorID
+
 	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
 	if err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
