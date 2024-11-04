@@ -45,7 +45,7 @@ const (
 )
 
 var (
-	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize}
+	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize, CheckOrigin: func(r *http.Request) bool { return true }}
 	mapUserConn = make(map[uint32]*Client)
 )
 
