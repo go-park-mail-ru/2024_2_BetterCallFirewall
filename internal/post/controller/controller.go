@@ -80,6 +80,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if file != nil {
+		defer file.Close()
 		err = pc.fileService.Download(r.Context(), file, id, 0)
 		if err != nil {
 			pc.responder.ErrorBadRequest(w, err, reqID)
@@ -169,6 +170,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if file != nil {
+		defer file.Close()
 		err = pc.fileService.UpdatePostFile(r.Context(), file, post.ID)
 		if err != nil {
 			pc.responder.ErrorBadRequest(w, err, reqID)
@@ -302,18 +304,11 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 		return nil, nil, myErr.ErrToLargeFile
 	}
 
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	if err != nil {
 		file = nil
 	} else {
-		buffer := make([]byte, 512)
-		_, err = file.Read(buffer)
-		if err != nil {
-			return nil, nil, err
-		}
-		defer file.Close()
-
-		format := http.DetectContentType(buffer)
+		format := header.Header.Get("Content-Type")
 
 		if _, ok := fileFormat[format]; !ok {
 			return nil, nil, myErr.ErrWrongFiletype
