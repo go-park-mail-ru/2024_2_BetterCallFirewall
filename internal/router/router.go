@@ -53,7 +53,7 @@ type ChatController interface {
 	SetConnection(w http.ResponseWriter, r *http.Request)
 	GetAllChats(w http.ResponseWriter, r *http.Request)
 	GetChat(w http.ResponseWriter, r *http.Request)
-	SendChatMsg(w http.ResponseWriter, r *http.Request)
+	SendChatMsg(w http.ResponseWriter, r *http.Request, userID uint32)
 }
 
 type FileController interface {
