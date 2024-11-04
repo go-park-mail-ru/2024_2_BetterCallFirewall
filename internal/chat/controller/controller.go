@@ -80,32 +80,26 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 	}()
 	go client.Write()
 	go client.Read()
-	cc.SendChatMsg(w, r)
+	cc.SendChatMsg(w, r, sess.UserID)
 }
 
-func (cc *ChatController) SendChatMsg(w http.ResponseWriter, r *http.Request) {
+func (cc *ChatController) SendChatMsg(w http.ResponseWriter, r *http.Request, userID uint32) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		cc.responder.LogError(myErr.ErrInvalidContext, "")
 		return
 	}
 
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		cc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
 	for jsonMsg := range cc.Messages {
 		msg := &models.Message{}
-		err = json.Unmarshal(jsonMsg, msg)
+		err := json.Unmarshal(jsonMsg, msg)
 		if err != nil {
 			cc.responder.ErrorInternal(w, err, reqID)
 			return
 		}
-		msg.Sender = sess.UserID
+		msg.Sender = userID
 
-		err := cc.chatService.SendNewMessage(r.Context(), msg.Receiver, msg.Sender, msg.Content)
+		err = cc.chatService.SendNewMessage(r.Context(), msg.Receiver, msg.Sender, msg.Content)
 		if err != nil {
 			cc.responder.ErrorInternal(w, err, reqID)
 			return
