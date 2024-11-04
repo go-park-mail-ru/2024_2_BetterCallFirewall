@@ -74,12 +74,12 @@ func main() {
 
 	postRepo := postgresProfile.NewAdapter(postgresDB)
 
-	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
-	profileControl := profileController.NewProfileController(profileUsecase, responder)
-
 	fileRepository := fileRepo.NewFileRepo(postgresDB)
 	fileServ := fileservis.NewFileService(fileRepository)
 	fileController := filecontrol.NewFileController(fileServ, responder)
+
+	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
+	profileControl := profileController.NewProfileController(profileUsecase, fileServ, responder)
 
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
