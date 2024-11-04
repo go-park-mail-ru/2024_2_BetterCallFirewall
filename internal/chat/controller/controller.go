@@ -34,6 +34,7 @@ type ChatController struct {
 func NewChatController(service chat.ChatService, responder Responder) *ChatController {
 	return &ChatController{
 		chatService: service,
+		Messages:    make(chan []byte),
 		responder:   responder,
 	}
 }
@@ -77,7 +78,8 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 		close(client.Receive)
 	}()
 	go client.Write()
-	client.Read()
+	go client.Read()
+	cc.SendChatMsg(w, r)
 }
 
 func (cc *ChatController) SendChatMsg(w http.ResponseWriter, r *http.Request) {
@@ -221,4 +223,5 @@ func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cc.responder.OutputJSON(w, messages, reqID)
+	cc.SetConnection(w, r)
 }

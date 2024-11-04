@@ -16,6 +16,9 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
 	redismy "github.com/2024_2_BetterCallFirewall/internal/auth/repository/redis"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
+	ChatController "github.com/2024_2_BetterCallFirewall/internal/chat/controller"
+	chatRepository "github.com/2024_2_BetterCallFirewall/internal/chat/repository/postgres"
+	chatService "github.com/2024_2_BetterCallFirewall/internal/chat/service"
 	"github.com/2024_2_BetterCallFirewall/internal/fileService"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresProfile "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
@@ -68,15 +71,19 @@ func main() {
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
 	postRepo := postgresProfile.NewAdapter(postgresDB)
+	chatRepo := chatRepository.NewChatRepository(postgresDB)
 
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postRepo)
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
+
+	chatService := chatService.NewChatService(chatRepo, profileUsecase)
+	chatControl := ChatController.NewChatController(chatService, responder)
 
 	fileServ := fileService.NewFileService()
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, sessionManager, logger)
+	rout := router.NewRouter(control, profileControl, postControl, sessionManager, logger, chatControl)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,

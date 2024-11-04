@@ -42,7 +42,7 @@ func (cs *ChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdat
 	return chats, nil
 }
 
-func (cs *ChatService) GetMessages(ctx context.Context, userID uint32, chatID uint32, lastSent time.Time) ([]*models.Message, error) {
+func (cs *ChatService) GetChat(ctx context.Context, userID uint32, chatID uint32, lastSent time.Time) ([]*models.Message, error) {
 	messages, err := cs.repo.GetMessages(ctx, userID, chatID, lastSent)
 	if err != nil {
 		return nil, fmt.Errorf("get all messages: %w", err)

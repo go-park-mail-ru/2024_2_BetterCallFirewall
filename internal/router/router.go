@@ -50,8 +50,8 @@ type SessionManager interface {
 
 type ChatController interface {
 	SetConnection(w http.ResponseWriter, r *http.Request)
-	GetChats(w http.ResponseWriter, r *http.Request)
-	GetChatById(w http.ResponseWriter, r *http.Request)
+	GetAllChats(w http.ResponseWriter, r *http.Request)
+	GetChat(w http.ResponseWriter, r *http.Request)
 	SendChatMsg(w http.ResponseWriter, r *http.Request)
 }
 
@@ -87,9 +87,9 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
 
-	router.HandleFunc("/api/v1/messages/chats", chatControl.GetChats).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChatById).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
+	/*router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)*/
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)
