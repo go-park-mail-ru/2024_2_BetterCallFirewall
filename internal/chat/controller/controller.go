@@ -28,14 +28,14 @@ type Responder interface {
 
 type ChatController struct {
 	chatService chat.ChatService
-	Messages    chan []byte
+	Messages    chan *models.Message
 	responder   Responder
 }
 
 func NewChatController(service chat.ChatService, responder Responder) *ChatController {
 	return &ChatController{
 		chatService: service,
-		Messages:    make(chan []byte),
+		Messages:    make(chan *models.Message),
 		responder:   responder,
 	}
 }
@@ -81,21 +81,13 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 		close(client.Receive)
 	}()
 	go client.Write()
-	go client.Read()
-	cc.SendChatMsg(ctx, reqID, sess.UserID)
+	go client.Read(sess.UserID)
+	cc.SendChatMsg(ctx, reqID)
 }
 
-func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, userID uint32) {
-	for jsonMsg := range cc.Messages {
-		msg := &models.Message{}
-		err := json.Unmarshal(jsonMsg, msg)
-		if err != nil {
-			cc.responder.LogError(err, reqID)
-			return
-		}
-		msg.Sender = userID
-
-		err = cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, msg.Content)
+func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
+	for msg := range cc.Messages {
+		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, msg.Content)
 		if err != nil {
 			cc.responder.LogError(err, reqID)
 			return

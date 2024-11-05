@@ -1,7 +1,11 @@
 package controller
 
 import (
+	"encoding/json"
+
 	"github.com/gorilla/websocket"
+
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 type Client struct {
@@ -10,14 +14,20 @@ type Client struct {
 	chatController *ChatController
 }
 
-func (c *Client) Read() {
+func (c *Client) Read(userID uint32) {
 	defer c.Socket.Close()
 	for {
+		msg := &models.Message{}
 		_, jsonMessage, err := c.Socket.ReadMessage()
 		if err != nil {
 			return
 		}
-		c.chatController.Messages <- jsonMessage
+		err = json.Unmarshal(jsonMessage, msg)
+		if err != nil {
+			return
+		}
+		msg.Sender = userID
+		c.chatController.Messages <- msg
 	}
 }
 
