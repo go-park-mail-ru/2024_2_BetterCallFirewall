@@ -6,7 +6,7 @@ import (
 
 type Chat struct {
 	LastMessage string    `json:"last_message"`
-	LastDate    time.Time `json:"last_sent_messageS"`
+	LastDate    time.Time `json:"last_date"`
 	Receiver    Header    `json:"receiver"`
 }
 
