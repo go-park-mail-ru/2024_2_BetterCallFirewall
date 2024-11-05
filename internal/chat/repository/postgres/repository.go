@@ -27,7 +27,6 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 	var chats []*models.Chat
 
 	rows, err := cr.db.QueryContext(ctx, getAllChatBatch, userID, pq.FormatTimestamp(lastUpdateTime))
-	defer rows.Close()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -35,6 +34,7 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 		}
 		return nil, fmt.Errorf("postgres get chats: %w", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		chat := &models.Chat{}
@@ -55,7 +55,6 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 	var messages []*models.Message
 
 	rows, err := cr.db.QueryContext(ctx, getLatestMessagesBatch, userID, chatID, pq.FormatTimestamp(lastSentTime))
-	defer rows.Close()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -63,6 +62,7 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 		}
 		return nil, fmt.Errorf("postgres get messages: %w", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		msg := &models.Message{}
