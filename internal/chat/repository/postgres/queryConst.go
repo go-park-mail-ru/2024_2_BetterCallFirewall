@@ -41,7 +41,7 @@ LIMIT 15;`
 FROM message
 WHERE ((sender = $1 AND receiver = $2) OR (sender = $2 AND receiver = $1)) 
 AND created_at < $3
-ORDER BY created_at
+ORDER BY created_at DESC
 LIMIT 20;`
 
 	sendNewMessage = `INSERT INTO message(receiver, sender, content) VALUES ($1, $2, $3)`
