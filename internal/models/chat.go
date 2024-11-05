@@ -5,8 +5,9 @@ import (
 )
 
 type Chat struct {
-	LastMessage Message `json:"last_message"`
-	Receiver    Header  `json:"receiver"`
+	LastMessage string    `json:"last_message"`
+	LastDate    time.Time `json:"last_sent_messageS"`
+	Receiver    Header    `json:"receiver"`
 }
 
 type Message struct {

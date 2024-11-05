@@ -38,7 +38,7 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 
 	for rows.Next() {
 		chat := &models.Chat{}
-		if err := rows.Scan(&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.Receiver.Avatar, &chat.LastMessage.Content, &chat.LastMessage.CreatedAt); err != nil {
+		if err := rows.Scan(&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.Receiver.Avatar, &chat.LastMessage, &chat.LastDate); err != nil {
 			return nil, fmt.Errorf("postgres get chats: %w", err)
 		}
 		chats = append(chats, chat)
