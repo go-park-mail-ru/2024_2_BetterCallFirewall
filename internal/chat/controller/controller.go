@@ -104,7 +104,7 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok     = r.Context().Value("requestID").(string)
-		lastTimeQuery = r.URL.Query().Get("lastIme")
+		lastTimeQuery = r.URL.Query().Get("lastTime")
 		lastTime      time.Time
 		err           error
 	)
@@ -116,7 +116,7 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	if lastTimeQuery == "" {
 		lastTime = time.Now()
 	} else {
-		lastTime, err = time.Parse("2006-01-02 15:04:05.000", lastTimeQuery)
+		lastTime, err = time.Parse("2006-01-02T15:04:05.000000Z", lastTimeQuery)
 		if err != nil {
 			cc.responder.ErrorBadRequest(w, myErr.ErrWrongDateFormat, reqID)
 			return
@@ -163,7 +163,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok     = r.Context().Value("requestID").(string)
-		lastTimeQuery = r.URL.Query().Get("lastIme")
+		lastTimeQuery = r.URL.Query().Get("lastTime")
 		lastTime      time.Time
 		err           error
 	)
