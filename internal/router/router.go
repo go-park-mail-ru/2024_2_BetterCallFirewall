@@ -54,7 +54,7 @@ type ChatController interface {
 	SetConnection(w http.ResponseWriter, r *http.Request)
 	GetAllChats(w http.ResponseWriter, r *http.Request)
 	GetChat(w http.ResponseWriter, r *http.Request)
-	SendChatMsg(ctx context.Context, reqID string, userID uint32)
+	SendChatMsg(ctx context.Context, reqID string)
 }
 
 type FileController interface {
