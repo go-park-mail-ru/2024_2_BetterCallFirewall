@@ -101,10 +101,14 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, userID 
 			return
 		}
 
+		jsonForSend, err := json.Marshal(msg)
+		if err != nil {
+			cc.responder.LogError(err, reqID)
+		}
 		resConn, ok := mapUserConn[msg.Receiver]
 		if ok {
-			resConn.Socket.ReadMessage()
-			resConn.Receive <- []byte(msg.Content)
+			//resConn.Socket.ReadMessage()
+			resConn.Receive <- jsonForSend
 		}
 	}
 	return
