@@ -24,8 +24,8 @@ const (
 SELECT
    	related_user,
     profile.first_name || ' ' || profile.last_name AS chat,
-    content AS last_message_content,
-    last_message.created_at AS last_message_time
+    last_messages.content AS last_message_content,
+    last_messages.created_at AS last_message_time
 FROM
     last_messages INNER JOIN profile ON related_user = profile.id
 WHERE
