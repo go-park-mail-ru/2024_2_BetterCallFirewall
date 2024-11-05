@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"math"
 	"net/http"
@@ -72,7 +71,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 
 	client := &Client{
 		Socket:         socket,
-		Receive:        make(chan []byte, messageBufferSize),
+		Receive:        make(chan *models.Message, messageBufferSize),
 		chatController: cc,
 	}
 	mapUserConn[sess.UserID] = client
@@ -93,14 +92,10 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
 			return
 		}
 
-		jsonForSend, err := json.Marshal(msg)
-		if err != nil {
-			cc.responder.LogError(err, reqID)
-		}
 		resConn, ok := mapUserConn[msg.Receiver]
 		if ok {
 			//resConn.Socket.ReadMessage()
-			resConn.Receive <- jsonForSend
+			resConn.Receive <- msg
 		}
 	}
 	return

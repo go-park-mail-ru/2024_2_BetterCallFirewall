@@ -67,11 +67,10 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 	for rows.Next() {
 		msg := &models.Message{}
 		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
-			return nil, fmt.Errorf("postgres get messages: %w", err)
+			return nil, fmt.Errorf("postgres get m\nessages: %w", err)
 		}
 		messages = append(messages, msg)
 	}
-
 	if len(messages) == 0 {
 		return nil, myErr.ErrNoMoreContent
 	}

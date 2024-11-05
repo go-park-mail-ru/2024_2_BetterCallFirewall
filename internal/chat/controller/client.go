@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -10,7 +11,7 @@ import (
 
 type Client struct {
 	Socket         *websocket.Conn
-	Receive        chan []byte
+	Receive        chan *models.Message
 	chatController *ChatController
 }
 
@@ -34,7 +35,12 @@ func (c *Client) Read(userID uint32) {
 func (c *Client) Write() {
 	defer c.Socket.Close()
 	for msg := range c.Receive {
-		err := c.Socket.WriteMessage(websocket.TextMessage, msg)
+		msg.CreatedAt = time.Now()
+		jsonForSend, err := json.Marshal(msg)
+		if err != nil {
+			return
+		}
+		err = c.Socket.WriteMessage(websocket.TextMessage, jsonForSend)
 		if err != nil {
 			return
 		}
