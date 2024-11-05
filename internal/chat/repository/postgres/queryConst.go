@@ -29,9 +29,9 @@ SELECT
 FROM
     last_messages INNER JOIN profile ON related_user = profile.id
 WHERE
-    rn = 1 AND last_message_time < $2
+    rn = 1 AND last_messages.created_at < $2
 ORDER BY
-    last_message_time DESC
+    last_messages.created_at DESC
 LIMIT 15;`
 
 	getLatestMessagesBatch = `SELECT sender, content, created_at
