@@ -27,7 +27,7 @@ SELECT
     content AS last_message_content,
     created_at AS last_message_time
 FROM
-    last_messages
+    last_messages INNER JOIN profile ON related_user = profile.id
 WHERE
     rn = 1 AND last_message_time < $2
 ORDER BY
