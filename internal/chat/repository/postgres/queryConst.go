@@ -25,13 +25,13 @@ SELECT
    	related_user,
     profile.first_name || ' ' || profile.last_name AS chat,
     content AS last_message_content,
-    created_at AS last_message_time
+    last_message.created_at AS last_message_time
 FROM
     last_messages INNER JOIN profile ON related_user = profile.id
 WHERE
     rn = 1 AND last_message_time < $2
 ORDER BY
-    last_message_date DESC
+    last_message_time DESC
 LIMIT 15;`
 
 	getLatestMessagesBatch = `SELECT sender, content, created_at
