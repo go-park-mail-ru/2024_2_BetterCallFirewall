@@ -38,7 +38,7 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 
 	for rows.Next() {
 		chat := &models.Chat{}
-		if err := rows.Scan(&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.LastMessage.Content, &chat.LastMessage.CreatedAt); err != nil {
+		if err := rows.Scan(&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.Receiver.Avatar, &chat.LastMessage.Content, &chat.LastMessage.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres get chats: %w", err)
 		}
 		chats = append(chats, chat)
@@ -66,7 +66,7 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 
 	for rows.Next() {
 		msg := &models.Message{}
-		if err := rows.Scan(&msg.Sender, &msg.Content, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres get messages: %w", err)
 		}
 		messages = append(messages, msg)

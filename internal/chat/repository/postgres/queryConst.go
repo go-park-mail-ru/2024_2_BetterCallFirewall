@@ -24,17 +24,20 @@ const (
 SELECT
    	related_user,
     profile.first_name || ' ' || profile.last_name AS chat,
+    file_path AS pic,
     last_messages.content AS last_message_content,
     last_messages.created_at AS last_message_time
 FROM
-    last_messages INNER JOIN profile ON related_user = profile.id
+    last_messages
+        INNER JOIN profile ON related_user = profile.id
+        INNER JOIN file ON profile.avatar = file.id
 WHERE
     rn = 1 AND last_messages.created_at < $2
 ORDER BY
     last_messages.created_at DESC
 LIMIT 15;`
 
-	getLatestMessagesBatch = `SELECT sender, content, created_at
+	getLatestMessagesBatch = `SELECT sender, receiver, content, created_at
 FROM message
 WHERE ((sender = $1 AND receiver = $2) OR (sender = $2 AND receiver = $1)) 
 AND created_at < $3

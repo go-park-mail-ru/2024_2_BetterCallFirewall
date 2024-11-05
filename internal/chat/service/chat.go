@@ -32,12 +32,12 @@ func (cs *ChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdat
 		return nil, fmt.Errorf("get all chats: %w", err)
 	}
 
-	for _, chat := range chats {
+	/*for _, chat := range chats {
 		chat.Receiver, err = cs.profileService.GetHeader(ctx, chat.Receiver.AuthorID)
 		if err != nil {
 			return nil, fmt.Errorf("get all chats: %w", err)
 		}
-	}
+	}*/
 
 	return chats, nil
 }
