@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -49,6 +50,13 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
+type ChatController interface {
+	SetConnection(w http.ResponseWriter, r *http.Request)
+	GetAllChats(w http.ResponseWriter, r *http.Request)
+	GetChat(w http.ResponseWriter, r *http.Request)
+	SendChatMsg(ctx context.Context, reqID string)
+}
+
 type FileController interface {
 	Upload(w http.ResponseWriter, r *http.Request)
 }
@@ -60,6 +68,7 @@ func NewRouter(
 	fileControl FileController,
 	sm SessionManager,
 	logger *logrus.Logger,
+	chatControl ChatController,
 ) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
@@ -74,8 +83,8 @@ func NewRouter(
 	router.HandleFunc("api/v1/profile", profileControl.DeleteProfile).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/friend/subscribe", profileControl.SendFriendReq).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/friend/accept", profileControl.AcceptFriendReq).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/{id}/friend/unsubscribe", profileControl.Unsubscribe).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/{id}/friend/remove", profileControl.RemoveFromFriends).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/unsubscribe", profileControl.RemoveFromFriends).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/remove", profileControl.Unsubscribe).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/friends", profileControl.GetAllFriends).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
@@ -86,7 +95,11 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
 
+	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
+	/*router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)*/
 	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)

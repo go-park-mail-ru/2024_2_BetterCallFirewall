@@ -44,6 +44,7 @@ func (fr FileRepo) GetProfileFiles(ctx context.Context, profileId uint32) ([]*st
 			return nil, myErr.ErrNoFile
 		}
 		return nil, fmt.Errorf("get file db: %w", err)
+
 	}
 	for rows.Next() {
 		var file string
