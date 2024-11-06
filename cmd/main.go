@@ -86,7 +86,7 @@ func main() {
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postsHelper)
 	profileControl := profileController.NewProfileController(profileUsecase, fileServ, responder)
 
-	chatService := chatService.NewChatService(chatRepo, profileUsecase)
+	chatService := chatService.NewChatService(chatRepo)
 	chatControl := ChatController.NewChatController(chatService, responder)
 	defer close(chatControl.Messages)
 

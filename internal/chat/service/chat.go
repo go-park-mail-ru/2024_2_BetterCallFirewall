@@ -9,19 +9,13 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-type ProfileService interface {
-	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
-}
-
 type ChatService struct {
-	repo           chat.ChatRepository
-	profileService ProfileService
+	repo chat.ChatRepository
 }
 
-func NewChatService(repo chat.ChatRepository, service ProfileService) *ChatService {
+func NewChatService(repo chat.ChatRepository) *ChatService {
 	return &ChatService{
-		repo:           repo,
-		profileService: service,
+		repo: repo,
 	}
 }
 
