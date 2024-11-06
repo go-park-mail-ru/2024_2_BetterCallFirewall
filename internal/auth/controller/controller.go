@@ -1,43 +1,41 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/models"
+	"github.com/2024_2_BetterCallFirewall/internal/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/models"
+
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 type AuthService interface {
-	Register(user models.User) (uint32, error)
-	Auth(user models.User) (uint32, error)
-}
-
-type SessionManager interface {
-	Check(r *http.Request) (*models.Session, error)
-	Create(w http.ResponseWriter, userID uint32) (*models.Session, error)
-	Destroy(w http.ResponseWriter, r *http.Request) error
+	Register(user models.User, ctx context.Context) (uint32, error)
+	Auth(user models.User, ctx context.Context) (uint32, error)
 }
 
 type Responder interface {
-	OutputJSON(w http.ResponseWriter, data any)
+	OutputJSON(w http.ResponseWriter, data any, requestID string)
 
-	ErrorWrongMethod(w http.ResponseWriter, err error)
-	ErrorBadRequest(w http.ResponseWriter, err error)
-	ErrorInternal(w http.ResponseWriter, err error)
+	ErrorBadRequest(w http.ResponseWriter, err error, requestID string)
+	ErrorInternal(w http.ResponseWriter, err error, requestID string)
+	LogError(err error, requestID string)
 }
 
 type AuthController struct {
 	responder      Responder
 	serviceAuth    AuthService
-	SessionManager SessionManager
+	SessionManager auth.SessionManager
 }
 
-func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager SessionManager) *AuthController {
+func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager auth.SessionManager) *AuthController {
 	return &AuthController{
 		responder:      responder,
 		serviceAuth:    serviceAuth,
@@ -46,83 +44,116 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
-	user.ID, err = c.serviceAuth.Register(user)
+	user.ID, err = c.serviceAuth.Register(user, r.Context())
 	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
-		c.responder.ErrorBadRequest(w, err)
+		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
-	_, err = c.SessionManager.Create(w, user.ID)
+	sess, err := c.SessionManager.Create(user.ID)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
 
-	c.responder.OutputJSON(w, "user create successful")
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, 1),
+	}
+
+	http.SetCookie(w, cookie)
+
+	c.responder.OutputJSON(w, "user create successful", reqID)
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
 	user := models.User{}
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
-	id, err := c.serviceAuth.Auth(user)
+	id, err := c.serviceAuth.Auth(user, r.Context())
 
 	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
 
-	_, err = c.SessionManager.Create(w, id)
+	sess, err := c.SessionManager.Create(id)
 	if err != nil {
-		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err))
+		c.responder.ErrorInternal(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, 1),
+	}
+	http.SetCookie(w, cookie)
 
-	c.responder.OutputJSON(w, "user auth")
+	c.responder.OutputJSON(w, "user auth", reqID)
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		c.responder.ErrorWrongMethod(w, errors.New("method not allowed"))
-		return
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
-	err := c.SessionManager.Destroy(w, r)
+	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err))
+		c.responder.ErrorBadRequest(w, myErr.ErrNoAuth, "")
 		return
 	}
 
-	c.responder.OutputJSON(w, "user logout")
+	err = c.SessionManager.Destroy(sess)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, fmt.Errorf("router logout: %w", err), reqID)
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    sess.ID,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().AddDate(0, 0, -1),
+	}
+	http.SetCookie(w, cookie)
+
+	c.responder.OutputJSON(w, "user logout", reqID)
 }

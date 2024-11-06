@@ -2,9 +2,12 @@ FROM golang:alpine AS build
 
 WORKDIR /app
 
-COPY . .
+COPY go.mod .
+COPY go.sum .
 
 RUN go mod download
+
+COPY . .
 
 RUN go build cmd/main.go
 
@@ -15,6 +18,8 @@ WORKDIR /app
 EXPOSE 8080
 
 COPY .env .
+
+COPY image ./image
 
 COPY --from=build /app/main /app/main
 
