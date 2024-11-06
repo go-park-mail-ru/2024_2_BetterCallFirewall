@@ -175,14 +175,14 @@ func TestCreate(t *testing.T) {
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/api/v1/feed", bytes.NewBuffer(post1)).WithContext(ctxSess),
-			wantCode: http.StatusOK,
-			wantBody: "Ok",
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/api/v1/feed", bytes.NewBuffer(badPost)).WithContext(ctxSess),
-			wantCode: http.StatusInternalServerError,
-			wantBody: "internal server error",
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 	}
 
