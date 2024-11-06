@@ -136,6 +136,10 @@ func (m *mockFileService) GetPostPicture(ctx context.Context, postID uint32) *mo
 	return nil
 }
 
+func (m *mockFileService) UpdatePostFile(ctx context.Context, file multipart.File, postID uint32) error {
+	return nil
+}
+
 type TestCase struct {
 	r        *http.Request
 	w        *httptest.ResponseRecorder

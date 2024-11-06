@@ -298,6 +298,10 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multipart.File, error) {
 	var newPost models.Post
 
+	if r.MultipartForm == nil {
+		return nil, nil, errors.New("multipart form required")
+	}
+
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
 	defer r.MultipartForm.RemoveAll()
 	if err != nil {

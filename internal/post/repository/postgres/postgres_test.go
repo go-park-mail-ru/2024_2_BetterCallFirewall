@@ -269,7 +269,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 			WillReturnRows(rows).
 			WillReturnError(test.dbErr)
 
-		posts, err := repo.GetAuthorsPosts(context.Background(), test.Author)
+		posts, err := repo.GetAuthorPosts(context.Background(), test.Author)
 		if !errors.Is(err, test.wantErr) {
 			t.Errorf("unexpected error: got:%v\nwant:%v\n", err, test.wantErr)
 		}

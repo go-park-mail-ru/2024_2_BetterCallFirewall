@@ -262,20 +262,18 @@ func TestUpdateProfile(t *testing.T) {
 	tests := []Test{
 		{
 			ctx:          context.Background(),
-			userID:       1,
 			inputProfile: exampleProfileWithPost,
 			err:          nil,
 		},
 		{
 			ctx:          context.Background(),
-			userID:       1,
 			inputProfile: exampleProfileWithoutPost,
 			err:          myErr.ErrWrongOwner,
 		},
 	}
 
 	for caseNum, test := range tests {
-		err := pu.UpdateProfile(nil, test.userID, test.inputProfile)
+		err := pu.UpdateProfile(nil, test.inputProfile)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}

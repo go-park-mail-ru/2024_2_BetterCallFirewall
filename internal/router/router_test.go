@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -74,11 +75,21 @@ type mockFileController struct{}
 
 func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
 
+type mockChatController struct{}
+
+func (m mockChatController) SetConnection(w http.ResponseWriter, r *http.Request) {}
+func (m mockChatController) GetAllChats(w http.ResponseWriter, r *http.Request)   {}
+func (m mockChatController) GetChat(w http.ResponseWriter, r *http.Request)       {}
+func (m mockChatController) SendChatMsg(ctx context.Context, reqID string)        {}
+
 func TestNewRouter(t *testing.T) {
 	router := NewRouter(MockAuthController{},
 		mockProfileController{},
 		mockPostController{},
 		mockFileController{},
-		mockMiddleware{}, logrus.New())
+		mockMiddleware{},
+		logrus.New(),
+		mockChatController{},
+	)
 	assert.NotNil(t, router)
 }
