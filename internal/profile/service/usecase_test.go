@@ -550,38 +550,6 @@ func TestGetAllSubscriptions(t *testing.T) {
 	}
 }
 
-func TestGetFriendsID(t *testing.T) {
-	tests := []Test{
-		{
-			ctx:    context.Background(),
-			userID: 3,
-			resID:  []uint32{1, 2},
-			err:    nil,
-		},
-		{
-			ctx:    context.Background(),
-			userID: 10,
-			err:    sql.ErrNoRows,
-		},
-	}
-
-	for caseNum, test := range tests {
-		res, err := pu.GetFriendsID(test.ctx, test.userID)
-		if err != nil && test.err == nil {
-			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
-		}
-		if err == nil && test.err != nil {
-			t.Errorf("[%d] expected error, got nil", caseNum)
-		}
-		if !errors.Is(err, test.err) {
-			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
-		}
-		if !reflect.DeepEqual(res, test.resID) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
-	}
-}
-
 func TestGetHeader(t *testing.T) {
 	tests := []Test{
 		{

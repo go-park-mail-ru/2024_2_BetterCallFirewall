@@ -146,10 +146,10 @@ func TestGetAll(t *testing.T) {
 	for casenum, test := range tests {
 		if casenum == 2 {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfilesBatch)).
-				WithArgs(test.inputID).WillReturnRows(errRows)
+				WithArgs(test.inputID, uint32(0), 20).WillReturnRows(errRows)
 		} else {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllProfilesBatch)).
-				WithArgs(test.inputID).WillReturnRows(rows).
+				WithArgs(test.inputID, 0, 20).WillReturnRows(rows).
 				WillReturnError(test.dbError)
 		}
 		profiles, err := ProfileManager.GetAll(context.Background(), test.inputID, 0)
@@ -210,7 +210,7 @@ func TestUpdateProfile(t *testing.T) {
 			WithArgs(test.inputProfile.FirstName, test.inputProfile.LastName, test.inputProfile.Bio, test.inputProfile.ID).
 			WillReturnResult(test.execResult).
 			WillReturnError(test.dbError)
-		err := ProfileManager.UpdateProfile(nil, test.inputProfile)
+		err := ProfileManager.UpdateProfile(context.Background(), test.inputProfile)
 		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("case [%d]: errors must match, have %v, want %v", casenum, err, test.expectedErr)
 		}
@@ -481,10 +481,10 @@ func TestGetAllFriends(t *testing.T) {
 	for casenum, test := range tests {
 		if casenum == 2 {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllFriends)).
-				WithArgs(test.inputID).WillReturnRows(errRows)
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(errRows)
 		} else {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllFriends)).
-				WithArgs(test.inputID).WillReturnRows(rows).
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(rows).
 				WillReturnError(test.dbError)
 		}
 
@@ -561,10 +561,10 @@ func TestGetAllSubs(t *testing.T) {
 	for casenum, test := range tests {
 		if casenum == 2 {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllSubs)).
-				WithArgs(test.inputID).WillReturnRows(errRows)
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(errRows)
 		} else {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllSubs)).
-				WithArgs(test.inputID).WillReturnRows(rows).
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(rows).
 				WillReturnError(test.dbError)
 		}
 
@@ -641,10 +641,10 @@ func TestGetAllSubscriptions(t *testing.T) {
 	for casenum, test := range tests {
 		if casenum == 2 {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllSubscriptions)).
-				WithArgs(test.inputID).WillReturnRows(errRows)
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(errRows)
 		} else {
 			mock.ExpectQuery(regexp.QuoteMeta(GetAllSubscriptions)).
-				WithArgs(test.inputID).WillReturnRows(rows).
+				WithArgs(test.inputID, 0, LIMIT).WillReturnRows(rows).
 				WillReturnError(test.dbError)
 		}
 
