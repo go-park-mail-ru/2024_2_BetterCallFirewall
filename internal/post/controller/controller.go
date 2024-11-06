@@ -313,7 +313,6 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 		file = nil
 	} else {
 		format := header.Header.Get("Content-Type")
-
 		if _, ok := fileFormat[format]; !ok {
 			return nil, nil, myErr.ErrWrongFiletype
 		}

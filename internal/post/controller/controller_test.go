@@ -157,7 +157,14 @@ func TestCreate(t *testing.T) {
 		badPost, _      = json.Marshal(&models.Post{PostContent: models.Content{Text: "wrong post"}})
 		sessGoodUser, _ = models.NewSession(1)
 		ctxSess         = models.ContextWithSession(context.Background(), sessGoodUser)
+		reqWithForm     = httptest.NewRequest(http.MethodGet, "/", nil).WithContext(ctxSess)
 	)
+
+	reqWithForm.MultipartForm = &multipart.Form{
+		Value: map[string][]string{
+			"text": {"post 1"},
+		},
+	}
 
 	tests := []TestCase{
 		{
@@ -183,6 +190,12 @@ func TestCreate(t *testing.T) {
 			r:        httptest.NewRequest(http.MethodPost, "/api/v1/feed", bytes.NewBuffer(badPost)).WithContext(ctxSess),
 			wantCode: http.StatusBadRequest,
 			wantBody: "bad request",
+		},
+		{
+			w:        httptest.NewRecorder(),
+			r:        reqWithForm,
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
 		},
 	}
 
@@ -261,9 +274,22 @@ func TestUpdate(t *testing.T) {
 		ctxSess              = models.ContextWithSession(context.Background(), sessGoodUser)
 		sessBadUser, _       = models.NewSession(2)
 		ctxSessBad           = models.ContextWithSession(context.Background(), sessBadUser)
+		reqWithForm          = httptest.NewRequest(http.MethodGet, "/", nil).WithContext(ctxSess)
+		goodID               = map[string]string{"id": "1"}
 	)
+	reqWithForm.MultipartForm = &multipart.Form{
+		Value: map[string][]string{
+			"text": {"post 1"},
+		},
+	}
 
 	tests := []TestCase{
+		{
+			w:        httptest.NewRecorder(),
+			r:        mux.SetURLVars(reqWithForm, goodID),
+			wantCode: http.StatusOK,
+			wantBody: "Ok",
+		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(badPost)),
