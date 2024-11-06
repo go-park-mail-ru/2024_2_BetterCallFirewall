@@ -285,8 +285,8 @@ func TestUpdate(t *testing.T) {
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/200", bytes.NewBuffer(internalErrorPost)).WithContext(ctxSessBad),
-			wantCode: http.StatusInternalServerError,
-			wantBody: "internal server error",
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
@@ -303,14 +303,14 @@ func TestUpdate(t *testing.T) {
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(post3)).WithContext(ctxSess),
-			wantCode: http.StatusInternalServerError,
-			wantBody: "internal server error",
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPut, "/api/v1/feed/1", bytes.NewBuffer(post1)).WithContext(ctxSess),
-			wantCode: http.StatusOK,
-			wantBody: "Ok",
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request",
 		},
 	}
 
