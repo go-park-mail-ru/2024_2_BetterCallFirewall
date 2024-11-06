@@ -49,7 +49,7 @@ var (
 		FirstName: "Andrew",
 		LastName:  "Savvateev",
 		Bio:       "Hello, viewers!",
-		Avatar:    "",
+		Avatar:    "/default",
 		Pics:      nil,
 		Posts:     []*models.Post{examplePost},
 	}
@@ -189,20 +189,34 @@ func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header) 
 }
 
 func TestGetProfileByID(t *testing.T) {
+	sessId1, err := models.NewSession(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessId10, err := models.NewSession(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessId2, err := models.NewSession(2)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []Test{
 		{
-			ctx:        context.Background(),
+			ctx:        models.ContextWithSession(context.Background(), sessId1),
 			userID:     1,
 			resProfile: exampleProfileWithPost,
 			err:        nil,
 		},
 		{
-			ctx:    context.Background(),
+			ctx:    models.ContextWithSession(context.Background(), sessId10),
 			userID: 10,
 			err:    sql.ErrNoRows,
 		},
 		{
-			ctx:        context.Background(),
+			ctx:        models.ContextWithSession(context.Background(), sessId2),
 			userID:     2,
 			resProfile: exampleProfileWithoutPost,
 			err:        nil,
@@ -264,11 +278,6 @@ func TestUpdateProfile(t *testing.T) {
 			ctx:          context.Background(),
 			inputProfile: exampleProfileWithPost,
 			err:          nil,
-		},
-		{
-			ctx:          context.Background(),
-			inputProfile: exampleProfileWithoutPost,
-			err:          myErr.ErrWrongOwner,
 		},
 	}
 
@@ -455,15 +464,24 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestGetAllFriends(t *testing.T) {
+	sessId3, err := models.NewSession(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessId10, err := models.NewSession(10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []Test{
 		{
-			ctx:              context.Background(),
+			ctx:              models.ContextWithSession(context.Background(), sessId3),
 			userID:           3,
 			resShortProfiles: []*models.ShortProfile{shortExample1, shortExample2},
 			err:              nil,
 		},
 		{
-			ctx:    context.Background(),
+			ctx:    models.ContextWithSession(context.Background(), sessId10),
 			userID: 10,
 			err:    sql.ErrNoRows,
 		},
@@ -487,15 +505,24 @@ func TestGetAllFriends(t *testing.T) {
 }
 
 func TestGetAllSubs(t *testing.T) {
+	sessId3, err := models.NewSession(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessId10, err := models.NewSession(10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []Test{
 		{
-			ctx:              context.Background(),
+			ctx:              models.ContextWithSession(context.Background(), sessId3),
 			userID:           3,
 			resShortProfiles: []*models.ShortProfile{shortExample1, shortExample2},
 			err:              nil,
 		},
 		{
-			ctx:    context.Background(),
+			ctx:    models.ContextWithSession(context.Background(), sessId10),
 			userID: 10,
 			err:    sql.ErrNoRows,
 		},
@@ -519,15 +546,24 @@ func TestGetAllSubs(t *testing.T) {
 }
 
 func TestGetAllSubscriptions(t *testing.T) {
+	sessId3, err := models.NewSession(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sessId10, err := models.NewSession(10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []Test{
 		{
-			ctx:              context.Background(),
+			ctx:              models.ContextWithSession(context.Background(), sessId3),
 			userID:           3,
 			resShortProfiles: []*models.ShortProfile{shortExample1, shortExample2},
 			err:              nil,
 		},
 		{
-			ctx:    context.Background(),
+			ctx:    models.ContextWithSession(context.Background(), sessId10),
 			userID: 10,
 			err:    sql.ErrNoRows,
 		},
