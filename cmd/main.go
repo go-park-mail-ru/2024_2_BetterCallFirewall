@@ -88,6 +88,7 @@ func main() {
 
 	chatService := chatService.NewChatService(chatRepo, profileUsecase)
 	chatControl := ChatController.NewChatController(chatService, responder)
+	defer close(chatControl.Messages)
 
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
