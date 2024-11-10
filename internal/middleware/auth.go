@@ -109,7 +109,7 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 
 func unauthorized(w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusUnauthorized)
 
@@ -120,7 +120,7 @@ func unauthorized(w http.ResponseWriter, r *http.Request, err error) {
 
 func internalErr(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	w.WriteHeader(http.StatusInternalServerError)
