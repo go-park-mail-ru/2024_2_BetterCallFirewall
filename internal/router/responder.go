@@ -38,7 +38,7 @@ func NewResponder(logger *log.Logger) *Respond {
 
 func writeHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 }
 
