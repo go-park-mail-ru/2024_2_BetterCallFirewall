@@ -222,3 +222,8 @@ func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint
 
 	return *header, nil
 }
+
+// TODO realize
+func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, communityID uint32) ([]models.ShortProfile, error) {
+	return nil, nil
+}
