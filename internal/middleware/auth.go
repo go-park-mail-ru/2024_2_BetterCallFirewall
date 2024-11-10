@@ -69,8 +69,6 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 				Name:     "session_id",
 				Value:    sess.ID,
 				Path:     "/",
-				Domain:   "vilka.online",
-				SameSite: http.SameSiteNoneMode,
 				HttpOnly: true,
 				Expires:  time.Now().AddDate(0, 0, 1),
 			}
@@ -102,8 +100,6 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 		Name:     "session_id",
 		Value:    sess.ID,
 		Path:     "/",
-		Domain:   "vilka.online",
-		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}

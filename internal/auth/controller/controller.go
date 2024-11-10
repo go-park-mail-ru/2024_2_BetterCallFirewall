@@ -77,8 +77,6 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_id",
 		Value:    sess.ID,
 		Path:     "/",
-		Domain:   "vilka.online",
-		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
@@ -122,8 +120,6 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_id",
 		Value:    sess.ID,
 		Path:     "/",
-		Domain:   "vilka.online",
-		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
@@ -154,8 +150,6 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Name:     "session_id",
 		Value:    sess.ID,
 		Path:     "/",
-		Domain:   "vilka.online",
-		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
