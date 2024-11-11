@@ -24,10 +24,11 @@ type responder interface {
 
 type communityService interface {
 	Get(ctx context.Context, lastID uint32) ([]*models.Community, error)
-	GetOne(ctx context.Context, id uint32) (models.Community, error)
-	Update(ctx context.Context, id uint32, community models.Community) error
+	GetOne(ctx context.Context, id uint32) (*models.Community, error)
+	Update(ctx context.Context, id uint32, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
-	Create(ctx context.Context, community models.Community) error
+	Create(ctx context.Context, community *models.Community) error
+	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
 
 type Controller struct {
@@ -105,13 +106,24 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newCommunity := c.getCommunityFromBody(r)
-	if !checkAccess(r) {
-		c.responder.LogError(myErr.ErrAccessDenied, reqID)
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	c.service.Update(r.Context(), id, newCommunity)
+	newCommunity := c.getCommunityFromBody(r)
+	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
+		c.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+		return
+	}
+
+	err = c.service.Update(r.Context(), id, &newCommunity)
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+	}
+
+	c.responder.OutputJSON(w, newCommunity, reqID)
 }
 
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +138,13 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkAccess(r) {
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
 		c.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
 		return
 	}
@@ -137,7 +155,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.responder.OutputJSON(w, nil, reqID)
+	c.responder.OutputJSON(w, id, reqID)
 }
 
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
@@ -147,13 +165,13 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newCommunity := c.getCommunityFromBody(r)
-	err := c.service.Create(r.Context(), newCommunity)
+	err := c.service.Create(r.Context(), &newCommunity)
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	c.responder.OutputJSON(w, nil, reqID)
+	c.responder.OutputJSON(w, newCommunity.ID, reqID)
 }
 
 func (c *Controller) getCommunityFromBody(r *http.Request) models.Community {
@@ -175,8 +193,4 @@ func getIDFromQuery(r *http.Request) (uint32, error) {
 	}
 
 	return uint32(uid), nil
-}
-
-func checkAccess(r *http.Request) bool {
-	return true
 }
