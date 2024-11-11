@@ -30,6 +30,7 @@ var (
 	ErrWrongFile            = errors.New("wrong file name")
 	ErrNoFile               = errors.New("file not found")
 	ErrResNotOK             = errors.New("res not OK")
+	ErrLikeAlreadyExists    = errors.New("like already exists")
 	ErrWrongCommunity       = errors.New("wrong community")
 	ErrLikeAlreadyExists    = errors.New("like already exists")
 	ErrWrongPost            = errors.New("wrong post")

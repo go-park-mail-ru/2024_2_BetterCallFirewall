@@ -75,3 +75,17 @@ CREATE TABLE IF NOT EXISTS reaction (
 ALTER TABLE friend
     ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
     ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
+
+ALTER TABLE community ADD FOREIGN KEY ("avatar") REFERENCES file(id) ON DELETE SET NULL;
+
+ALTER TABLE file
+    ADD FOREIGN KEY ("post_id") REFERENCES post(id) ON DELETE NO ACTION,
+    ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE NO ACTION,
+    ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE NO ACTION;
+
+ALTER TABLE reaction
+    ADD CONSTRAINT unique_user_post UNIQUE (post_id, user_id),
+    ADD CONSTRAINT unique_user_comment UNIQUE (comment_id, user_id),
+    ADD CONSTRAINT unique_user_file UNIQUE (file_id, user_id);
+
+INSERT INTO file(file_path) VALUES ('/image/default');
