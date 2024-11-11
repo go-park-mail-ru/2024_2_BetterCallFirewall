@@ -22,6 +22,9 @@ import (
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
 	fileRepo "github.com/2024_2_BetterCallFirewall/internal/fileService/repository"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
+	likeController "github.com/2024_2_BetterCallFirewall/internal/like/controller"
+	likeRepo "github.com/2024_2_BetterCallFirewall/internal/like/repository"
+	likeService "github.com/2024_2_BetterCallFirewall/internal/like/usecase"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresProfile "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
@@ -93,7 +96,11 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger, chatControl)
+	likeRepo := likeRepo.NewLikeRepository(postgresDB)
+	likeUsecase := likeService.NewLikeUsecase(likeRepo)
+	likeControl := likeController.NewLikeController(likeUsecase)
+
+	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger, chatControl, likeControl)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,

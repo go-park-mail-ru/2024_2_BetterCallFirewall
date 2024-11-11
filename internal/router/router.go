@@ -57,6 +57,15 @@ type ChatController interface {
 	SendChatMsg(ctx context.Context, reqID string)
 }
 
+type ReactionController interface {
+	SetLikeToPost(w http.ResponseWriter, r *http.Request)
+	SetLikeToComment(w http.ResponseWriter, r *http.Request)
+	SetLikeToFile(w http.ResponseWriter, r *http.Request)
+	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
+	DeleteLikeFromComment(w http.ResponseWriter, r *http.Request)
+	DeleteLikeFromFile(w http.ResponseWriter, r *http.Request)
+}
+
 type FileController interface {
 	Upload(w http.ResponseWriter, r *http.Request)
 }
@@ -69,6 +78,7 @@ func NewRouter(
 	sm SessionManager,
 	logger *logrus.Logger,
 	chatControl ChatController,
+	reactionControl ReactionController,
 ) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
@@ -88,16 +98,19 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profile/{id}/friends", profileControl.GetAllFriends).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/picture/{id}/like", reactionControl.SetLikeToFile).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/picture/{id}/like", reactionControl.DeleteLikeFromFile).Methods(http.MethodDelete, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/feed", postControl.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.GetOne).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/like", reactionControl.SetLikeToPost).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/like", reactionControl.DeleteLikeFromComment).Methods(http.MethodDelete, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
-	/*router.HandleFunc("api/v1/messages/chat/{id}", chatControl.SendChatMsg).Methods(http.MethodPost, http.MethodOptions)*/
 	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
 

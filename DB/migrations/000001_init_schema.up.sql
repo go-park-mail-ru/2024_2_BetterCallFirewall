@@ -96,4 +96,9 @@ ALTER TABLE file
     ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE NO ACTION,
     ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE NO ACTION;
 
+ALTER TABLE reaction
+    ADD CONSTRAINT unique_user_post UNIQUE (post_id, user_id),
+    ADD CONSTRAINT unique_user_comment UNIQUE (comment_id, user_id),
+    ADD CONSTRAINT unique_user_file UNIQUE (file_id, user_id);
+
 INSERT INTO file(file_path) VALUES ('/image/default');
