@@ -6,6 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
@@ -21,6 +24,9 @@ const (
 	getProfilePosts = `SELECT id, content, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
 	getFriendsPost  = `SELECT id, author_id, content, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
+
+	createCommunityPost = `INSERT INTO post (community_id, content) VALUES ($1, $2) RETURNING id;`
+	getCommunityPosts   = `SELECT id, community_id, content, created_at FROM post WHERE community_id = $1 AND created_at < $2 ORDER BY created_at DESC LIMIT 10;`
 )
 
 type Adapter struct {
@@ -202,4 +208,38 @@ func convertSliceToString(sl []uint32) string {
 	res += "}"
 
 	return res
+}
+
+func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+	res, err := a.db.ExecContext(ctx, createCommunityPost, communityID, post.PostContent.Text)
+	if err != nil {
+		return 0, fmt.Errorf("postgres create community post db: %w", err)
+	}
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("postgres get last id of community post db: %w", err)
+	}
+	return uint32(lastId), nil
+
+}
+
+func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, lastTime time.Time) ([]*models.Post, error) {
+	var posts []*models.Post
+	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, pq.FormatTimestamp(lastTime))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, myErr.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("postgres get community posts: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		post := &models.Post{}
+		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("postgres get community posts: %w", err)
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
 }
