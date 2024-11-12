@@ -26,7 +26,7 @@ func NewService(repo Repo) *Service {
 	}
 }
 
-func (s *Service) Get(ctx context.Context, lastID uint32) ([]*models.Community, error) {
+func (s *Service) Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error) {
 	coms, err := s.repo.GetBatch(ctx, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get community list: %w", err)
@@ -44,8 +44,8 @@ func (s *Service) GetOne(ctx context.Context, id uint32) (*models.Community, err
 	return com, nil
 }
 
-func (s *Service) Create(ctx context.Context, community *models.Community) error {
-	id, err := s.repo.Create(ctx, community)
+func (s *Service) Create(ctx context.Context, community *models.Community, authorID uint32) error {
+	id, err := s.repo.Create(ctx, community, authorID)
 	if err != nil {
 		return fmt.Errorf("create community: %w", err)
 	}
@@ -74,10 +74,5 @@ func (s *Service) Delete(ctx context.Context, id uint32) error {
 }
 
 func (s *Service) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
-	err := s.repo.CheckAccess(ctx, communityID, userID)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return s.repo.CheckAccess(ctx, communityID, userID)
 }

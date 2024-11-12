@@ -23,11 +23,11 @@ type responder interface {
 }
 
 type communityService interface {
-	Get(ctx context.Context, lastID uint32) ([]*models.Community, error)
+	Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error)
 	GetOne(ctx context.Context, id uint32) (*models.Community, error)
 	Update(ctx context.Context, id uint32, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
-	Create(ctx context.Context, community *models.Community) error
+	Create(ctx context.Context, community *models.Community, authorID uint32) error
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
 
@@ -164,8 +164,14 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		c.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	newCommunity := c.getCommunityFromBody(r)
-	err := c.service.Create(r.Context(), &newCommunity)
+	err = c.service.Create(r.Context(), &newCommunity, sess.UserID)
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
