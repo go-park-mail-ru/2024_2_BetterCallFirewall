@@ -275,3 +275,21 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	}
 	return profile, nil
 }
+
+func (p *ProfileRepo) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+	var subs []*models.ShortProfile
+	rows, err := p.DB.QueryContext(ctx, GetCommunitySubs, communityID, lastInsertId, LIMIT)
+	if err != nil {
+		return nil, fmt.Errorf("get community subs db: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		profile := &models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
+		if err != nil {
+			return nil, fmt.Errorf("get community subs db: %w", err)
+		}
+		subs = append(subs, profile)
+	}
+	return subs, nil
+}
