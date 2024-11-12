@@ -28,7 +28,7 @@ type ProfileRepo interface {
 }
 
 type CommunityRepo interface {
-	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) (bool, error)
+	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
 
 type PostServiceImpl struct {
@@ -169,12 +169,7 @@ func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, las
 }
 
 func (s *PostServiceImpl) CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool {
-	access, err := s.communityRepo.CheckAccessToCommunity(ctx, userID, communityID)
-	if err != nil {
-		return false
-	}
-
-	return access
+	return s.communityRepo.CheckAccess(ctx, userID, communityID)
 }
 
 func convertTime(t time.Time) time.Time {

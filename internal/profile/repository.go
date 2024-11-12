@@ -27,6 +27,8 @@ type Repository interface {
 	GetSubscribersID(context.Context, uint32) ([]uint32, error)
 	GetStatuses(context.Context, uint32) ([]uint32, []uint32, []uint32, error)
 	GetHeader(context.Context, uint32) (*models.Header, error)
+
+	GetCommunitySubs(ctx context.Context, communityID uint32) ([]models.ShortProfile, error)
 }
 
 type PostGetter interface {

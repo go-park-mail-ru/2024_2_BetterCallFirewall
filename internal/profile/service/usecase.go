@@ -223,7 +223,11 @@ func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint
 	return *header, nil
 }
 
-// TODO realize
 func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, communityID uint32) ([]models.ShortProfile, error) {
-	return nil, nil
+	subs, err := p.repo.GetCommunitySubs(ctx, communityID)
+	if err != nil {
+		return nil, fmt.Errorf("get subs: %w", err)
+	}
+
+	return subs, nil
 }
