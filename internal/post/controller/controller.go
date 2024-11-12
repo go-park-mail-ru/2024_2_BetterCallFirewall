@@ -33,7 +33,7 @@ type PostService interface {
 
 	GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error)
 	CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error)
-	CheckAccessToCommunity(ctx context.Context, userID uint32, postID uint32) bool
+	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool
 }
 
 type Responder interface {
@@ -66,7 +66,13 @@ func NewPostController(service PostService, responder Responder, fileService Fil
 }
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		comunity  = r.URL.Query().Get("community")
+		id        uint32
+		err       error
+	)
+
 	if !ok {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
@@ -77,10 +83,29 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := pc.postService.Create(r.Context(), newPost)
-	if err != nil {
-		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
-		return
+	if comunity != "" {
+		comID, err := strconv.ParseUint(comunity, 10, 32)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		if !pc.checkAccessToCommunity(r, uint32(comID)) {
+			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			return
+		}
+
+		newPost.Header.CommunityID = uint32(comID)
+		id, err = pc.postService.CreateCommunityPost(r.Context(), newPost)
+		if err != nil {
+			pc.responder.ErrorInternal(w, err, reqID)
+			return
+		}
+	} else {
+		id, err = pc.postService.Create(r.Context(), newPost)
+		if err != nil {
+			pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
+			return
+		}
 	}
 
 	if file != nil {
@@ -129,6 +154,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
 		id, err   = getIDFromQuery(r)
+		community = r.URL.Query().Get("community")
 	)
 
 	if err != nil {
@@ -140,29 +166,29 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(myErr.ErrInvalidContext, "")
 	}
 
+	if community != "" {
+		comID, err := strconv.ParseUint(community, 10, 32)
+		if err != nil {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		if !pc.checkAccessToCommunity(r, uint32(comID)) {
+			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			return
+		}
+	} else {
+		if !pc.checkAccess(r, id) {
+			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			return
+		}
+	}
+
 	post, file, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	post.ID = id
-	userID := post.Header.AuthorID
-
-	authorID, err := pc.postService.GetPostAuthorID(r.Context(), post.ID)
-	if err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
-		return
-	}
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
 		if errors.Is(err, myErr.ErrPostNotFound) {
@@ -189,6 +215,7 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok   = r.Context().Value("requestID").(string)
 		postID, err = getIDFromQuery(r)
+		community   = r.URL.Query().Get("community")
 	)
 
 	if !ok {
@@ -200,27 +227,21 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	userID := sess.UserID
-	authorID, err := pc.postService.GetPostAuthorID(r.Context(), postID)
-	if err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
+	if community != "" {
+		comID, err := strconv.ParseUint(community, 10, 32)
+		if err != nil {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	if userID != authorID {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
-		return
+		if !pc.checkAccessToCommunity(r, uint32(comID)) {
+			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			return
+		}
+	} else {
+		if !pc.checkAccess(r, postID) {
+			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			return
+		}
 	}
 
 	if err := pc.postService.Delete(r.Context(), postID); err != nil {
@@ -237,11 +258,13 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-		section   = r.URL.Query().Get("section")
-		posts     []*models.Post
-		intLastID uint64
-		err       error
+		reqID, ok   = r.Context().Value("requestID").(string)
+		section     = r.URL.Query().Get("section")
+		communityID = r.URL.Query().Get("community")
+		posts       []*models.Post
+		intLastID   uint64
+		err         error
+		id          uint64
 	)
 
 	if !ok {
@@ -266,7 +289,16 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		}
 	case "":
 		{
-			posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID))
+			if communityID != "" {
+				id, err = strconv.ParseUint(communityID, 10, 32)
+				if err != nil {
+					pc.responder.ErrorBadRequest(w, err, reqID)
+					return
+				}
+				posts, err = pc.postService.GetCommunityPost(r.Context(), uint32(id), uint32(intLastID))
+			} else {
+				posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID))
+			}
 		}
 	default:
 		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
@@ -292,170 +324,6 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	}
 
 	pc.responder.OutputJSON(w, posts, reqID)
-}
-
-func (pc *PostController) GetCommunityPosts(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
-	lastID, err := getLastID(r)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	id := r.URL.Query().Get("community_id")
-	if id == "" {
-		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
-		return
-	}
-	uid, err := strconv.ParseUint(id, 10, 32)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
-	}
-
-	posts, err := pc.postService.GetCommunityPost(r.Context(), uint32(uid), uint32(lastID))
-	if err != nil {
-		if errors.Is(err, myErr.ErrNoMoreContent) {
-			pc.responder.OutputNoMoreContentJSON(w, reqID)
-			return
-		}
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	pc.responder.OutputJSON(w, posts, reqID)
-}
-
-func (pc *PostController) CreatePostInCommunity(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
-	post, file, err := pc.getPostFromBody(r)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	if !checkAccess(post.Header.AuthorID, post.Header.CommunityID) {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
-		return
-	}
-
-	id, err := pc.postService.CreateCommunityPost(r.Context(), post)
-	if err != nil {
-		pc.responder.ErrorInternal(w, fmt.Errorf("create controller: %w", err), reqID)
-		return
-	}
-
-	if file != nil {
-		defer file.Close()
-		err = pc.fileService.Download(r.Context(), file, id, 0)
-		if err != nil {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-	}
-	post.ID = id
-
-	pc.responder.OutputJSON(w, post, reqID)
-
-}
-
-func (pc *PostController) UpdatePostInCommunity(w http.ResponseWriter, r *http.Request) {
-	var (
-		reqID, ok   = r.Context().Value("requestID").(string)
-		postID, err = getIDFromQuery(r)
-	)
-
-	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	if !pc.postService.CheckAccessToCommunity(r.Context(), sess.UserID, postID) {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
-		return
-	}
-
-	post, file, err := pc.getPostFromBody(r)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-	post.ID = postID
-
-	if err := pc.postService.Update(r.Context(), post); err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	if file != nil {
-		defer file.Close()
-		err = pc.fileService.UpdatePostFile(r.Context(), file, post.ID)
-		if err != nil {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-	}
-
-	pc.responder.OutputJSON(w, post, reqID)
-}
-
-func (pc *PostController) DeletePostInCommunity(w http.ResponseWriter, r *http.Request) {
-	var (
-		reqID, ok   = r.Context().Value("requestID").(string)
-		postID, err = getIDFromQuery(r)
-	)
-
-	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
-	}
-
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	sess, err := models.SessionFromContext(r.Context())
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	if !pc.postService.CheckAccessToCommunity(r.Context(), sess.UserID, postID) {
-		pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
-		return
-	}
-
-	if err := pc.postService.Delete(r.Context(), postID); err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	pc.responder.OutputJSON(w, postID, reqID)
 }
 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multipart.File, error) {
@@ -530,6 +398,31 @@ func getLastID(r *http.Request) (uint64, error) {
 	return intLastID, nil
 }
 
-func checkAccess(userID, communityID uint32) bool {
+func (pc *PostController) checkAccess(r *http.Request, postID uint32) bool {
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		return false
+	}
+
+	userID := sess.UserID
+	authorID, err := pc.postService.GetPostAuthorID(r.Context(), postID)
+	if err != nil {
+		return false
+	}
+
+	if userID != authorID {
+		return false
+	}
+
 	return true
+}
+
+func (pc *PostController) checkAccessToCommunity(r *http.Request, communityID uint32) bool {
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		return false
+	}
+	userID := sess.UserID
+
+	return pc.postService.CheckAccessToCommunity(r.Context(), userID, communityID)
 }

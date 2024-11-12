@@ -17,6 +17,9 @@ type DB interface {
 	GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error)
 	GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error)
 	GetPostAuthor(ctx context.Context, postID uint32) (uint32, error)
+
+	CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error)
+	GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error)
 }
 
 type ProfileRepo interface {
@@ -24,15 +27,21 @@ type ProfileRepo interface {
 	GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error)
 }
 
-type PostServiceImpl struct {
-	db          DB
-	profileRepo ProfileRepo
+type CommunityRepo interface {
+	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) (bool, error)
 }
 
-func NewPostServiceImpl(db DB, profileRepo ProfileRepo) *PostServiceImpl {
+type PostServiceImpl struct {
+	db            DB
+	profileRepo   ProfileRepo
+	communityRepo CommunityRepo
+}
+
+func NewPostServiceImpl(db DB, profileRepo ProfileRepo, repo CommunityRepo) *PostServiceImpl {
 	return &PostServiceImpl{
-		db:          db,
-		profileRepo: profileRepo,
+		db:            db,
+		profileRepo:   profileRepo,
+		communityRepo: repo,
 	}
 }
 
@@ -139,6 +148,33 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 
 func (s *PostServiceImpl) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
 	return s.db.GetPostAuthor(ctx, postID)
+}
+
+func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error) {
+	id, err := s.db.CreateCommunityPost(ctx, post, post.Header.CommunityID)
+	if err != nil {
+		return 0, fmt.Errorf("create post: %w", err)
+	}
+
+	return id, nil
+}
+
+func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error) {
+	posts, err := s.db.GetCommunityPosts(ctx, communityID, lastID)
+	if err != nil {
+		return nil, fmt.Errorf("get posts: %w", err)
+	}
+
+	return posts, nil
+}
+
+func (s *PostServiceImpl) CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool {
+	access, err := s.communityRepo.CheckAccessToCommunity(ctx, userID, communityID)
+	if err != nil {
+		return false
+	}
+
+	return access
 }
 
 func convertTime(t time.Time) time.Time {
