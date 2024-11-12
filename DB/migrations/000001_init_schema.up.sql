@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS profile (
                                        last_name TEXT NOT NULL CONSTRAINT last_name_length CHECK (CHAR_LENGTH(last_name) <= 30),
                                        email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50),
                                        hashed_password TEXT NOT NULL,
-                                       bio TEXT CONSTRAINT bio_length CHECK (CHAR_LENGTH(bio) <= 255) DEFAULT 'description',
+                                       bio TEXT CONSTRAINT bio_length CHECK (CHAR_LENGTH(bio) <= 255) DEFAULT 'Что расскажете о себе?',
                                        avatar INT DEFAULT 1,
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS friend (
 CREATE TABLE IF NOT EXISTS community (
                                          id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                          name text CONSTRAINT community_name_length CHECK(CHAR_LENGTH(name) <= 50),
-                                         avatar INT DEFAULT NULL,
-                                         about TEXT CONSTRAINT about_length CHECK (CHAR_LENGTH(about) <= 500) DEFAULT 'description',
+                                         avatar INT DEFAULT '/default_community',
+                                         about TEXT CONSTRAINT about_length CHECK (CHAR_LENGTH(about) <= 500) DEFAULT 'Опишите ваше сообщество',
                                          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
