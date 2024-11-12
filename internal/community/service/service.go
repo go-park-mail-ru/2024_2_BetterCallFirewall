@@ -8,12 +8,12 @@ import (
 )
 
 type Repo interface {
-	GetBatch(ctx context.Context, lastID uint32) ([]*models.Community, error)
+	GetBatch(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error)
 	GetOne(ctx context.Context, id uint32) (*models.Community, error)
-	Create(ctx context.Context, community *models.Community) (uint32, error)
+	Create(ctx context.Context, community *models.Community, author uint32) (uint32, error)
 	Update(ctx context.Context, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
-	CheckAccess(ctx context.Context, communityID, userID uint32) error
+	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
 
 type Service struct {
