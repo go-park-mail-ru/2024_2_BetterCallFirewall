@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
 
 const LIMIT = 10
@@ -81,6 +82,46 @@ func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 	if err != nil {
 		return fmt.Errorf("delete community: %w", err)
 	}
+	return nil
+}
+
+func (c CommunityRepository) JoinCommunity(ctx context.Context, communityId, author uint32) error {
+	_, err := c.db.ExecContext(ctx, JoinCommunity, communityId, author)
+	if err != nil {
+		return fmt.Errorf("join community: %w", err)
+	}
+
+	return nil
+}
+
+func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
+	_, err := c.db.ExecContext(ctx, LeaveCommunity, communityId, author)
+	if err != nil {
+		return fmt.Errorf("leave community: %w", err)
+	}
+
+	if c.CheckAccess(ctx, communityId, author) {
+		admins := c.adminList[communityId]
+		var i int
+		for idx, admin := range admins {
+			if admin == author {
+				i = idx
+				break
+			}
+		}
+		c.adminList[communityId] = append(c.adminList[communityId][:i], c.adminList[communityId][i+1:]...)
+	}
+
+	return nil
+}
+
+func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, author uint32) error {
+	_, ok := c.adminList[communityId]
+	if !ok {
+		return myErr.ErrWrongCommunity
+	}
+	c.adminList[communityId] = append(c.adminList[communityId], author)
+
 	return nil
 }
 

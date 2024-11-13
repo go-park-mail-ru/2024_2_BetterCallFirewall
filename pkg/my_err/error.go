@@ -30,4 +30,5 @@ var (
 	ErrWrongFile            = errors.New("wrong file name")
 	ErrNoFile               = errors.New("file not found")
 	ErrResNotOK             = errors.New("res not OK")
+	ErrWrongCommunity       = errors.New("wrong community")
 )
