@@ -154,6 +154,17 @@ func (p *ProfileRepo) DeleteProfile(u uint32) error {
 	return nil
 }
 
+func (p *ProfileRepo) CheckFriendship(ctx context.Context, self uint32, profile uint32) (bool, error) {
+	_, err := p.DB.ExecContext(ctx, CheckFriendship, self, profile)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, fmt.Errorf("check friendship: %w", err)
+	}
+	return true, nil
+}
+
 func (p *ProfileRepo) AddFriendsReq(receiver uint32, sender uint32) error {
 	_, err := p.DB.Exec(AddFriends, sender, receiver)
 	if err != nil {

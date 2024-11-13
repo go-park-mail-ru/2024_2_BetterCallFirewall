@@ -14,6 +14,7 @@ type Repository interface {
 	UpdateWithAvatar(context.Context, *models.FullProfile) error
 	DeleteProfile(uint32) error
 
+	CheckFriendship(context.Context, uint32, uint32) (bool, error)
 	AddFriendsReq(receiver uint32, sender uint32) error
 	AcceptFriendsReq(who uint32, whose uint32) error
 	MoveToSubs(who uint32, whom uint32) error
