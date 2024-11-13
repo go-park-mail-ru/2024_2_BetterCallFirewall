@@ -97,7 +97,15 @@ func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint
 	if receiver == sender {
 		return myErr.ErrSameUser
 	}
-	err := p.repo.AddFriendsReq(receiver, sender)
+	has, err := p.repo.CheckFriendship(context.Background(), sender, receiver)
+	if err != nil {
+		return fmt.Errorf("send friendship usecase: %w", err)
+	}
+	if has {
+		p.AcceptFriendReq(sender, receiver)
+		return nil
+	}
+	err = p.repo.AddFriendsReq(receiver, sender)
 	if err != nil {
 		return fmt.Errorf("add friend req usecase: %w", err)
 	}
