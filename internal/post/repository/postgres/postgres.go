@@ -177,6 +177,16 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 	return authorID, nil
 }
 
+// TODO realize
+func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+	return 0, nil
+}
+
+// TODO realize
+func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error) {
+	return nil, nil
+}
+
 func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 	var posts []*models.Post
 
