@@ -486,6 +486,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 
 func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
+	lastID := r.URL.Query().Get("last_id")
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -496,7 +497,13 @@ func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r
 		return
 	}
 
-	subs, err := h.ProfileManager.GetCommunitySubs(r.Context(), id)
+	last, err := strconv.ParseUint(lastID, 10, 32)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	subs, err := h.ProfileManager.GetCommunitySubs(r.Context(), id, uint32(last))
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
