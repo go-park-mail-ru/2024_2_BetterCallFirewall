@@ -6,9 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -26,7 +23,7 @@ const (
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
 
 	createCommunityPost = `INSERT INTO post (community_id, content) VALUES ($1, $2) RETURNING id;`
-	getCommunityPosts   = `SELECT id, community_id, content, created_at FROM post WHERE community_id = $1 AND created_at < $2 ORDER BY created_at DESC LIMIT 10;`
+	getCommunityPosts   = `SELECT id, community_id, content, created_at FROM post WHERE community_id = $1 AND id < $2 ORDER BY id DESC LIMIT 10;`
 )
 
 type Adapter struct {
@@ -177,16 +174,6 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 	return authorID, nil
 }
 
-// TODO realize
-func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
-	return 0, nil
-}
-
-// TODO realize
-func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error) {
-	return nil, nil
-}
-
 func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 	var posts []*models.Post
 
@@ -233,12 +220,12 @@ func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, co
 
 }
 
-func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, lastTime time.Time) ([]*models.Post, error) {
+func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32) ([]*models.Post, error) {
 	var posts []*models.Post
-	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, pq.FormatTimestamp(lastTime))
+	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get community posts: %w", err)
 	}
