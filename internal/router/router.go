@@ -59,6 +59,7 @@ type ChatController interface {
 
 type FileController interface {
 	Upload(w http.ResponseWriter, r *http.Request)
+	Download(w http.ResponseWriter, r *http.Request)
 }
 
 type CommunityController interface {
@@ -106,8 +107,10 @@ func NewRouter(
 
 	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
+
+	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/image", fileControl.Upload).Methods(http.MethodPost, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/community", communityController.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}", postControl.GetOne).Methods(http.MethodGet, http.MethodOptions)
