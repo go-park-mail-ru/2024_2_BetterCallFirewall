@@ -8,3 +8,9 @@ stop:
 	docker compose stop
 
 restart: stop start
+
+gen-proto:
+	protoc \
+     	--go_out=internal/api/grpc --go_opt=paths=import --go_opt=module=github.com/2024_2_BetterCallFirewall/internal/api/grpc \
+     	--go-grpc_out=internal/api/grpc --go-grpc_opt=paths=import --go-grpc_opt=module=github.com/2024_2_BetterCallFirewall/internal/api/grpc \
+      	proto/*.proto

@@ -68,7 +68,6 @@ CREATE TABLE IF NOT EXISTS reaction (
                                         post_id INT REFERENCES post(id) ON DELETE CASCADE DEFAULT NULL,
                                         comment_id INT REFERENCES comment(id) ON DELETE CASCADE DEFAULT NULL,
                                         user_id INT REFERENCES profile(id) ON DELETE CASCADE DEFAULT NULL,
-                                        file_id INT REFERENCES file(id) ON DELETE CASCADE DEFAULT NULL,
                                         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
