@@ -15,13 +15,6 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
-var fileFormat = map[string]struct{}{
-	"image/jpeg": {},
-	"image/jpg":  {},
-	"image/png":  {},
-	"image/webp": {},
-}
-
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
