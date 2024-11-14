@@ -1,10 +1,10 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
-	"mime/multipart"
 	"net/http"
 	"strconv"
 
@@ -31,21 +31,15 @@ type Responder interface {
 	LogError(err error, requestID string)
 }
 
-type FileService interface {
-	CreateFile(file multipart.File) (string, error)
-}
-
 type ProfileHandlerImplementation struct {
 	ProfileManager profile.ProfileUsecase
 	Responder      Responder
-	FileService    FileService
 }
 
-func NewProfileController(manager profile.ProfileUsecase, fileService FileService, responder Responder) *ProfileHandlerImplementation {
+func NewProfileController(manager profile.ProfileUsecase, responder Responder) *ProfileHandlerImplementation {
 	return &ProfileHandlerImplementation{
 		ProfileManager: manager,
 		Responder:      responder,
-		FileService:    fileService,
 	}
 }
 
@@ -134,35 +128,10 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 
 func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.FullProfile, error) {
 	newProfile := models.FullProfile{}
-
-	err := r.ParseMultipartForm(10 << 20) //10 M byte
-	defer r.MultipartForm.RemoveAll()
+	err := json.NewDecoder(r.Body).Decode(&newProfile)
 	if err != nil {
-		return nil, fmt.Errorf("update profile: %w", my_err.ErrToLargeFile)
+		return nil, err
 	}
-
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		file = nil
-	} else {
-		format := header.Header.Get("Content-Type")
-		if _, ok := fileFormat[format]; !ok {
-			return nil, fmt.Errorf("update profile: %w", my_err.ErrWrongFiletype)
-		}
-	}
-
-	filePath := ""
-	if file != nil {
-		filePath, err = h.FileService.CreateFile(file)
-		if err != nil {
-			return nil, fmt.Errorf("update profile: %w", err)
-		}
-	}
-
-	newProfile.FirstName = r.Form.Get("first_name")
-	newProfile.LastName = r.Form.Get("last_name")
-	newProfile.Bio = r.Form.Get("bio")
-	newProfile.Avatar = models.Picture(filePath)
 
 	return &newProfile, nil
 }

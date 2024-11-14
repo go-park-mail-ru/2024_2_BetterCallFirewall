@@ -12,17 +12,17 @@ import (
 )
 
 const (
-	createPost      = `INSERT INTO post (author_id, content) VALUES ($1, $2) RETURNING id;`
-	getPost         = `SELECT id, author_id, content, created_at  FROM post WHERE id = $1;`
+	createPost      = `INSERT INTO post (author_id, content, file_path) VALUES ($1, $2, $3) RETURNING id;`
+	getPost         = `SELECT id, author_id, content, file_path, created_at  FROM post WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
-	updatePost      = `UPDATE post SET content = $1, updated_at = $2 WHERE id = $3;`
-	getPostBatch    = `SELECT id, author_id, content, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
-	getProfilePosts = `SELECT id, content, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
-	getFriendsPost  = `SELECT id, author_id, content, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
+	updatePost      = `UPDATE post SET content = $1, updated_at = $2, file_path = $3 WHERE id = $4;`
+	getPostBatch    = `SELECT id, author_id, content, file_path, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
+	getProfilePosts = `SELECT id, content, file_path, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
+	getFriendsPost  = `SELECT id, author_id, content, file_path, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
 
-	createCommunityPost = `INSERT INTO post (community_id, content) VALUES ($1, $2) RETURNING id;`
-	getCommunityPosts   = `SELECT id, community_id, content, created_at FROM post WHERE community_id = $1 AND id < $2 ORDER BY id DESC LIMIT 10;`
+	createCommunityPost = `INSERT INTO post (community_id, content, file_path) VALUES ($1, $2, $3) RETURNING id;`
+	getCommunityPosts   = `SELECT id, community_id, content, file_path, created_at FROM post WHERE community_id = $1 AND id < $2 ORDER BY id DESC LIMIT 10;`
 )
 
 type Adapter struct {
@@ -38,7 +38,7 @@ func NewAdapter(db *sql.DB) *Adapter {
 func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	var postID uint32
 
-	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text).Scan(&postID); err != nil {
+	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File).Scan(&postID); err != nil {
 		return 0, fmt.Errorf("postgres create post: %w", err)
 	}
 
@@ -48,7 +48,8 @@ func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error)
 func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	var post models.Post
 
-	if err := a.db.QueryRowContext(ctx, getPost, postID).Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+	if err := a.db.QueryRowContext(ctx, getPost, postID).
+		Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrPostNotFound
 		}
@@ -79,7 +80,7 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 }
 
 func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
-	res, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.ID)
+	res, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.PostContent.File, post.ID)
 
 	if err != nil {
 		return fmt.Errorf("postgres update post: %w", err)
@@ -134,10 +135,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 	var posts []*models.Post
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
-
-	if rows != nil {
-		defer rows.Close()
-	}
+	defer rows.Close()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -149,7 +147,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.CreatedAt)
+		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("postgres get author posts: %w", err)
 		}
@@ -178,7 +176,7 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)
@@ -207,7 +205,7 @@ func convertSliceToString(sl []uint32) string {
 }
 
 func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
-	res, err := a.db.ExecContext(ctx, createCommunityPost, communityID, post.PostContent.Text)
+	res, err := a.db.ExecContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File)
 	if err != nil {
 		return 0, fmt.Errorf("postgres create community post db: %w", err)
 	}
@@ -231,7 +229,7 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 	defer rows.Close()
 	for rows.Next() {
 		post := &models.Post{}
-		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.CreatedAt)
+		err = rows.Scan(&post.ID, &post.Header.CommunityID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("postgres get community posts: %w", err)
 		}

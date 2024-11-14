@@ -13,6 +13,8 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+const defaultAva = 2
+
 type responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
