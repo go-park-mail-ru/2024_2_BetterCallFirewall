@@ -23,7 +23,6 @@ import (
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
-	fileRepo "github.com/2024_2_BetterCallFirewall/internal/fileService/repository"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresPost "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
@@ -87,13 +86,12 @@ func Run() error {
 	postRepo := postgresPost.NewAdapter(postgresDB)
 	chatRepo := chatRepository.NewChatRepository(postgresDB)
 
-	fileRepository := fileRepo.NewFileRepo(postgresDB)
-	fileServ := fileservis.NewFileService(fileRepository)
+	fileServ := fileservis.NewFileService()
 	fileController := filecontrol.NewFileController(fileServ, responder)
 
-	postsHelper := postServ.NewPostProfileImpl(fileServ, postRepo)
+	postsHelper := postServ.NewPostProfileImpl(postRepo)
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postsHelper)
-	profileControl := profileController.NewProfileController(profileUsecase, fileServ, responder)
+	profileControl := profileController.NewProfileController(profileUsecase, responder)
 
 	chatService := chatService.NewChatService(chatRepo)
 	chatControl := ChatController.NewChatController(chatService, responder)
@@ -104,7 +102,7 @@ func Run() error {
 	communityControl := communityController.NewController(responder, communityServ)
 
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase, communityRepo)
-	postControl := postController.NewPostController(postService, responder, fileServ)
+	postControl := postController.NewPostController(postService, responder)
 
 	rout := router.NewRouter(control,
 		profileControl,
