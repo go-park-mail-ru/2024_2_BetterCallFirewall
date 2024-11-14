@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var (
@@ -296,7 +296,7 @@ func TestPostServiceGetBatchFromFriend(t *testing.T) {
 		{lastId: 10, userId: 10, wantPosts: nil, wantErr: errMockDB},
 		{lastId: 1, userId: 0, wantPosts: nil, wantErr: errMockProfile},
 		{lastId: 1, userId: 10, wantPosts: nil, wantErr: errMockProfile},
-		{lastId: 1, userId: 1, wantPosts: nil, wantErr: myErr.ErrNoMoreContent},
+		{lastId: 1, userId: 1, wantPosts: nil, wantErr: my_err.ErrNoMoreContent},
 		{lastId: 3, userId: 5, wantPosts: Posts[:3], wantErr: nil},
 		{lastId: 5, userId: 5, wantPosts: Posts[:], wantErr: nil},
 		{lastId: 2, userId: 3, wantPosts: Posts[:2], wantErr: nil},

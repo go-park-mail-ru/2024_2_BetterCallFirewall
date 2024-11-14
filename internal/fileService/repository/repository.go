@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type FileRepo struct {
@@ -41,7 +41,7 @@ func (fr FileRepo) GetProfileFiles(ctx context.Context, profileId uint32) ([]*st
 	rows, err := fr.DB.QueryContext(ctx, GetProfileFile, profileId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoFile
+			return nil, my_err.ErrNoFile
 		}
 		return nil, fmt.Errorf("get file db: %w", err)
 
@@ -63,7 +63,7 @@ func (fr FileRepo) GetPostFiles(ctx context.Context, postId uint32) (string, err
 
 	if err := fr.DB.QueryRowContext(ctx, GetPostFile, postId).Scan(&res); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", myErr.ErrNoFile
+			return "", my_err.ErrNoFile
 		}
 		return "", fmt.Errorf("get file db: %w", err)
 	}

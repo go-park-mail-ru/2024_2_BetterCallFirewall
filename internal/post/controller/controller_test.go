@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var errMock = errors.New("mock error")
@@ -31,7 +31,7 @@ func (m *mockPostService) Create(ctx context.Context, post *models.Post) (uint32
 
 func (m *mockPostService) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	if postID == 100 {
-		return nil, myErr.ErrPostNotFound
+		return nil, my_err.ErrPostNotFound
 	}
 
 	if postID == 200 {
@@ -43,7 +43,7 @@ func (m *mockPostService) Get(ctx context.Context, postID uint32) (*models.Post,
 
 func (m *mockPostService) Update(ctx context.Context, post *models.Post) error {
 	if post.ID == 2 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 	if post.PostContent.Text == "bad text in post" {
 		return errMock
@@ -54,7 +54,7 @@ func (m *mockPostService) Update(ctx context.Context, post *models.Post) error {
 
 func (m *mockPostService) Delete(ctx context.Context, postID uint32) error {
 	if postID == 300 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 	if postID == 400 {
 		return errMock
@@ -69,10 +69,10 @@ func (m *mockPostService) GetBatch(ctx context.Context, lastID uint32) ([]*model
 		return nil, errMock
 	}
 	if data == "0 post" {
-		return nil, myErr.ErrNoMoreContent
+		return nil, my_err.ErrNoMoreContent
 	}
 	if data == "another err" {
-		return nil, myErr.ErrAnotherService
+		return nil, my_err.ErrAnotherService
 	}
 
 	return []*models.Post{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}, {ID: 8}}, nil
@@ -84,7 +84,7 @@ func (m *mockPostService) GetBatchFromFriend(ctx context.Context, userID uint32,
 		return nil, errMock
 	}
 	if data == "1 post" {
-		return []*models.Post{{ID: 1}}, myErr.ErrNoMoreContent
+		return []*models.Post{{ID: 1}}, my_err.ErrNoMoreContent
 	}
 
 	return []*models.Post{{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}, {ID: 8}}, nil
@@ -92,7 +92,7 @@ func (m *mockPostService) GetBatchFromFriend(ctx context.Context, userID uint32,
 
 func (m *mockPostService) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
 	if postID == 100 {
-		return 0, myErr.ErrPostNotFound
+		return 0, my_err.ErrPostNotFound
 	}
 	if postID == 200 {
 		return 0, errMock

@@ -13,7 +13,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type AuthService interface {
@@ -46,7 +46,7 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	user := models.User{}
@@ -57,7 +57,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID, err = c.serviceAuth.Register(user, r.Context())
-	if errors.Is(err, myErr.ErrUserAlreadyExists) || errors.Is(err, myErr.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
+	if errors.Is(err, my_err.ErrUserAlreadyExists) || errors.Is(err, my_err.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
 		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
@@ -89,7 +89,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	user := models.User{}
@@ -101,7 +101,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	id, err := c.serviceAuth.Auth(user, r.Context())
 
-	if errors.Is(err, myErr.ErrWrongEmailOrPassword) || errors.Is(err, myErr.ErrNonValidEmail) {
+	if errors.Is(err, my_err.ErrWrongEmailOrPassword) || errors.Is(err, my_err.ErrNonValidEmail) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
@@ -131,12 +131,12 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		c.responder.ErrorBadRequest(w, myErr.ErrNoAuth, "")
+		c.responder.ErrorBadRequest(w, my_err.ErrNoAuth, "")
 		return
 	}
 

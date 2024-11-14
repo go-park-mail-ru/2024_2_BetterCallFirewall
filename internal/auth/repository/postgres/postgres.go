@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Adapter struct {
@@ -29,7 +29,7 @@ func (a *Adapter) Create(user *models.User, ctx context.Context) (uint32, error)
 	err := a.db.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, fmt.Errorf("postgres create user: %w", myErr.ErrUserAlreadyExists)
+			return 0, fmt.Errorf("postgres create user: %w", my_err.ErrUserAlreadyExists)
 		}
 		return 0, fmt.Errorf("postgres create user: %w", err)
 	}
@@ -42,7 +42,7 @@ func (a *Adapter) GetByEmail(email string, ctx context.Context) (*models.User, e
 	err := a.db.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("postgres get user: %w", myErr.ErrUserNotFound)
+			return nil, fmt.Errorf("postgres get user: %w", my_err.ErrUserNotFound)
 		}
 		return nil, fmt.Errorf("postgres get user: %w", err)
 	}

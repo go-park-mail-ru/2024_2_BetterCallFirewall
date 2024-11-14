@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type responder interface {
@@ -46,7 +46,7 @@ func NewController(responder responder, service communityService) *Controller {
 func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	id, err := getIDFromQuery(r)
@@ -73,14 +73,14 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 	if lastID == "" {
 		intLastID = math.MaxInt32
 	} else {
 		intLastID, err = strconv.ParseUint(lastID, 10, 32)
 		if err != nil {
-			c.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
+			c.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
 			return
 		}
 	}
@@ -97,7 +97,7 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	id, err := getIDFromQuery(r)
@@ -114,7 +114,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 
 	newCommunity := c.getCommunityFromBody(r)
 	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
-		c.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+		c.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	id, err := getIDFromQuery(r)
@@ -145,7 +145,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
-		c.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+		c.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 		return
 	}
 
@@ -161,7 +161,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		c.responder.LogError(myErr.ErrInvalidContext, "")
+		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())

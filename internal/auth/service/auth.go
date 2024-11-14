@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type UserRepo interface {
@@ -29,7 +29,7 @@ func NewAuthServiceImpl(db UserRepo) *AuthServiceImpl {
 
 func (a *AuthServiceImpl) Register(user models.User, ctx context.Context) (uint32, error) {
 	if !a.validateEmail(user.Email) {
-		return 0, fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+		return 0, fmt.Errorf("auth service: %w", my_err.ErrNonValidEmail)
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -48,12 +48,12 @@ func (a *AuthServiceImpl) Register(user models.User, ctx context.Context) (uint3
 
 func (a *AuthServiceImpl) Auth(user models.User, ctx context.Context) (uint32, error) {
 	if !a.validateEmail(user.Email) {
-		return 0, fmt.Errorf("auth service: %w", myErr.ErrNonValidEmail)
+		return 0, fmt.Errorf("auth service: %w", my_err.ErrNonValidEmail)
 	}
 
 	dbUser, err := a.db.GetByEmail(user.Email, ctx)
-	if errors.Is(err, myErr.ErrUserNotFound) {
-		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+	if errors.Is(err, my_err.ErrUserNotFound) {
+		return 0, fmt.Errorf("auth service: %w", my_err.ErrWrongEmailOrPassword)
 	}
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (a *AuthServiceImpl) Auth(user models.User, ctx context.Context) (uint32, e
 
 	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 	if err != nil {
-		return 0, fmt.Errorf("auth service: %w", myErr.ErrWrongEmailOrPassword)
+		return 0, fmt.Errorf("auth service: %w", my_err.ErrWrongEmailOrPassword)
 	}
 
 	return dbUser.ID, nil

@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 // TODO добавить сообщества
@@ -54,7 +54,7 @@ func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) 
 
 	if err := a.db.QueryRowContext(ctx, getPost, postID).Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrPostNotFound
+			return nil, my_err.ErrPostNotFound
 		}
 
 		return nil, fmt.Errorf("postgres get post: %w", err)
@@ -76,7 +76,7 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 	}
 
 	if affected == 0 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 	}
 
 	if affected == 0 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
@@ -126,7 +126,7 @@ func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastI
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get friends posts: %w", err)
 	}
@@ -145,7 +145,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
@@ -169,7 +169,7 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 
 	if err := a.db.QueryRowContext(ctx, getPostAuthor, postID).Scan(&authorID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, myErr.ErrPostNotFound
+			return 0, my_err.ErrPostNotFound
 		}
 		return 0, fmt.Errorf("postgres get post author: %w", err)
 	}
@@ -189,7 +189,7 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 	}
 
 	if len(posts) == 0 {
-		return posts, myErr.ErrNoMoreContent
+		return posts, my_err.ErrNoMoreContent
 	}
 
 	return posts, nil
