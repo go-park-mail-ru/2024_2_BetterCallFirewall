@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Session struct {
@@ -35,7 +35,7 @@ var SessionKey sessKey = "sessionKey"
 func SessionFromContext(ctx context.Context) (*Session, error) {
 	sess, ok := ctx.Value(SessionKey).(*Session)
 	if !ok || sess == nil {
-		return nil, myErr.ErrNoAuth
+		return nil, my_err.ErrNoAuth
 	}
 	return sess, nil
 }

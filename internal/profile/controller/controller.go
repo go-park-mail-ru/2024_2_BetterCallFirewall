@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var fileFormat = map[string]struct{}{
@@ -52,7 +52,7 @@ func NewProfileController(manager profile.ProfileUsecase, fileService FileServic
 func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -64,7 +64,7 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 	userId := sess.UserID
 	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -78,7 +78,7 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -89,11 +89,11 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 	userId := sess.UserID
 	userProfile, err := h.ProfileManager.GetProfileById(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-		if errors.Is(err, myErr.ErrNoMoreContent) {
+		if errors.Is(err, my_err.ErrNoMoreContent) {
 			h.Responder.OutputNoMoreContentJSON(w, reqID)
 			return
 		}
@@ -107,12 +107,12 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", myErr.ErrSessionNotFound), reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 	err := r.ParseMultipartForm(10 << 20) //10 M byte
 	defer r.MultipartForm.RemoveAll()
 	if err != nil {
-		return nil, fmt.Errorf("update profile: %w", myErr.ErrToLargeFile)
+		return nil, fmt.Errorf("update profile: %w", my_err.ErrToLargeFile)
 	}
 
 	file, header, err := r.FormFile("file")
@@ -147,7 +147,7 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 	} else {
 		format := header.Header.Get("Content-Type")
 		if _, ok := fileFormat[format]; !ok {
-			return nil, fmt.Errorf("update profile: %w", myErr.ErrWrongFiletype)
+			return nil, fmt.Errorf("update profile: %w", my_err.ErrWrongFiletype)
 		}
 	}
 
@@ -174,11 +174,11 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
+		h.Responder.ErrorBadRequest(w, my_err.ErrSessionNotFound, reqID)
 		return
 	}
 
@@ -196,7 +196,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
-		return 0, myErr.ErrEmptyId
+		return 0, my_err.ErrEmptyId
 	}
 
 	uid, err := strconv.ParseUint(id, 10, 32)
@@ -204,7 +204,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 		return 0, err
 	}
 	if uid > math.MaxInt {
-		return 0, myErr.ErrBigId
+		return 0, my_err.ErrBigId
 	}
 	return uint32(uid), nil
 }
@@ -216,7 +216,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -226,7 +226,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 
 	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -256,7 +256,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -303,7 +303,7 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -327,7 +327,7 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -349,7 +349,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -370,7 +370,7 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	whose, who, err := GetReceiverAndSender(r)
@@ -393,7 +393,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -426,7 +426,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -458,7 +458,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -487,7 +487,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	id, err := GetIdFromURL(r)

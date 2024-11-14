@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type fileService interface {
@@ -40,12 +40,12 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		fc.responder.LogError(myErr.ErrInvalidContext, "")
+		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	res, err := fc.fileService.Upload(r.Context(), name)
 	if err != nil {
-		fc.responder.ErrorBadRequest(w, fmt.Errorf("%w: %w", err, myErr.ErrWrongFile), reqID)
+		fc.responder.ErrorBadRequest(w, fmt.Errorf("%w: %w", err, my_err.ErrWrongFile), reqID)
 		return
 	}
 

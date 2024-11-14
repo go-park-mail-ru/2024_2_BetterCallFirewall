@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var fileFormat = map[string]struct{}{
@@ -74,7 +74,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	newPost, file, err := pc.getPostFromBody(r)
@@ -90,7 +90,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !pc.checkAccessToCommunity(r, uint32(comID)) {
-			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			pc.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 			return
 		}
 
@@ -124,7 +124,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	postID, err := getIDFromQuery(r)
@@ -135,11 +135,11 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	post, err := pc.postService.Get(r.Context(), postID)
 	if err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
+		if errors.Is(err, my_err.ErrPostNotFound) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-		if !errors.Is(err, myErr.ErrAnotherService) {
+		if !errors.Is(err, my_err.ErrAnotherService) {
 			pc.responder.ErrorInternal(w, err, reqID)
 			return
 		}
@@ -163,7 +163,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if community != "" {
@@ -173,12 +173,12 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !pc.checkAccessToCommunity(r, uint32(comID)) {
-			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			pc.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 			return
 		}
 	} else {
 		if !pc.checkAccess(r, id) {
-			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			pc.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 			return
 		}
 	}
@@ -191,7 +191,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	post.ID = id
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
+		if errors.Is(err, my_err.ErrPostNotFound) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -219,7 +219,7 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -234,18 +234,18 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !pc.checkAccessToCommunity(r, uint32(comID)) {
-			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			pc.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 			return
 		}
 	} else {
 		if !pc.checkAccess(r, postID) {
-			pc.responder.ErrorBadRequest(w, myErr.ErrAccessDenied, reqID)
+			pc.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 			return
 		}
 	}
 
 	if err := pc.postService.Delete(r.Context(), postID); err != nil {
-		if errors.Is(err, myErr.ErrPostNotFound) {
+		if errors.Is(err, my_err.ErrPostNotFound) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -268,7 +268,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	)
 
 	if !ok {
-		pc.responder.LogError(myErr.ErrInvalidContext, "")
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	intLastID, err = getLastID(r)
@@ -301,24 +301,24 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	default:
-		pc.responder.ErrorBadRequest(w, myErr.ErrInvalidQuery, reqID)
+		pc.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
 		return
 	}
 
-	if err != nil && !errors.Is(err, myErr.ErrNoMoreContent) && !errors.Is(err, myErr.ErrAnotherService) {
+	if err != nil && !errors.Is(err, my_err.ErrNoMoreContent) && !errors.Is(err, my_err.ErrAnotherService) {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	if errors.Is(err, myErr.ErrAnotherService) {
-		pc.responder.LogError(myErr.ErrAnotherService, reqID)
+	if errors.Is(err, my_err.ErrAnotherService) {
+		pc.responder.LogError(my_err.ErrAnotherService, reqID)
 	}
 
 	for _, p := range posts {
 		p.PostContent.File = pc.fileService.GetPostPicture(r.Context(), p.ID)
 	}
 
-	if errors.Is(err, myErr.ErrNoMoreContent) {
+	if errors.Is(err, my_err.ErrNoMoreContent) {
 		pc.responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
@@ -332,7 +332,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
 	defer r.MultipartForm.RemoveAll()
 	if err != nil {
-		return nil, nil, myErr.ErrToLargeFile
+		return nil, nil, my_err.ErrToLargeFile
 	}
 
 	file, header, err := r.FormFile("file")
@@ -341,7 +341,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, multip
 	} else {
 		format := header.Header.Get("Content-Type")
 		if _, ok := fileFormat[format]; !ok {
-			return nil, nil, myErr.ErrWrongFiletype
+			return nil, nil, my_err.ErrWrongFiletype
 		}
 	}
 

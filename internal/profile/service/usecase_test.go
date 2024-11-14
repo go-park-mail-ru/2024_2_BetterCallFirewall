@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type MockProfileDB struct {
@@ -331,7 +331,7 @@ func TestSendFriendReq(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -367,7 +367,7 @@ func TestAcceptFriendReq(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -403,7 +403,7 @@ func TestRemoveFromFriends(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -439,7 +439,7 @@ func TestUnsubscribe(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),

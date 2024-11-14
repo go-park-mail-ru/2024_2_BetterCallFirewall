@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var (
@@ -22,7 +22,7 @@ type MockAuthService struct{}
 
 func (m MockAuthService) Register(user models.User, ctx context.Context) (uint32, error) {
 	if user.ID == 1 {
-		return user.ID, myErr.ErrUserAlreadyExists
+		return user.ID, my_err.ErrUserAlreadyExists
 	}
 
 	if user.ID == 0 {
@@ -34,7 +34,7 @@ func (m MockAuthService) Register(user models.User, ctx context.Context) (uint32
 
 func (m MockAuthService) Auth(user models.User, ctx context.Context) (uint32, error) {
 	if user.ID == 1 {
-		return user.ID, myErr.ErrWrongEmailOrPassword
+		return user.ID, my_err.ErrWrongEmailOrPassword
 	}
 
 	if user.ID == 0 {

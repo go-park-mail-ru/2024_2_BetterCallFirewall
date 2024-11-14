@@ -10,8 +10,8 @@ import (
 	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 const LIMIT = 20
@@ -32,7 +32,7 @@ func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.Fu
 	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrProfileNotFound
+			return nil, my_err.ErrProfileNotFound
 		}
 		return nil, fmt.Errorf("get profile by id db: %w", err)
 	}
@@ -269,7 +269,7 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	err := p.DB.QueryRowContext(ctx, GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrProfileNotFound
+			return nil, my_err.ErrProfileNotFound
 		}
 		return nil, fmt.Errorf("get header db: %w", err)
 	}
