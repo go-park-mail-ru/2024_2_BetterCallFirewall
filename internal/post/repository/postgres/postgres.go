@@ -11,7 +11,6 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
-// TODO добавить сообщества
 const (
 	createPost      = `INSERT INTO post (author_id, content) VALUES ($1, $2) RETURNING id;`
 	getPost         = `SELECT id, author_id, content, created_at  FROM post WHERE id = $1;`
