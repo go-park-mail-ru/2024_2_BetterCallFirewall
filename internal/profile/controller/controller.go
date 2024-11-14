@@ -15,6 +15,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
