@@ -4,11 +4,13 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 	_ "github.com/swaggo/http-swagger"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -69,6 +71,7 @@ func NewRouter(
 	sm SessionManager,
 	logger *logrus.Logger,
 	chatControl ChatController,
+	httpMetric *metrics.HttpMetrics,
 ) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
@@ -101,8 +104,11 @@ func NewRouter(
 	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
 
+	router.Handle("/metrics", promhttp.Handler())
+
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)
+	res = middleware.HttpMetricsMiddleware(httpMetric, res)
 
 	return res
 }

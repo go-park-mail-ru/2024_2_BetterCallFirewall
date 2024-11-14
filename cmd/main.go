@@ -22,6 +22,7 @@ import (
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
 	fileRepo "github.com/2024_2_BetterCallFirewall/internal/fileService/repository"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
+	metrics "github.com/2024_2_BetterCallFirewall/internal/metrics"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresProfile "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
@@ -93,7 +94,12 @@ func main() {
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase)
 	postControl := postController.NewPostController(postService, responder, fileServ)
 
-	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger, chatControl)
+	httpMetric, err := metrics.NewHTTPMetrics("main")
+	if err != nil {
+		logger.Errorf("cant create metrics: %w", err)
+	}
+
+	rout := router.NewRouter(control, profileControl, postControl, fileController, sessionManager, logger, chatControl, httpMetric)
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      rout,
