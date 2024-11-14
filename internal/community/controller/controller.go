@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"math"
 	"net/http"
@@ -114,7 +115,12 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newCommunity := c.getCommunityFromBody(r)
+	newCommunity, err := c.getCommunityFromBody(r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
 		c.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
 		return
@@ -172,7 +178,12 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newCommunity := c.getCommunityFromBody(r)
+	newCommunity, err := c.getCommunityFromBody(r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	err = c.service.Create(r.Context(), &newCommunity, sess.UserID)
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
@@ -182,9 +193,15 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	c.responder.OutputJSON(w, newCommunity.ID, reqID)
 }
 
-func (c *Controller) getCommunityFromBody(r *http.Request) models.Community {
+func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, error) {
+	var res models.Community
 
-	return models.Community{}
+	err := json.NewDecoder(r.Body).Decode(&res)
+	if err != nil {
+		return res, err
+	}
+
+	return models.Community{}, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
