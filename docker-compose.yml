@@ -53,7 +53,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "8090:8090"
+      - "9090:9090"
     volumes:
       - "./prometheus.yml:/etc/prometheus.yml"
     command:
@@ -62,6 +62,6 @@ services:
   grafana:
     image: grafana/grafana
     ports:
-      - "8030:8030"
+      - "3000:3000"
 volumes:
   postgres_data:
