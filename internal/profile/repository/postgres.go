@@ -158,11 +158,11 @@ func (p *ProfileRepo) CheckFriendship(ctx context.Context, self uint32, profile 
 	_, err := p.DB.ExecContext(ctx, CheckFriendship, self, profile)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return false, nil
+			return true, nil
 		}
 		return false, fmt.Errorf("check friendship: %w", err)
 	}
-	return true, nil
+	return false, nil
 }
 
 func (p *ProfileRepo) AddFriendsReq(receiver uint32, sender uint32) error {
