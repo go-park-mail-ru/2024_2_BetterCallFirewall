@@ -158,6 +158,6 @@ services:
   grafana:
     image: grafana/grafana
     ports:
-      - "8000:8000"
+      - "8030:8030"
 volumes:
   postgres_data:
