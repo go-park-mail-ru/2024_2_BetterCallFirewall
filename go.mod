@@ -27,6 +27,7 @@ require (
 	github.com/go-openapi/spec v0.20.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
