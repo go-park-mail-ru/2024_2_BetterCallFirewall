@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
@@ -22,8 +20,8 @@ func NewResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{w, http.StatusOK}
 }
 
-func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	h, ok := w.ResponseWriter.(http.Hijacker)
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := rw.ResponseWriter.(http.Hijacker)
 	if !ok {
 		return nil, nil, errors.New("hijack not supported")
 	}
@@ -42,8 +40,7 @@ func HttpMetricsMiddleware(metr *metrics.HttpMetrics, next http.Handler) http.Ha
 		respWithCode := NewResponseWriter(w)
 		next.ServeHTTP(respWithCode, r)
 		statusCode := respWithCode.statusCode
-		route := mux.CurrentRoute(r)
-		path, _ := route.GetPathTemplate()
+		path := r.URL.Path
 		if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
 			metr.IncErrors(path, strconv.Itoa(statusCode))
 		}
