@@ -15,6 +15,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type PostService interface {
 	Create(ctx context.Context, post *models.Post) (uint32, error)
 	Get(ctx context.Context, postID uint32) (*models.Post, error)
