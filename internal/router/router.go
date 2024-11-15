@@ -104,7 +104,7 @@ func NewRouter(
 	router.HandleFunc("/image/{name}", fileControl.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
 
-	router.Handle("/metrics", promhttp.Handler())
+	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)
