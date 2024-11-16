@@ -241,6 +241,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 	intLastID, err = getLastID(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
 	}
 
 	switch section {
@@ -272,18 +273,15 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err != nil && !errors.Is(err, my_err.ErrNoMoreContent) && !errors.Is(err, my_err.ErrAnotherService) {
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	if errors.Is(err, my_err.ErrAnotherService) {
-		pc.responder.LogError(my_err.ErrAnotherService, reqID)
-	}
-
-	if errors.Is(err, my_err.ErrNoMoreContent) {
-		pc.responder.OutputNoMoreContentJSON(w, reqID)
-		return
+	if err != nil {
+		if errors.Is(err, my_err.ErrNoMoreContent) {
+			pc.responder.OutputNoMoreContentJSON(w, reqID)
+			return
+		}
+		if !errors.Is(err, my_err.ErrAnotherService) {
+			pc.responder.ErrorInternal(w, err, reqID)
+			return
+		}
 	}
 
 	pc.responder.OutputJSON(w, posts, reqID)
@@ -293,6 +291,9 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	var newPost models.Post
 
 	err := json.NewDecoder(r.Body).Decode(&newPost)
+	if err != nil {
+		return nil, err
+	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
