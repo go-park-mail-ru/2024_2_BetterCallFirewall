@@ -18,7 +18,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 			Name: "errors_total",
 			Help: "Number of total errors.",
 		},
-		[]string{"path", "service", "status"},
+		[]string{"path", "service", "status", "method"},
 	)
 	if err := prometheus.Register(metrics.Errors); err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 			Name: "hits_total",
 			Help: "Number of total hits.",
 		},
-		[]string{"path", "service", "status"},
+		[]string{"path", "service", "status", "method"},
 	)
 	if err := prometheus.Register(metrics.Hits); err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 			Name:    "total_timings",
 			Buckets: []float64{0, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "status"},
+		[]string{"path", "status", "method"},
 	)
 	if err := prometheus.Register(metrics.Timings); err != nil {
 		return nil, err
@@ -51,14 +51,14 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 	return &metrics, nil
 }
 
-func (m *HttpMetrics) IncErrors(path string, status string) {
-	m.Errors.WithLabelValues(path, m.serviceName, status).Inc()
+func (m *HttpMetrics) IncErrors(path string, status, method string) {
+	m.Errors.WithLabelValues(path, m.serviceName, status, method).Inc()
 }
 
-func (m *HttpMetrics) IncHits(path string, status string) {
-	m.Hits.WithLabelValues(path, m.serviceName, status).Inc()
+func (m *HttpMetrics) IncHits(path string, status, method string) {
+	m.Hits.WithLabelValues(path, m.serviceName, status, method).Inc()
 }
 
-func (m *HttpMetrics) ObserveTiming(path string, status string, time float64) {
-	m.Timings.WithLabelValues(path, status).Observe(time)
+func (m *HttpMetrics) ObserveTiming(path string, status, method string, time float64) {
+	m.Timings.WithLabelValues(path, status, method).Observe(time)
 }
