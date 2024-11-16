@@ -23,8 +23,6 @@ type mockProfileController struct{}
 
 func (m mockProfileController) GetProfile(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) GetHeader(w http.ResponseWriter, r *http.Request) {}
-
 func (m mockProfileController) GetProfileById(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) GetAll(w http.ResponseWriter, r *http.Request) {}
@@ -33,19 +31,23 @@ func (m mockProfileController) UpdateProfile(w http.ResponseWriter, r *http.Requ
 
 func (m mockProfileController) DeleteProfile(w http.ResponseWriter, r *http.Request) {}
 
+func (m mockProfileController) GetHeader(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockProfileController) SendFriendReq(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockProfileController) Unsubscribe(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) RemoveFromFriends(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) GetAllFriends(w http.ResponseWriter, r *http.Request) {}
 
-func (m mockProfileController) Unsubscribe(w http.ResponseWriter, r *http.Request) {}
-
 func (m mockProfileController) GetAllSubs(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockProfileController) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockProfileController) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {}
 
 type mockPostController struct{}
 
@@ -73,7 +75,8 @@ func (m mockMiddleware) Destroy(sess *models.Session) error {
 
 type mockFileController struct{}
 
-func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
+func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request)   {}
+func (m mockFileController) Download(w http.ResponseWriter, r *http.Request) {}
 
 type mockChatController struct{}
 
@@ -82,14 +85,27 @@ func (m mockChatController) GetAllChats(w http.ResponseWriter, r *http.Request) 
 func (m mockChatController) GetChat(w http.ResponseWriter, r *http.Request)       {}
 func (m mockChatController) SendChatMsg(ctx context.Context, reqID string)        {}
 
+type mockCommunityController struct{}
+
+func (m mockCommunityController) GetOne(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) GetAll(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) Update(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) Delete(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) Create(w http.ResponseWriter, r *http.Request) {}
+
 func TestNewRouter(t *testing.T) {
 	router := NewRouter(MockAuthController{},
 		mockProfileController{},
 		mockPostController{},
 		mockFileController{},
 		mockMiddleware{},
-		logrus.New(),
 		mockChatController{},
+		mockCommunityController{},
+		logrus.New(),
 	)
 	assert.NotNil(t, router)
 }
