@@ -28,6 +28,14 @@ type mockDB struct {
 	counter uint32
 }
 
+func (m *mockDB) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+	return 0, nil
+}
+
+func (m *mockDB) GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error) {
+	return nil, nil
+}
+
 func (m *mockDB) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	if post.Header.AuthorID == 0 {
 		return 0, errMockDB
@@ -134,6 +142,12 @@ func (p *profileRepositoryMock) GetFriendsID(ctx context.Context, userID uint32)
 	return ids, nil
 }
 
+type communityRepositoryMock struct{}
+
+func (c *communityRepositoryMock) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
+	return false
+}
+
 type TestCaseCreate struct {
 	post    *models.Post
 	wantID  uint32
@@ -144,11 +158,12 @@ var (
 	baseId uint32 = 1
 	db            = &mockDB{counter: baseId}
 	pr            = &profileRepositoryMock{}
+	cr            = &communityRepositoryMock{}
 	ctx           = context.Background()
 )
 
 func TestPostServiceCreate(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 		return
@@ -178,7 +193,7 @@ type TestCaseGet struct {
 }
 
 func TestPostServiceGet(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -205,7 +220,7 @@ type TestCaseDelete struct {
 }
 
 func TestPostServiceDelete(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -230,7 +245,7 @@ type TestCaseUpdate struct {
 }
 
 func TestPostServiceUpdate(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -256,7 +271,7 @@ type TestCaseGetBatch struct {
 }
 
 func TestPostServiceGetBatch(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -287,7 +302,7 @@ type TestCaseGetBatchFromFriend struct {
 }
 
 func TestPostServiceGetBatchFromFriend(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -318,7 +333,7 @@ type TestCaseGetAuthor struct {
 }
 
 func TestPostServiceGetAuthor(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
