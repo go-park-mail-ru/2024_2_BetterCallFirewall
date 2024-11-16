@@ -41,10 +41,11 @@ func HttpMetricsMiddleware(metr *metrics.HttpMetrics, next http.Handler) http.Ha
 		next.ServeHTTP(respWithCode, r)
 		statusCode := respWithCode.statusCode
 		path := r.URL.Path
+		method := r.Method
 		if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
-			metr.IncErrors(path, strconv.Itoa(statusCode))
+			metr.IncErrors(path, strconv.Itoa(statusCode), method)
 		}
-		metr.IncHits(path, strconv.Itoa(statusCode))
-		metr.ObserveTiming(path, strconv.Itoa(statusCode), time.Since(start).Seconds())
+		metr.IncHits(path, strconv.Itoa(statusCode), method)
+		metr.ObserveTiming(path, strconv.Itoa(statusCode), method, time.Since(start).Seconds())
 	})
 }
