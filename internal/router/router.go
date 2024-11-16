@@ -42,6 +42,8 @@ type ProfileController interface {
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 	GetAllSubs(w http.ResponseWriter, r *http.Request)
 	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
+
+	GetCommunitySubs(w http.ResponseWriter, r *http.Request)
 }
 
 type SessionManager interface {
@@ -113,10 +115,11 @@ func NewRouter(
 	router.HandleFunc("/image", fileControl.Upload).Methods(http.MethodPost, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/community", communityController.Create).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/community/{id}", postControl.GetOne).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/community/{id}", postControl.Update).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc("/api/v1/community/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
-	router.HandleFunc("/api/v1/community", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}", communityController.GetOne).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}", communityController.Update).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}", communityController.Delete).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/community", communityController.GetAll).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}/subs", profileControl.GetCommunitySubs).Methods(http.MethodGet, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.AccessLog(logger, res)

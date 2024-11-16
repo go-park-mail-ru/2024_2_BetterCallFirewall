@@ -45,7 +45,7 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 	userId := sess.UserID
@@ -152,7 +152,7 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 		return
 	}
 
-	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
+	h.Responder.OutputJSON(w, "delete", reqID)
 }
 
 func GetIdFromURL(r *http.Request) (uint32, error) {
@@ -279,8 +279,8 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	h.Responder.OutputJSON(w, "success", reqID)
 
+	h.Responder.OutputJSON(w, "success", reqID)
 }
 
 func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {
@@ -369,6 +369,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
@@ -434,6 +435,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
@@ -448,27 +450,34 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 }
 
 func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	lastID := r.URL.Query().Get("last_id")
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromURL(r)
+	)
+
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	id, err := GetIdFromURL(r)
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
-	last, err := strconv.ParseUint(lastID, 10, 32)
+	lastId, err := GetLastId(r)
 	if err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
-	subs, err := h.ProfileManager.GetCommunitySubs(r.Context(), id, uint32(last))
+	subs, err := h.ProfileManager.GetCommunitySubs(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if len(subs) == 0 {
+		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
 
