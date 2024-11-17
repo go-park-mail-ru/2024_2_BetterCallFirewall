@@ -14,6 +14,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
@@ -76,6 +77,7 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
+
 	if lastID == "" {
 		intLastID = math.MaxInt32
 	} else {
@@ -114,7 +116,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		c.responder.ErrorInternal(w, err, reqID)
+		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -132,6 +134,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 	err = c.service.Update(r.Context(), id, &newCommunity)
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
+		return
 	}
 
 	c.responder.OutputJSON(w, newCommunity, reqID)
@@ -151,7 +154,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		c.responder.ErrorInternal(w, err, reqID)
+		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
