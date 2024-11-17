@@ -11,14 +11,6 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-type MockAuthController struct{}
-
-func (m MockAuthController) Register(w http.ResponseWriter, r *http.Request) {}
-
-func (m MockAuthController) Auth(w http.ResponseWriter, r *http.Request) {}
-
-func (m MockAuthController) Logout(w http.ResponseWriter, r *http.Request) {}
-
 type mockProfileController struct{}
 
 func (m mockProfileController) GetProfile(w http.ResponseWriter, r *http.Request) {}
@@ -65,25 +57,25 @@ type mockMiddleware struct{}
 
 func (m mockMiddleware) Check(str string) (*models.Session, error) { return nil, nil }
 
-func (m mockMiddleware) Create(userID uint32) (*models.Session, error) {
-	return nil, nil
-}
+func (m mockMiddleware) Create(userID uint32) (*models.Session, error) { return nil, nil }
 
-func (m mockMiddleware) Destroy(sess *models.Session) error {
-	return nil
-}
+func (m mockMiddleware) Destroy(sess *models.Session) error { return nil }
 
 type mockFileController struct{}
 
-func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request)   {}
+func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockFileController) Download(w http.ResponseWriter, r *http.Request) {}
 
 type mockChatController struct{}
 
 func (m mockChatController) SetConnection(w http.ResponseWriter, r *http.Request) {}
-func (m mockChatController) GetAllChats(w http.ResponseWriter, r *http.Request)   {}
-func (m mockChatController) GetChat(w http.ResponseWriter, r *http.Request)       {}
-func (m mockChatController) SendChatMsg(ctx context.Context, reqID string)        {}
+
+func (m mockChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockChatController) GetChat(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockChatController) SendChatMsg(ctx context.Context, reqID string) {}
 
 type mockCommunityController struct{}
 
@@ -98,8 +90,7 @@ func (m mockCommunityController) Delete(w http.ResponseWriter, r *http.Request) 
 func (m mockCommunityController) Create(w http.ResponseWriter, r *http.Request) {}
 
 func TestNewRouter(t *testing.T) {
-	router := NewRouter(MockAuthController{},
-		mockProfileController{},
+	router := NewRouter(mockProfileController{},
 		mockPostController{},
 		mockFileController{},
 		mockMiddleware{},

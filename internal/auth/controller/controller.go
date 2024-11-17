@@ -137,6 +137,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
 		c.responder.ErrorBadRequest(w, err, reqID)
+		return
 	}
 
 	sess, err := c.SessionManager.Check(sessionCookie.Value)
