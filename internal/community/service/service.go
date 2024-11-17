@@ -7,6 +7,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Repo interface {
 	GetBatch(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error)
 	GetOne(ctx context.Context, id uint32) (*models.Community, error)
