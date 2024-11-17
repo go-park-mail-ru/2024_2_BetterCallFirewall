@@ -15,6 +15,10 @@ type MockProfileDB struct {
 	Storage struct{}
 }
 
+func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+	return nil, nil
+}
+
 type MockPostDB struct {
 	Storage struct{}
 }

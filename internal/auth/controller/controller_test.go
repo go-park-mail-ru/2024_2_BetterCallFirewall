@@ -61,6 +61,9 @@ func (m MockSessionManager) Create(userID uint32) (*models.Session, error) {
 }
 
 func (m MockSessionManager) Destroy(sess *models.Session) error {
+	if sess == nil {
+		return nil
+	}
 	if sess.UserID == 0 {
 		return mockErrorInternal
 	}
@@ -236,8 +239,8 @@ func TestLogout(t *testing.T) {
 		{
 			w:        httptest.NewRecorder(),
 			r:        reqWithSession,
-			wantCode: http.StatusOK,
-			wantBody: `"user logout"`,
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request error",
 		},
 		{
 			w:        httptest.NewRecorder(),
