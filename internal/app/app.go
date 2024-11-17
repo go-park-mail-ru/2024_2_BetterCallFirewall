@@ -1,20 +1,14 @@
 package app
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/gomodule/redigo/redis"
-	_ "github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 
-	"github.com/2024_2_BetterCallFirewall/internal/auth/controller"
-	"github.com/2024_2_BetterCallFirewall/internal/auth/repository/postgres"
-	redismy "github.com/2024_2_BetterCallFirewall/internal/auth/repository/redis"
-	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
+	_ "github.com/jackc/pgx"
+
 	ChatController "github.com/2024_2_BetterCallFirewall/internal/chat/controller"
 	chatRepository "github.com/2024_2_BetterCallFirewall/internal/chat/repository/postgres"
 	chatService "github.com/2024_2_BetterCallFirewall/internal/chat/service"
@@ -22,6 +16,7 @@ import (
 	communityRepository "github.com/2024_2_BetterCallFirewall/internal/community/repository"
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
@@ -31,6 +26,7 @@ import (
 	profileRepository "github.com/2024_2_BetterCallFirewall/internal/profile/repository"
 	profileService "github.com/2024_2_BetterCallFirewall/internal/profile/service"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
+	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
 
 func Run() error {
@@ -59,29 +55,15 @@ func Run() error {
 		cfg.DB.SSLMode,
 	)
 
-	postgresDB, err := startPostgres(connStr, logger)
+	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
 	if err != nil {
 		return err
 	}
 	defer postgresDB.Close()
 
-	redisPool := &redis.Pool{
-		MaxIdle:   cfg.REDIS.MaxIdle,
-		MaxActive: cfg.REDIS.MaxActive,
-		Dial: func() (redis.Conn, error) {
-			addr := fmt.Sprintf("%s:%s", cfg.REDIS.Host, cfg.REDIS.Port)
-			return redis.Dial("tcp", addr)
-		},
-	}
-
-	repo := postgres.NewAdapter(postgresDB)
 	profileRepo := profileRepository.NewProfileRepo(postgresDB)
-	authServ := service.NewAuthServiceImpl(repo)
 
 	responder := router.NewResponder(logger)
-	sessionRepo := redismy.NewSessionRedisRepository(redisPool)
-	sessionManager := service.NewSessionManager(sessionRepo)
-	control := controller.NewAuthController(responder, authServ, sessionManager)
 
 	postRepo := postgresPost.NewAdapter(postgresDB)
 	chatRepo := chatRepository.NewChatRepository(postgresDB)
@@ -104,11 +86,17 @@ func Run() error {
 	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase, communityRepo)
 	postControl := postController.NewPostController(postService, responder)
 
-	rout := router.NewRouter(control,
+	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))
+	if err != nil {
+		return err
+	}
+
+	sm := auth.New(provider)
+	rout := router.NewRouter(
 		profileControl,
 		postControl,
 		fileController,
-		sessionManager,
+		sm,
 		chatControl,
 		communityControl,
 		logger,
@@ -123,26 +111,4 @@ func Run() error {
 
 	logger.Infof("Starting server on port %s", cfg.SERVER.Port)
 	return server.ListenAndServe()
-}
-
-func startPostgres(connStr string, logger *logrus.Logger) (*sql.DB, error) {
-	db, err := sql.Open("pgx", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("postgres connect: %w", err)
-	}
-	db.SetMaxOpenConns(10)
-
-	retrying := 10
-	i := 1
-	logger.Infof("try ping postgresql:%v", i)
-	for err = db.Ping(); err != nil; err = db.Ping() {
-		if i >= retrying {
-			return nil, fmt.Errorf("postgres connect: %w", err)
-		}
-		i++
-		time.Sleep(1 * time.Second)
-		logger.Infof("try ping postgresql: %v", i)
-	}
-
-	return db, nil
 }

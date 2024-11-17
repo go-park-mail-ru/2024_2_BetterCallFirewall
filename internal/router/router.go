@@ -13,12 +13,6 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-type AuthController interface {
-	Register(w http.ResponseWriter, r *http.Request)
-	Auth(w http.ResponseWriter, r *http.Request)
-	Logout(w http.ResponseWriter, r *http.Request)
-}
-
 type PostController interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	GetOne(w http.ResponseWriter, r *http.Request)
@@ -73,7 +67,6 @@ type CommunityController interface {
 }
 
 func NewRouter(
-	authControl AuthController,
 	profileControl ProfileController,
 	postControl PostController,
 	fileControl FileController,
@@ -83,9 +76,6 @@ func NewRouter(
 	logger *logrus.Logger,
 ) http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/profile/header", profileControl.GetHeader).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile", profileControl.GetProfile).Methods(http.MethodGet, http.MethodOptions)
@@ -122,6 +112,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/community/{id}/subs", profileControl.GetCommunitySubs).Methods(http.MethodGet, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
+	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
 
 	return res

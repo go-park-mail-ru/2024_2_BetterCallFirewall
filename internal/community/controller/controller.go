@@ -14,8 +14,6 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
-const defaultAva = 2
-
 type responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
@@ -91,6 +89,11 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	res, err := c.service.Get(r.Context(), uint32(intLastID))
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if len(res) == 0 {
+		c.responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
 

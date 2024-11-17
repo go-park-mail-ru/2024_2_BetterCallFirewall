@@ -134,9 +134,14 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	sess, err := models.SessionFromContext(r.Context())
+	sessionCookie, err := r.Cookie("session_id")
 	if err != nil {
-		c.responder.ErrorBadRequest(w, my_err.ErrNoAuth, "")
+		c.responder.ErrorBadRequest(w, err, reqID)
+	}
+
+	sess, err := c.SessionManager.Check(sessionCookie.Value)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, my_err.ErrNoAuth, reqID)
 		return
 	}
 

@@ -31,10 +31,20 @@ type Server struct {
 	WriteTimeout time.Duration
 }
 
+type AuthServer struct {
+	Port         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+}
+
+type AuthGRPCPort string
+
 type Config struct {
-	DB     DBConnect
-	REDIS  Redis
-	SERVER Server
+	DB       DBConnect
+	REDIS    Redis
+	SERVER   Server
+	AUTH     AuthServer
+	AUTHGRPC AuthGRPCPort
 }
 
 func GetConfig(configFilePath string) (*Config, error) {
@@ -63,6 +73,12 @@ func GetConfig(configFilePath string) (*Config, error) {
 				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
+			AUTH: AuthServer{
+				Port:         os.Getenv("AUTH_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
+			},
+			AUTHGRPC: AuthGRPCPort(os.Getenv("AUTH_GRPC_PORT")),
 		},
 		nil
 }

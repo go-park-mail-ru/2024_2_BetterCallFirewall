@@ -12,6 +12,17 @@ services:
       - "8080:8080"
     depends_on:
       - db
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfileauth
+    restart: always
+    ports:
+      - "8081:8081"
+      - "7071:7071"
+    depends_on:
+      - redis
+      - db
   db:
     image: postgres:latest
     ports:
