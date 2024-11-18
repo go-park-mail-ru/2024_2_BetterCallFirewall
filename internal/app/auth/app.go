@@ -48,7 +48,6 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer postgresDB.Close()
 
 	redisPool := &redis.Pool{
 		MaxIdle:   cfg.REDIS.MaxIdle,
