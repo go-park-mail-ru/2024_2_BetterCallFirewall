@@ -1,0 +1,39 @@
+syntax="proto3";
+
+package auth_api;
+
+option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/auth_api";
+
+service AuthService{
+  rpc Check(CheckRequest) returns (CheckResponse){}
+  rpc Create(CreateRequest) returns (CreateResponse){}
+  rpc Destroy(DestroyRequest) returns (EmptyResponse){}
+}
+
+message CheckRequest {
+  string Cookie = 1;
+}
+
+message CheckResponse {
+  Session Sess = 1;
+}
+
+message Session {
+  string ID = 1;
+  uint32 UserID = 2;
+  int64 CreatedAt = 3;
+}
+
+message CreateRequest {
+  uint32 UserID = 1;
+}
+
+message CreateResponse {
+  Session Sess = 1;
+}
+
+message DestroyRequest {
+  Session Sess = 1;
+}
+
+message EmptyResponse {}

@@ -1,0 +1,33 @@
+syntax = 'proto3';
+
+package profile_api;
+
+option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/profile_api";
+
+service ProfileService {
+  rpc GetHeader(HeaderRequest) returns (HeaderResponse){}
+  rpc GetFriendsID(FriendsRequest) returns(FriendsResponse){}
+}
+
+message HeaderRequest {
+  uint32 UserID = 1;
+}
+
+message HeaderResponse{
+  Header Head = 1;
+}
+
+message Header {
+  uint32 AuthorID = 1;
+  uint32 CommunityID = 2;
+  string Author = 3;
+  string Avatar = 4;
+}
+
+message FriendsRequest {
+  uint32 UserID = 1;
+}
+
+message FriendsResponse {
+  repeated uint32 UserID = 1;
+}
