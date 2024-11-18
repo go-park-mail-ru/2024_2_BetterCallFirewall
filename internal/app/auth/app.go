@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"flag"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/gomodule/redigo/redis"
@@ -28,21 +26,13 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-func Run() error {
+func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
 		DisableColors:   false,
 		TimestampFormat: "2006-01-02 15:04:05",
 		ForceColors:     true,
-	}
-
-	confPath := flag.String("c", ".env", "path to config file")
-	flag.Parse()
-
-	cfg, err := config.GetConfig(*confPath)
-	if err != nil {
-		return err
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
@@ -56,7 +46,7 @@ func Run() error {
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	defer postgresDB.Close()
 
@@ -85,21 +75,13 @@ func Run() error {
 		WriteTimeout: cfg.AUTH.WriteTimeout,
 	}
 
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.AUTHGRPC))
-	if err != nil {
-		return err
-	}
-	go startGRPC(l, logger, sessionManager)
-	logger.Infof("Listening on :%s with protocol gRPC", cfg.AUTHGRPC)
+	grpcServer := getGRPC(sessionManager)
 
-	logger.Infof("Starting server on port %s", cfg.AUTH.Port)
-	return server.ListenAndServe()
+	return &server, grpcServer, nil
 }
 
-func startGRPC(l net.Listener, logger *logrus.Logger, auth SessionManager) {
+func getGRPC(auth SessionManager) *grpc.Server {
 	server := grpc.NewServer()
 	auth_api.RegisterAuthServiceServer(server, auth_api.New(auth))
-	if err := server.Serve(l); err != nil {
-		logger.Fatal(err)
-	}
+	return server
 }
