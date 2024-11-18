@@ -37,7 +37,7 @@ func Run() error {
 		ForceColors:     true,
 	}
 
-	confPath := flag.String("c", "./.env", "path to config file")
+	confPath := flag.String("c", ".env", "path to config file")
 	flag.Parse()
 
 	cfg, err := config.GetConfig(*confPath)
