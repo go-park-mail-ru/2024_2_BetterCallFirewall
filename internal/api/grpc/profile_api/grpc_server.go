@@ -6,6 +6,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type profileService interface {
 	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
 	GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error)
