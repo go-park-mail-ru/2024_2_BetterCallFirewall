@@ -1,0 +1,37 @@
+syntax = 'proto3';
+
+package post_api;
+
+option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/post_api";
+
+service PostService {
+    rpc GetAuthorsPosts(Request) returns (Response){}
+}
+
+message Request {
+  Header Head = 1;
+}
+
+message Header {
+  uint32 AuthorID = 1;
+  uint32 CommunityID = 2;
+  string Author = 3;
+  string Avatar = 4;
+}
+
+message Response {
+  repeated Post Posts = 1;
+}
+
+message Post {
+  uint32 ID = 1;
+  Content PostContent = 2;
+  Header Head = 3;
+}
+
+message Content {
+  string Text = 1;
+  string File = 2;
+  int64 CreatedAt = 3;
+  int64 UpdatedAt = 4;
+}
