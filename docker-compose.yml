@@ -14,6 +14,7 @@ services:
       - db
   db:
     image: postgres:latest
+    command: -c config_file=/etc/postgresql/postgresql.conf
     ports:
       - "5432:5432"
     environment:
@@ -23,6 +24,8 @@ services:
       - DATABASE_HOST=${DB_HOST}
     volumes:
       - postgres_data:/var/lib/postgresql/vk_app_data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./conf.d:/etc/postgresql/conf.d
     expose:
       - 5432
     healthcheck:
