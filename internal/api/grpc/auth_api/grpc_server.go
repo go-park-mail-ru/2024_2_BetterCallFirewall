@@ -6,6 +6,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type SessionManager interface {
 	Check(string) (*models.Session, error)
 	Create(userID uint32) (*models.Session, error)

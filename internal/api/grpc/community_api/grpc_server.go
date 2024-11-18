@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type CommunityService interface {
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
