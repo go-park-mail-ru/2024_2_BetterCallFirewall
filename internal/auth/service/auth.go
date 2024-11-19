@@ -13,8 +13,8 @@ import (
 )
 
 type UserRepo interface {
-	Create(user *models.User, ctx context.Context) (uint32, error)
-	GetByEmail(email string, ctx context.Context) (*models.User, error)
+	Create(ctx context.Context, user *models.User) (uint32, error)
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
 }
 
 type AuthServiceImpl struct {
@@ -38,7 +38,7 @@ func (a *AuthServiceImpl) Register(user models.User, ctx context.Context) (uint3
 	}
 	user.Password = string(hashPassword)
 
-	user.ID, err = a.db.Create(&user, ctx)
+	user.ID, err = a.db.Create(ctx, &user)
 	if err != nil {
 		return 0, fmt.Errorf("registration: %w", err)
 	}
@@ -51,7 +51,7 @@ func (a *AuthServiceImpl) Auth(user models.User, ctx context.Context) (uint32, e
 		return 0, fmt.Errorf("auth service: %w", my_err.ErrNonValidEmail)
 	}
 
-	dbUser, err := a.db.GetByEmail(user.Email, ctx)
+	dbUser, err := a.db.GetByEmail(ctx, user.Email)
 	if errors.Is(err, my_err.ErrUserNotFound) {
 		return 0, fmt.Errorf("auth service: %w", my_err.ErrWrongEmailOrPassword)
 	}

@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ProfileService_GetHeader_FullMethodName    = "/profile_api.ProfileService/GetHeader"
-	ProfileService_GetFriendsID_FullMethodName = "/profile_api.ProfileService/GetFriendsID"
+	ProfileService_GetHeader_FullMethodName      = "/profile_api.ProfileService/GetHeader"
+	ProfileService_GetFriendsID_FullMethodName   = "/profile_api.ProfileService/GetFriendsID"
+	ProfileService_GetUserByEmail_FullMethodName = "/profile_api.ProfileService/GetUserByEmail"
+	ProfileService_Create_FullMethodName         = "/profile_api.ProfileService/Create"
 )
 
 // ProfileServiceClient is the client API for ProfileService service.
@@ -29,6 +31,8 @@ const (
 type ProfileServiceClient interface {
 	GetHeader(ctx context.Context, in *HeaderRequest, opts ...grpc.CallOption) (*HeaderResponse, error)
 	GetFriendsID(ctx context.Context, in *FriendsRequest, opts ...grpc.CallOption) (*FriendsResponse, error)
+	GetUserByEmail(ctx context.Context, in *GetByEmailRequest, opts ...grpc.CallOption) (*GetByEmailResponse, error)
+	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 }
 
 type profileServiceClient struct {
@@ -59,12 +63,34 @@ func (c *profileServiceClient) GetFriendsID(ctx context.Context, in *FriendsRequ
 	return out, nil
 }
 
+func (c *profileServiceClient) GetUserByEmail(ctx context.Context, in *GetByEmailRequest, opts ...grpc.CallOption) (*GetByEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetByEmailResponse)
+	err := c.cc.Invoke(ctx, ProfileService_GetUserByEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *profileServiceClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateResponse)
+	err := c.cc.Invoke(ctx, ProfileService_Create_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProfileServiceServer is the server API for ProfileService service.
 // All implementations must embed UnimplementedProfileServiceServer
 // for forward compatibility.
 type ProfileServiceServer interface {
 	GetHeader(context.Context, *HeaderRequest) (*HeaderResponse, error)
 	GetFriendsID(context.Context, *FriendsRequest) (*FriendsResponse, error)
+	GetUserByEmail(context.Context, *GetByEmailRequest) (*GetByEmailResponse, error)
+	Create(context.Context, *CreateRequest) (*CreateResponse, error)
 	mustEmbedUnimplementedProfileServiceServer()
 }
 
@@ -80,6 +106,12 @@ func (UnimplementedProfileServiceServer) GetHeader(context.Context, *HeaderReque
 }
 func (UnimplementedProfileServiceServer) GetFriendsID(context.Context, *FriendsRequest) (*FriendsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFriendsID not implemented")
+}
+func (UnimplementedProfileServiceServer) GetUserByEmail(context.Context, *GetByEmailRequest) (*GetByEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByEmail not implemented")
+}
+func (UnimplementedProfileServiceServer) Create(context.Context, *CreateRequest) (*CreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
 func (UnimplementedProfileServiceServer) mustEmbedUnimplementedProfileServiceServer() {}
 func (UnimplementedProfileServiceServer) testEmbeddedByValue()                        {}
@@ -138,6 +170,42 @@ func _ProfileService_GetFriendsID_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProfileService_GetUserByEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetByEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).GetUserByEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_GetUserByEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).GetUserByEmail(ctx, req.(*GetByEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProfileService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProfileServiceServer).Create(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProfileService_Create_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProfileServiceServer).Create(ctx, req.(*CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProfileService_ServiceDesc is the grpc.ServiceDesc for ProfileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +220,14 @@ var ProfileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFriendsID",
 			Handler:    _ProfileService_GetFriendsID_Handler,
+		},
+		{
+			MethodName: "GetUserByEmail",
+			Handler:    _ProfileService_GetUserByEmail_Handler,
+		},
+		{
+			MethodName: "Create",
+			Handler:    _ProfileService_Create_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
