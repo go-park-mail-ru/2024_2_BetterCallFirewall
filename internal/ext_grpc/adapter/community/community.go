@@ -34,8 +34,8 @@ func (g *GrpcSender) CheckAccess(ctx context.Context, communityID, userID uint32
 	return res
 }
 
-func GetCommunityProvider(port string) (grpc.ClientConnInterface, error) {
-	conn, err := grpc.NewClient(fmt.Sprintf("communitygrpc:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+func GetCommunityProvider(host, port string) (grpc.ClientConnInterface, error) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		return nil, err

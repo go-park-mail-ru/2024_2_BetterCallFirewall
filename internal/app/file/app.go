@@ -27,7 +27,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	fileServ := fileservis.NewFileService()
 	fileController := filecontrol.NewFileController(fileServ, responder)
 
-	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))
+	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

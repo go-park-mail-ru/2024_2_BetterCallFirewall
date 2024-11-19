@@ -43,7 +43,7 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 		},
 	}
 
-	profileProvider, err := profile.GetProfileProvider(string(cfg.PROFILEGRPC))
+	profileProvider, err := profile.GetProfileProvider(cfg.PROFILEGRPC.Host, cfg.PROFILEGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

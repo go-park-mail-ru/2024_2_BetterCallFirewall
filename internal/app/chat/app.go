@@ -46,7 +46,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	chatControl := ChatController.NewChatController(chatServ, responder)
 	//defer close(chatControl.Messages)
 
-	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))
+	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.PROFILEGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

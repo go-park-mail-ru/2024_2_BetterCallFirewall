@@ -69,8 +69,8 @@ func (g *GrpcSender) GetByEmail(ctx context.Context, email string) (*models.User
 	return res, nil
 }
 
-func GetProfileProvider(port string) (grpc.ClientConnInterface, error) {
-	conn, err := grpc.NewClient(fmt.Sprintf("profilegrpc:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+func GetProfileProvider(host, port string) (grpc.ClientConnInterface, error) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		return nil, err
