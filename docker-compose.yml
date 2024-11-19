@@ -1,13 +1,27 @@
 version: '3.9'
 
 services:
+  profilegrpc:
+    build:
+      context: .
+      dockerfile: Dockerfileprofilegrpc
+    restart: always
+    ports:
+      - "7074:7074"
+    depends_on:
+      - db
+  authgrpc:
+    build:
+      context: .
+      dockerfile: Dockerfileauthgrpc
+    restart: always
+    ports:
+      - "7072:7072"
   project:
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    volumes:
-      - ./image:/image
     ports:
       - "8080:8080"
     depends_on:
@@ -27,6 +41,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfilefile
+    volumes:
+      - ./image:/image
     restart: always
     ports:
       - "8082:8082"

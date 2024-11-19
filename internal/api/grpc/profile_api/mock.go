@@ -81,10 +81,10 @@ func (mr *MockprofileServiceMockRecorder) GetFriendsID(ctx, userID interface{}) 
 }
 
 // GetHeader mocks base method.
-func (m *MockprofileService) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (m *MockprofileService) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHeader", ctx, userID)
-	ret0, _ := ret[0].(models.Header)
+	ret0, _ := ret[0].(*models.Header)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

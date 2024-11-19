@@ -8,7 +8,7 @@ import (
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type profileService interface {
-	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
+	GetHeader(ctx context.Context, userID uint32) (*models.Header, error)
 	GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error)
 	Create(ctx context.Context, user *models.User) (uint32, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)

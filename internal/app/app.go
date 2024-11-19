@@ -69,7 +69,8 @@ func Run() error {
 	communityServ := communityService.NewService(communityRepo)
 	communityControl := communityController.NewController(responder, communityServ)
 
-	postService := postServ.NewPostServiceImpl(postRepo, profileUsecase, communityRepo)
+	profileHelper := profileService.NewProfileHelper(profileRepo)
+	postService := postServ.NewPostServiceImpl(postRepo, profileHelper, communityRepo)
 	postControl := postController.NewPostController(postService, responder)
 
 	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))

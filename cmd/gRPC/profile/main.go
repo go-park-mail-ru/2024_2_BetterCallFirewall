@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"net"
 
-	"github.com/2024_2_BetterCallFirewall/internal/app/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/app/profile"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 )
 
@@ -17,13 +19,14 @@ func main() {
 		panic(err)
 	}
 
-	httpServer, err := auth.GetHTTPServer(cfg)
+	grpcServer, err := profile.GetGRPCServer(cfg)
+	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.PROFILEGRPC))
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Starting server on port %s", cfg.AUTH.Port)
-	if err := httpServer.ListenAndServe(); err != nil {
+	log.Printf("Listening on :%s with protocol gRPC", cfg.PROFILEGRPC)
+	if err := grpcServer.Serve(l); err != nil {
 		panic(err)
 	}
 }

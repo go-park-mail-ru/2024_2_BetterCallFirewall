@@ -10,7 +10,6 @@ import (
 	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/profile"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
@@ -20,7 +19,7 @@ type ProfileRepo struct {
 	DB *sql.DB
 }
 
-func NewProfileRepo(db *sql.DB) profile.Repository {
+func NewProfileRepo(db *sql.DB) *ProfileRepo {
 	repo := &ProfileRepo{
 		DB: db,
 	}

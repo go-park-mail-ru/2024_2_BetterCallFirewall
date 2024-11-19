@@ -205,15 +205,6 @@ func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, i
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
-	res, err := p.repo.GetFriendsID(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("get friends id usecase: %w", err)
-	}
-
-	return res, nil
-}
-
 func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	header, err := p.repo.GetHeader(ctx, userID)
 	if err != nil {
@@ -230,22 +221,4 @@ func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, comm
 	}
 
 	return subs, nil
-}
-
-func (p ProfileUsecaseImplementation) Create(ctx context.Context, user *models.User) (uint32, error) {
-	id, err := p.repo.Create(user, ctx)
-	if err != nil {
-		return 0, fmt.Errorf("get profile: %w", err)
-	}
-
-	return id, nil
-}
-
-func (p ProfileUsecaseImplementation) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	user, err := p.repo.GetByEmail(email, ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get user by email usecase: %w", err)
-	}
-
-	return user, nil
 }
