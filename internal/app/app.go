@@ -9,9 +9,6 @@ import (
 
 	_ "github.com/jackc/pgx"
 
-	ChatController "github.com/2024_2_BetterCallFirewall/internal/chat/controller"
-	chatRepository "github.com/2024_2_BetterCallFirewall/internal/chat/repository/postgres"
-	chatService "github.com/2024_2_BetterCallFirewall/internal/chat/service"
 	communityController "github.com/2024_2_BetterCallFirewall/internal/community/controller"
 	communityRepository "github.com/2024_2_BetterCallFirewall/internal/community/repository"
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
@@ -64,15 +61,9 @@ func Run() error {
 	responder := router.NewResponder(logger)
 
 	postRepo := postgresPost.NewAdapter(postgresDB)
-	chatRepo := chatRepository.NewChatRepository(postgresDB)
-
 	postsHelper := postServ.NewPostProfileImpl(postRepo)
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postsHelper)
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
-
-	chatService := chatService.NewChatService(chatRepo)
-	chatControl := ChatController.NewChatController(chatService, responder)
-	defer close(chatControl.Messages)
 
 	communityRepo := communityRepository.NewCommunityRepository(postgresDB)
 	communityServ := communityService.NewService(communityRepo)
@@ -91,7 +82,6 @@ func Run() error {
 		profileControl,
 		postControl,
 		sm,
-		chatControl,
 		communityControl,
 		logger,
 	)
