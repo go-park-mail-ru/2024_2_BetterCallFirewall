@@ -19,7 +19,7 @@ type ProfileUsecase interface {
 	GetAllFriends(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error)
 	GetAllSubs(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error)
 	GetAllSubscriptions(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error)
-	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
+	GetHeader(ctx context.Context, userID uint32) (*models.Header, error)
 
 	GetCommunitySubs(ctx context.Context, communityID, lastID uint32) ([]*models.ShortProfile, error)
 }
