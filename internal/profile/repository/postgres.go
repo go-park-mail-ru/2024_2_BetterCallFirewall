@@ -27,6 +27,32 @@ func NewProfileRepo(db *sql.DB) profile.Repository {
 	return repo
 }
 
+func (p *ProfileRepo) Create(user *models.User, ctx context.Context) (uint32, error) {
+	var id uint32
+	err := p.DB.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("postgres create user: %w", my_err.ErrUserAlreadyExists)
+		}
+		return 0, fmt.Errorf("postgres create user: %w", err)
+	}
+
+	return id, nil
+}
+
+func (p *ProfileRepo) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+	user := &models.User{}
+	err := p.DB.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("postgres get user: %w", my_err.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf("postgres get user: %w", err)
+	}
+
+	return user, nil
+}
+
 func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.FullProfile, error) {
 	res := &models.FullProfile{}
 	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)

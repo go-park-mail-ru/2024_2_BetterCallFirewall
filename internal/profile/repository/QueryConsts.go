@@ -1,6 +1,9 @@
 package repository
 
 const (
+	CreateUser     = `INSERT INTO profile (first_name, last_name, email, hashed_password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id;`
+	GetUserByEmail = `SELECT id, first_name, last_name, email, hashed_password FROM profile WHERE email = $1 LIMIT 1;`
+
 	GetProfileByID      = "SELECT profile.id, first_name, last_name, bio, avatar FROM profile WHERE profile.id = $1 LIMIT 1;"
 	GetStatus           = "SELECT status FROM friend WHERE (sender = $1 AND receiver = $2) LIMIT 1"
 	GetAllProfilesBatch = "WITH friends AS (SELECT sender AS friend FROM friend WHERE (receiver = $1 AND status = 0) UNION SELECT receiver AS friend FROM friend WHERE (sender = $1 AND status = 0)), subscriptions AS (SELECT sender AS subscription FROM friend WHERE (receiver = $1 AND status = -1) UNION SELECT receiver AS subscriber FROM friend WHERE (sender = $1 AND status = 1)) SELECT p.id, first_name, last_name, avatar FROM profile p WHERE p.id <> $1 AND p.id > $2 AND p.id NOT IN (SELECT friend FROM friends) AND p.id NOT IN (SELECT subscription FROM subscriptions) ORDER BY p.id LIMIT $3;"
