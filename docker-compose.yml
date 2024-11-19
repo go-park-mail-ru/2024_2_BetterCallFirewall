@@ -17,6 +17,15 @@ services:
     restart: always
     ports:
       - "7072:7072"
+  postgrpc:
+    build:
+      context: .
+      dockerfile: Dockerfilepostgrpc
+    restart: always
+    ports:
+      - "7075:7075"
+    depends_on:
+      - db
   project:
     build:
       context: .

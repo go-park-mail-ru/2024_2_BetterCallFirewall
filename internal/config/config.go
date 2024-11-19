@@ -42,6 +42,7 @@ type Config struct {
 	CHAT        Server
 	AUTHGRPC    GRPCPort
 	PROFILEGRPC GRPCPort
+	POSTGRPC    GRPCPort
 }
 
 func GetConfig(configFilePath string) (*Config, error) {
@@ -87,6 +88,7 @@ func GetConfig(configFilePath string) (*Config, error) {
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
 			PROFILEGRPC: GRPCPort(os.Getenv("PROFILE_GRPC_PORT")),
+			POSTGRPC:    GRPCPort(os.Getenv("POST_GRPC_PORT")),
 		},
 		nil
 }

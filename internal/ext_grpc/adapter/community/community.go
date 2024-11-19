@@ -2,8 +2,10 @@ package community
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/community_api"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/port/community"
@@ -30,4 +32,14 @@ func (g *GrpcSender) CheckAccess(ctx context.Context, communityID, userID uint32
 
 	res := community.UnmarshallResponse(resp)
 	return res
+}
+
+func GetCommunityProvider(port string) (grpc.ClientConnInterface, error) {
+	conn, err := grpc.NewClient(fmt.Sprintf("communitygrpc:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
