@@ -23,7 +23,7 @@ type DB interface {
 }
 
 type ProfileRepo interface {
-	GetHeader(ctx context.Context, userID uint32) (models.Header, error)
+	GetHeader(ctx context.Context, userID uint32) (*models.Header, error)
 	GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error)
 }
 
@@ -66,7 +66,7 @@ func (s *PostServiceImpl) Get(ctx context.Context, postID uint32) (*models.Post,
 	if err != nil {
 		return nil, fmt.Errorf("get header:%w", err)
 	}
-	post.Header = header
+	post.Header = *header
 
 	return post, nil
 }
@@ -94,7 +94,7 @@ func (s *PostServiceImpl) Update(ctx context.Context, post *models.Post) error {
 func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error) {
 	var (
 		err    error
-		header models.Header
+		header *models.Header
 	)
 
 	posts, err := s.db.GetPosts(ctx, lastID)
@@ -107,7 +107,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*model
 		if err != nil {
 			return nil, fmt.Errorf("get header: %w", err)
 		}
-		post.Header = header
+		post.Header = *header
 		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
 	}
 
@@ -117,7 +117,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID uint32) ([]*model
 func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
 	var (
 		err    error
-		header models.Header
+		header *models.Header
 	)
 
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
@@ -139,7 +139,7 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 		if err != nil {
 			return nil, fmt.Errorf("get header: %w", err)
 		}
-		post.Header = header
+		post.Header = *header
 		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
 	}
 

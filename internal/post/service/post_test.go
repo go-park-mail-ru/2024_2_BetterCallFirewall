@@ -115,12 +115,12 @@ func (m *mockDB) GetPostAuthor(ctx context.Context, postID uint32) (uint32, erro
 
 type profileRepositoryMock struct{}
 
-func (p *profileRepositoryMock) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (p *profileRepositoryMock) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	if userID == 0 {
-		return models.Header{}, errMockProfile
+		return nil, errMockProfile
 	}
 
-	return models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
+	return &models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
 }
 
 func (p *profileRepositoryMock) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
