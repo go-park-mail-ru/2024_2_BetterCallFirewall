@@ -214,13 +214,13 @@ func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID u
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	header, err := p.repo.GetHeader(ctx, userID)
 	if err != nil {
-		return models.Header{}, fmt.Errorf("get header usecase: %w", err)
+		return nil, fmt.Errorf("get header usecase: %w", err)
 	}
 
-	return *header, nil
+	return header, nil
 }
 
 func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, communityID, lastId uint32) ([]*models.ShortProfile, error) {
