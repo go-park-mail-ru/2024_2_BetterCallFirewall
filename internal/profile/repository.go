@@ -22,16 +22,12 @@ type Repository interface {
 	GetAllSubs(ctx context.Context, u uint32, lastId uint32) ([]*models.ShortProfile, error)
 	GetAllSubscriptions(context.Context, uint32, uint32) ([]*models.ShortProfile, error)
 
-	GetFriendsID(context.Context, uint32) ([]uint32, error)
 	GetSubscriptionsID(context.Context, uint32) ([]uint32, error)
 	GetSubscribersID(context.Context, uint32) ([]uint32, error)
 	GetStatuses(context.Context, uint32) ([]uint32, []uint32, []uint32, error)
 	GetHeader(context.Context, uint32) (*models.Header, error)
 
 	GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error)
-
-	Create(user *models.User, ctx context.Context) (uint32, error)
-	GetByEmail(email string, ctx context.Context) (*models.User, error)
 }
 
 type PostGetter interface {

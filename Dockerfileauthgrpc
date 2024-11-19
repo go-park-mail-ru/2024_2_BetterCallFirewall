@@ -1,6 +1,6 @@
 FROM golang:alpine AS build
 
-WORKDIR /auth
+WORKDIR /authgrpc
 
 COPY go.mod .
 COPY go.sum .
@@ -9,16 +9,16 @@ RUN go mod download
 
 COPY . .
 
-RUN go build cmd/auth/main.go
+RUN go build cmd/gRPC/auth/main.go
 
 FROM alpine:latest
 
-WORKDIR /auth
+WORKDIR /authgrpc
 
-EXPOSE 8081
+EXPOSE 7072
 
 COPY .env .
 
-COPY --from=build /auth/main /auth/main
+COPY --from=build /authgrpc/main /authgrpc/main
 
 CMD ["./main"]

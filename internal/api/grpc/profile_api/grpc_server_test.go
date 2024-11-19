@@ -49,7 +49,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: errMock,
 			SetupMock: func(request *HeaderRequest, m *mocks) {
 				m.profileService.EXPECT().GetHeader(gomock.Any(), gomock.Any()).
-					Return(models.Header{}, errMock)
+					Return(nil, errMock)
 			},
 		},
 		{
@@ -72,7 +72,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request *HeaderRequest, m *mocks) {
 				m.profileService.EXPECT().GetHeader(gomock.Any(), gomock.Any()).
-					Return(models.Header{AuthorID: 1, Author: "Alexey Zemliakov"}, nil)
+					Return(&models.Header{AuthorID: 1, Author: "Alexey Zemliakov"}, nil)
 			},
 		},
 	}

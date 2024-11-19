@@ -34,13 +34,14 @@ type Server struct {
 type GRPCPort string
 
 type Config struct {
-	DB       DBConnect
-	REDIS    Redis
-	SERVER   Server
-	AUTH     Server
-	FILE     Server
-	CHAT     Server
-	AUTHGRPC GRPCPort
+	DB          DBConnect
+	REDIS       Redis
+	SERVER      Server
+	AUTH        Server
+	FILE        Server
+	CHAT        Server
+	AUTHGRPC    GRPCPort
+	PROFILEGRPC GRPCPort
 }
 
 func GetConfig(configFilePath string) (*Config, error) {
@@ -85,6 +86,7 @@ func GetConfig(configFilePath string) (*Config, error) {
 				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
+			PROFILEGRPC: GRPCPort(os.Getenv("PROFILE_GRPC_PORT")),
 		},
 		nil
 }

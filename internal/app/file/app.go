@@ -15,10 +15,6 @@ import (
 )
 
 func GetServer(cfg *config.Config) (*http.Server, error) {
-	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))
-	if err != nil {
-		return nil, err
-	}
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -31,6 +27,10 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	fileServ := fileservis.NewFileService()
 	fileController := filecontrol.NewFileController(fileServ, responder)
 
+	provider, err := auth.GetAuthProvider(string(cfg.AUTHGRPC))
+	if err != nil {
+		return nil, err
+	}
 	sm := auth.New(provider)
 
 	rout := file.NewRouter(fileController, sm, logger)
