@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 const LIMIT = 10
@@ -118,7 +118,7 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, author uint32) error {
 	_, ok := c.adminList[communityId]
 	if !ok {
-		return myErr.ErrWrongCommunity
+		return my_err.ErrWrongCommunity
 	}
 	c.adminList[communityId] = append(c.adminList[communityId], author)
 

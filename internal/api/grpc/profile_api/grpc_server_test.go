@@ -175,6 +175,144 @@ func TestGetFriendID(t *testing.T) {
 	}
 }
 
+func TestCreate(t *testing.T) {
+	tests := []TableTest[CreateResponse, CreateRequest]{
+		{
+			name: "1",
+			SetupInput: func() (*CreateRequest, error) {
+				res := &CreateRequest{User: &User{ID: 0}}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *CreateRequest) (*CreateResponse, error) {
+				return implementation.Create(ctx, request)
+			},
+			ExpectedResult: func() (*CreateResponse, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request *CreateRequest, m *mocks) {
+				m.profileService.EXPECT().Create(gomock.Any(), gomock.Any()).
+					Return(uint32(0), errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*CreateRequest, error) {
+				res := &CreateRequest{User: &User{ID: 1, FirstName: "Alexey", LastName: "Zemliakov"}}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *CreateRequest) (*CreateResponse, error) {
+				return implementation.Create(ctx, request)
+			},
+			ExpectedResult: func() (*CreateResponse, error) {
+				return &CreateResponse{ID: 1}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request *CreateRequest, m *mocks) {
+				m.profileService.EXPECT().Create(gomock.Any(), gomock.Any()).
+					Return(uint32(1), nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			adapter, mock := getAdapter(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, adapter, input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
+func TestGetByEmail(t *testing.T) {
+	tests := []TableTest[GetByEmailResponse, GetByEmailRequest]{
+		{
+			name: "1",
+			SetupInput: func() (*GetByEmailRequest, error) {
+				res := &GetByEmailRequest{Email: ""}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *GetByEmailRequest) (*GetByEmailResponse, error) {
+				return implementation.GetUserByEmail(ctx, request)
+			},
+			ExpectedResult: func() (*GetByEmailResponse, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request *GetByEmailRequest, m *mocks) {
+				m.profileService.EXPECT().GetByEmail(gomock.Any(), gomock.Any()).
+					Return(nil, errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*GetByEmailRequest, error) {
+				res := &GetByEmailRequest{Email: "alex.zem@gigamail.com"}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *GetByEmailRequest) (*GetByEmailResponse, error) {
+				return implementation.GetUserByEmail(ctx, request)
+			},
+			ExpectedResult: func() (*GetByEmailResponse, error) {
+				return &GetByEmailResponse{User: &User{ID: 1, Email: "alex.zem@gigamail.com"}}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request *GetByEmailRequest, m *mocks) {
+				m.profileService.EXPECT().GetByEmail(gomock.Any(), gomock.Any()).
+					Return(&models.User{ID: 1, Email: "alex.zem@gigamail.com"}, nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			adapter, mock := getAdapter(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, adapter, input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
 type TableTest[T, In any] struct {
 	name           string
 	SetupInput     func() (*In, error)

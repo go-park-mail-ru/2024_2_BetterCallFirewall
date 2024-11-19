@@ -7,6 +7,8 @@ option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/prof
 service ProfileService {
   rpc GetHeader(HeaderRequest) returns (HeaderResponse){}
   rpc GetFriendsID(FriendsRequest) returns(FriendsResponse){}
+  rpc GetUserByEmail(GetByEmailRequest) returns(GetByEmailResponse){}
+  rpc Create(CreateRequest) returns(CreateResponse){}
 }
 
 message HeaderRequest {
@@ -30,4 +32,29 @@ message FriendsRequest {
 
 message FriendsResponse {
   repeated uint32 UserID = 1;
+}
+
+message GetByEmailRequest {
+  string Email = 1;
+}
+
+message GetByEmailResponse {
+  User User = 1;
+}
+
+message User {
+  uint32 ID = 1;
+  string Email = 2;
+  string Password = 3;
+  string FirstName = 4;
+  string LastName = 5;
+  string Avatar = 6;
+}
+
+message CreateRequest {
+  User User = 1;
+}
+
+message CreateResponse {
+  uint32 ID = 1;
 }

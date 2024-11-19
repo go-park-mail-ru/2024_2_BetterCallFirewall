@@ -29,6 +29,9 @@ type Repository interface {
 	GetHeader(context.Context, uint32) (*models.Header, error)
 
 	GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error)
+
+	Create(user *models.User, ctx context.Context) (uint32, error)
+	GetByEmail(email string, ctx context.Context) (*models.User, error)
 }
 
 type PostGetter interface {
