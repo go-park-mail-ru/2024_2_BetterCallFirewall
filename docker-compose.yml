@@ -17,6 +17,8 @@ services:
     restart: always
     ports:
       - "7072:7072"
+    depends_on:
+      - redis
   postgrpc:
     build:
       context: .
@@ -24,6 +26,15 @@ services:
     restart: always
     ports:
       - "7075:7075"
+    depends_on:
+      - db
+  communitygrpc:
+    build:
+      context: .
+      dockerfile: Dockerfilecommunitygrpc
+    restart: always
+    ports:
+      - "7076:7076"
     depends_on:
       - db
   project:

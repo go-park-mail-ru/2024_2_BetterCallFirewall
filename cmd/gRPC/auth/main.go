@@ -20,11 +20,11 @@ func main() {
 	}
 
 	grpcServer := auth.GetGRPCServer(cfg)
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.AUTHGRPC))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.AUTHGRPC.Port))
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("Listening on :%s with protocol gRPC", cfg.AUTHGRPC)
+	log.Printf("Listening on :%s with protocol gRPC", cfg.AUTHGRPC.Port)
 	if err := grpcServer.Serve(l); err != nil {
 		panic(err)
 	}

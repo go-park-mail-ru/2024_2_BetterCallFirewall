@@ -33,8 +33,8 @@ func (g *GrpcSender) GetAuthorsPosts(ctx context.Context, header *models.Header)
 	return res, nil
 }
 
-func GetPostProvider(port string) (grpc.ClientConnInterface, error) {
-	conn, err := grpc.NewClient(fmt.Sprintf("postgrpc:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+func GetPostProvider(host, port string) (grpc.ClientConnInterface, error) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		return nil, err

@@ -51,8 +51,8 @@ func (s *GrpcSender) Destroy(session *models.Session) error {
 	return err
 }
 
-func GetAuthProvider(port string) (grpc.ClientConnInterface, error) {
-	conn, err := grpc.NewClient(fmt.Sprintf("authgrpc:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+func GetAuthProvider(host, port string) (grpc.ClientConnInterface, error) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		return nil, err

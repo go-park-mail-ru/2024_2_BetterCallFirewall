@@ -20,12 +20,12 @@ func main() {
 	}
 
 	grpcServer, err := post.GetGRPCServer(cfg)
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.POSTGRPC))
+	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.POSTGRPC.Port))
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Listening on :%s with protocol gRPC", cfg.POSTGRPC)
+	log.Printf("Listening on :%s with protocol gRPC", cfg.POSTGRPC.Port)
 	if err := grpcServer.Serve(l); err != nil {
 		panic(err)
 	}
