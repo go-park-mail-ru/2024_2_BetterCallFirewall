@@ -1,7 +1,6 @@
 package router
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -46,13 +45,6 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-type ChatController interface {
-	SetConnection(w http.ResponseWriter, r *http.Request)
-	GetAllChats(w http.ResponseWriter, r *http.Request)
-	GetChat(w http.ResponseWriter, r *http.Request)
-	SendChatMsg(ctx context.Context, reqID string)
-}
-
 type CommunityController interface {
 	GetOne(w http.ResponseWriter, r *http.Request)
 	GetAll(w http.ResponseWriter, r *http.Request)
@@ -65,7 +57,6 @@ func NewRouter(
 	profileControl ProfileController,
 	postControl PostController,
 	sm SessionManager,
-	chatControl ChatController,
 	communityController CommunityController,
 	logger *logrus.Logger,
 ) http.Handler {
@@ -90,10 +81,6 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", postControl.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
-
-	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/ws", chatControl.SetConnection)
 
 	router.HandleFunc("/api/v1/community", communityController.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}", communityController.GetOne).Methods(http.MethodGet, http.MethodOptions)

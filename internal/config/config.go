@@ -39,6 +39,7 @@ type Config struct {
 	SERVER   Server
 	AUTH     Server
 	FILE     Server
+	CHAT     Server
 	AUTHGRPC GRPCPort
 }
 
@@ -76,6 +77,11 @@ func GetConfig(configFilePath string) (*Config, error) {
 			AUTHGRPC: GRPCPort(os.Getenv("AUTH_GRPC_PORT")),
 			FILE: Server{
 				Port:         os.Getenv("FILE_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
+			},
+			CHAT: Server{
+				Port:         os.Getenv("CHAT_HTTP_PORT"),
 				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
