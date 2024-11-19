@@ -23,6 +23,13 @@ services:
     depends_on:
       - redis
       - db
+  file:
+    build:
+      context: .
+      dockerfile: Dockerfilefile
+    restart: always
+    ports:
+      - "8082:8082"
   db:
     image: postgres:latest
     ports:

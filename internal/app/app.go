@@ -17,8 +17,6 @@ import (
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
-	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
-	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
 	postController "github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	postgresPost "github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
 	postServ "github.com/2024_2_BetterCallFirewall/internal/post/service"
@@ -68,9 +66,6 @@ func Run() error {
 	postRepo := postgresPost.NewAdapter(postgresDB)
 	chatRepo := chatRepository.NewChatRepository(postgresDB)
 
-	fileServ := fileservis.NewFileService()
-	fileController := filecontrol.NewFileController(fileServ, responder)
-
 	postsHelper := postServ.NewPostProfileImpl(postRepo)
 	profileUsecase := profileService.NewProfileUsecase(profileRepo, postsHelper)
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
@@ -95,7 +90,6 @@ func Run() error {
 	rout := router.NewRouter(
 		profileControl,
 		postControl,
-		fileController,
 		sm,
 		chatControl,
 		communityControl,
