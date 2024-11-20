@@ -11,4 +11,5 @@ type ReactionController interface {
 	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromComment(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromFile(w http.ResponseWriter, r *http.Request)
+	GetLikesOnPost(w http.ResponseWriter, r *http.Request)
 }

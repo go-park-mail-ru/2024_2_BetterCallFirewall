@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"strconv"
@@ -193,4 +194,28 @@ func (l LikeController) DeleteLikeFromFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	l.Responder.OutputJSON(w, "like is unset from file", reqID)
+}
+
+func (l LikeController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		l.Responder.LogError(myErr.ErrInvalidContext, "")
+	}
+
+	postID, err := getIdFromURL(r)
+	if err != nil {
+		l.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	likes, err := l.LikeManager.GetLikesOnPost(r.Context(), postID)
+	if err != nil {
+		if errors.Is(err, myErr.ErrWrongPost) {
+			l.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		l.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+	l.Responder.OutputJSON(w, likes, reqID)
 }

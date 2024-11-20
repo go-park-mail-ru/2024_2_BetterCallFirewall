@@ -7,4 +7,5 @@ const (
 	DeleteLikeFromPost    = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
 	DeleteLikeFromComment = `DELETE FROM reaction WHERE comment_id = $1 AND user_id = $2;`
 	DeleteLikeFromFile    = `DELETE FROM reaction WHERE file_id = $1 AND user_id = $2;`
+	GetLikesOnPost        = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
 )

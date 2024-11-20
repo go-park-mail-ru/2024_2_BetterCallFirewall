@@ -64,6 +64,7 @@ type ReactionController interface {
 	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromComment(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromFile(w http.ResponseWriter, r *http.Request)
+	GetLikesOnPost(w http.ResponseWriter, r *http.Request)
 }
 
 type FileController interface {
@@ -108,6 +109,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed", postControl.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/like", reactionControl.SetLikeToPost).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/like", reactionControl.DeleteLikeFromComment).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/likes", reactionControl.GetLikesOnPost).Methods(http.MethodGet, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/messages/chats", chatControl.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", chatControl.GetChat).Methods(http.MethodGet, http.MethodOptions)

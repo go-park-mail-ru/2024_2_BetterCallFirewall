@@ -63,3 +63,11 @@ func (u Usecase) DeleteLikeFromFile(ctx context.Context, fileID uint32, userID u
 	}
 	return nil
 }
+
+func (u Usecase) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	likes, err := u.Repo.GetLikesOnPost(ctx, postID)
+	if err != nil {
+		return 0, err
+	}
+	return likes, nil
+}

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 )
@@ -72,4 +73,16 @@ func (lr *LikeRepository) DeleteLikeFromFile(ctx context.Context, fileID uint32,
 		return err
 	}
 	return nil
+}
+
+func (lr *LikeRepository) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	var likes uint32
+	err := lr.DB.QueryRowContext(ctx, GetLikesOnPost, postID).Scan(&likes)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, myErr.ErrWrongPost
+		}
+		return 0, err
+	}
+	return likes, nil
 }
