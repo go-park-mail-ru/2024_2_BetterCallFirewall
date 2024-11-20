@@ -20,7 +20,7 @@ func getService(ctrl *gomock.Controller) (*Service, *mocks) {
 		repo: NewMockRepo(ctrl),
 	}
 
-	return NewService(m.repo), m
+	return NewCommunityService(m.repo), m
 }
 
 func TestNewService(t *testing.T) {

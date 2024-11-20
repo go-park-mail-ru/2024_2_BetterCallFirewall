@@ -46,6 +46,7 @@ type Config struct {
 	AUTHGRPC      GRPCServer
 	PROFILEGRPC   GRPCServer
 	POSTGRPC      GRPCServer
+	COMMUNITY     Server
 	COMMUNITYGRPC GRPCServer
 }
 
@@ -101,6 +102,11 @@ func GetConfig(configFilePath string) (*Config, error) {
 			POSTGRPC: GRPCServer{
 				Port: os.Getenv("POST_GRPC_PORT"),
 				Host: os.Getenv("POST_GRPC_HOST"),
+			},
+			COMMUNITY: Server{
+				Port:         os.Getenv("COMMUNITY_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
 			COMMUNITYGRPC: GRPCServer{
 				Port: os.Getenv("COMMUNITY_GRPC_PORT"),

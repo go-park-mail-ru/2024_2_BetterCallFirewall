@@ -66,8 +66,8 @@ func Run() error {
 	profileControl := profileController.NewProfileController(profileUsecase, responder)
 
 	communityRepo := communityRepository.NewCommunityRepository(postgresDB)
-	communityServ := communityService.NewService(communityRepo)
-	communityControl := communityController.NewController(responder, communityServ)
+	communityServ := communityService.NewCommunityService(communityRepo)
+	communityControl := communityController.NewCommunityController(responder, communityServ)
 
 	profileHelper := profileService.NewProfileHelper(profileRepo)
 	postService := postServ.NewPostServiceImpl(postRepo, profileHelper, communityRepo)

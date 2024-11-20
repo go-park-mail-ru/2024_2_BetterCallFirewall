@@ -26,7 +26,7 @@ func getController(ctrl *gomock.Controller) (*Controller, *mocks) {
 		responder:        NewMockresponder(ctrl),
 	}
 
-	return NewController(m.responder, m.communityService), m
+	return NewCommunityController(m.responder, m.communityService), m
 }
 
 func TestNewController(t *testing.T) {

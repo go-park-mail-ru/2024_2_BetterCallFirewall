@@ -38,7 +38,7 @@ type Controller struct {
 	service   communityService
 }
 
-func NewController(responder responder, service communityService) *Controller {
+func NewCommunityController(responder responder, service communityService) *Controller {
 	return &Controller{
 		responder: responder,
 		service:   service,
