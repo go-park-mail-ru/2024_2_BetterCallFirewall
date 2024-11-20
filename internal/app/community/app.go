@@ -51,9 +51,8 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	communityRepo := communityRepository.NewCommunityRepository(postgresDB)
 	communityServ := communityService.NewCommunityService(communityRepo)
 	communityControl := communityController.NewCommunityController(responder, communityServ)
-	//defer close(chatControl.Messages)
 
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.PROFILEGRPC.Port)
+	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +61,10 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	rout := community.NewRouter(communityControl, sm, logger)
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%s", cfg.CHAT.Port),
+		Addr:         fmt.Sprintf(":%s", cfg.COMMUNITY.Port),
 		Handler:      rout,
-		ReadTimeout:  cfg.SERVER.ReadTimeout,
-		WriteTimeout: cfg.SERVER.WriteTimeout,
+		ReadTimeout:  cfg.COMMUNITY.ReadTimeout,
+		WriteTimeout: cfg.COMMUNITY.WriteTimeout,
 	}
 
 	return server, nil

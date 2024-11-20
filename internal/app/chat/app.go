@@ -46,7 +46,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	chatControl := ChatController.NewChatController(chatServ, responder)
 	//defer close(chatControl.Messages)
 
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.PROFILEGRPC.Port)
+	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +57,8 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.CHAT.Port),
 		Handler:      rout,
-		ReadTimeout:  cfg.SERVER.ReadTimeout,
-		WriteTimeout: cfg.SERVER.WriteTimeout,
+		ReadTimeout:  cfg.CHAT.ReadTimeout,
+		WriteTimeout: cfg.CHAT.WriteTimeout,
 	}
 
 	return server, nil
