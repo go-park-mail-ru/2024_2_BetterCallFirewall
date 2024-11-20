@@ -1,15 +1,6 @@
 version: '3.9'
 
 services:
-  profilegrpc:
-    build:
-      context: .
-      dockerfile: Dockerfileprofilegrpc
-    restart: always
-    ports:
-      - "7074:7074"
-    depends_on:
-      - db
   authgrpc:
     build:
       context: .
@@ -19,6 +10,15 @@ services:
       - "7072:7072"
     depends_on:
       - redis
+  profilegrpc:
+    build:
+      context: .
+      dockerfile: Dockerfileprofilegrpc
+    restart: always
+    ports:
+      - "7074:7074"
+    depends_on:
+      - db
   postgrpc:
     build:
       context: .
@@ -37,26 +37,18 @@ services:
       - "7076:7076"
     depends_on:
       - db
-  project:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+
   auth:
     build:
       context: .
       dockerfile: Dockerfileauth
     restart: always
     ports:
-      - "8081:8081"
-      - "7071:7071"
+      - "8082:8082"
     depends_on:
       - redis
-      - db
+      - profilegrpc
+
   file:
     build:
       context: .
@@ -65,16 +57,34 @@ services:
       - ./image:/image
     restart: always
     ports:
-      - "8082:8082"
-  chat:
-    build:
-      context: .
-      dockerfile: Dockerfilechat
-    restart: always
-    ports:
       - "8083:8083"
     depends_on:
+      - authgrpc
+
+  profile:
+    build:
+      context: .
+      dockerfile: Dockerfileprofile
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
       - db
+      - authgrpc
+      - postgrpc
+
+  post:
+    build:
+      context: .
+      dockerfile: Dockerfilepost
+    restart: always
+    ports:
+      - "8085:8085"
+    depends_on:
+      - db
+      - authgrpc
+      - profilegrpc
+      - communitygrpc
 
   community:
     build:
@@ -82,9 +92,21 @@ services:
       dockerfile: Dockerfilecommunity
     restart: always
     ports:
-      - "8023:8023"
+      - "8086:8086"
     depends_on:
       - db
+      - authgrpc
+
+  chat:
+    build:
+      context: .
+      dockerfile: Dockerfilechat
+    restart: always
+    ports:
+      - "8087:8087"
+    depends_on:
+      - db
+      - authgrpc
 
   db:
     image: postgres:latest

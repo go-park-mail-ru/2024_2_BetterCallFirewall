@@ -39,14 +39,15 @@ type GRPCServer struct {
 type Config struct {
 	DB            DBConnect
 	REDIS         Redis
-	SERVER        Server
 	AUTH          Server
 	FILE          Server
 	CHAT          Server
+	POST          Server
+	PROFILE       Server
+	COMMUNITY     Server
 	AUTHGRPC      GRPCServer
 	PROFILEGRPC   GRPCServer
 	POSTGRPC      GRPCServer
-	COMMUNITY     Server
 	COMMUNITYGRPC GRPCServer
 }
 
@@ -71,8 +72,13 @@ func GetConfig(configFilePath string) (*Config, error) {
 				MaxIdle:   getIntEnv("REDIS_MAX_IDLE"),
 				MaxActive: getIntEnv("REDIS_MAX_ACTIVE"),
 			},
-			SERVER: Server{
-				Port:         os.Getenv("HTTP_PORT"),
+			POST: Server{
+				Port:         os.Getenv("POST_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
+			},
+			PROFILE: Server{
+				Port:         os.Getenv("PROFILE_HTTP_PORT"),
 				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},

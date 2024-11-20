@@ -1,6 +1,6 @@
 FROM golang:alpine AS build
 
-WORKDIR /app
+WORKDIR /post
 
 COPY go.mod .
 COPY go.sum .
@@ -9,18 +9,16 @@ RUN go mod download
 
 COPY . .
 
-RUN go build cmd/main.go
+RUN go build cmd/post/main.go
 
 FROM alpine:latest
 
-WORKDIR /app
+WORKDIR /post
 
-EXPOSE 8080
+EXPOSE 8085
 
 COPY .env .
 
-COPY image ./image
-
-COPY --from=build /app/main /app/main
+COPY --from=build /post/main /post/main
 
 CMD ["./main"]

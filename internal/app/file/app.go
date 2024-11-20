@@ -38,8 +38,8 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.FILE.Port),
 		Handler:      rout,
-		ReadTimeout:  cfg.SERVER.ReadTimeout,
-		WriteTimeout: cfg.SERVER.WriteTimeout,
+		ReadTimeout:  cfg.FILE.ReadTimeout,
+		WriteTimeout: cfg.FILE.WriteTimeout,
 	}
 
 	return server, nil
