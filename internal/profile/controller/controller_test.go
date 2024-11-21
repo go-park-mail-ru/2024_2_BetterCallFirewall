@@ -84,7 +84,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(models.Header{}, my_err.ErrProfileNotFound)
+				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, my_err.ErrProfileNotFound)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
 					request.w.Write([]byte("bad request"))
@@ -111,7 +111,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(models.Header{}, errors.New("error"))
+				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
 					request.w.Write([]byte("internal error"))
@@ -138,7 +138,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(models.Header{}, nil)
+				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{}, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, header, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))

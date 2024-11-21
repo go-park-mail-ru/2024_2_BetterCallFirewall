@@ -13,89 +13,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockResponder is a mock of Responder interface.
-type MockResponder struct {
-	ctrl     *gomock.Controller
-	recorder *MockResponderMockRecorder
-}
-
-// MockResponderMockRecorder is the mock recorder for MockResponder.
-type MockResponderMockRecorder struct {
-	mock *MockResponder
-}
-
-// NewMockResponder creates a new mock instance.
-func NewMockResponder(ctrl *gomock.Controller) *MockResponder {
-	mock := &MockResponder{ctrl: ctrl}
-	mock.recorder = &MockResponderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockResponder) EXPECT() *MockResponderMockRecorder {
-	return m.recorder
-}
-
-// ErrorBadRequest mocks base method.
-func (m *MockResponder) ErrorBadRequest(w http.ResponseWriter, err error, requestID string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ErrorBadRequest", w, err, requestID)
-}
-
-// ErrorBadRequest indicates an expected call of ErrorBadRequest.
-func (mr *MockResponderMockRecorder) ErrorBadRequest(w, err, requestID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorBadRequest", reflect.TypeOf((*MockResponder)(nil).ErrorBadRequest), w, err, requestID)
-}
-
-// ErrorInternal mocks base method.
-func (m *MockResponder) ErrorInternal(w http.ResponseWriter, err error, requestID string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ErrorInternal", w, err, requestID)
-}
-
-// ErrorInternal indicates an expected call of ErrorInternal.
-func (mr *MockResponderMockRecorder) ErrorInternal(w, err, requestID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorInternal", reflect.TypeOf((*MockResponder)(nil).ErrorInternal), w, err, requestID)
-}
-
-// LogError mocks base method.
-func (m *MockResponder) LogError(err error, requestID string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "LogError", err, requestID)
-}
-
-// LogError indicates an expected call of LogError.
-func (mr *MockResponderMockRecorder) LogError(err, requestID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogError", reflect.TypeOf((*MockResponder)(nil).LogError), err, requestID)
-}
-
-// OutputJSON mocks base method.
-func (m *MockResponder) OutputJSON(w http.ResponseWriter, data any, requestID string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OutputJSON", w, data, requestID)
-}
-
-// OutputJSON indicates an expected call of OutputJSON.
-func (mr *MockResponderMockRecorder) OutputJSON(w, data, requestID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutputJSON", reflect.TypeOf((*MockResponder)(nil).OutputJSON), w, data, requestID)
-}
-
-// OutputNoMoreContentJSON mocks base method.
-func (m *MockResponder) OutputNoMoreContentJSON(w http.ResponseWriter, requestID string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OutputNoMoreContentJSON", w, requestID)
-}
-
-// OutputNoMoreContentJSON indicates an expected call of OutputNoMoreContentJSON.
-func (mr *MockResponderMockRecorder) OutputNoMoreContentJSON(w, requestID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutputNoMoreContentJSON", reflect.TypeOf((*MockResponder)(nil).OutputNoMoreContentJSON), w, requestID)
-}
-
 // MockProfileUsecase is a mock of ProfileUsecase interface.
 type MockProfileUsecase struct {
 	ctrl     *gomock.Controller
@@ -223,10 +140,10 @@ func (mr *MockProfileUsecaseMockRecorder) GetCommunitySubs(ctx, communityID, las
 }
 
 // GetHeader mocks base method.
-func (m *MockProfileUsecase) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (m *MockProfileUsecase) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHeader", ctx, userID)
-	ret0, _ := ret[0].(models.Header)
+	ret0, _ := ret[0].(*models.Header)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -306,4 +223,87 @@ func (m *MockProfileUsecase) UpdateProfile(arg0 context.Context, arg1 *models.Fu
 func (mr *MockProfileUsecaseMockRecorder) UpdateProfile(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProfile", reflect.TypeOf((*MockProfileUsecase)(nil).UpdateProfile), arg0, arg1)
+}
+
+// MockResponder is a mock of Responder interface.
+type MockResponder struct {
+	ctrl     *gomock.Controller
+	recorder *MockResponderMockRecorder
+}
+
+// MockResponderMockRecorder is the mock recorder for MockResponder.
+type MockResponderMockRecorder struct {
+	mock *MockResponder
+}
+
+// NewMockResponder creates a new mock instance.
+func NewMockResponder(ctrl *gomock.Controller) *MockResponder {
+	mock := &MockResponder{ctrl: ctrl}
+	mock.recorder = &MockResponderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockResponder) EXPECT() *MockResponderMockRecorder {
+	return m.recorder
+}
+
+// ErrorBadRequest mocks base method.
+func (m *MockResponder) ErrorBadRequest(w http.ResponseWriter, err error, requestID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ErrorBadRequest", w, err, requestID)
+}
+
+// ErrorBadRequest indicates an expected call of ErrorBadRequest.
+func (mr *MockResponderMockRecorder) ErrorBadRequest(w, err, requestID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorBadRequest", reflect.TypeOf((*MockResponder)(nil).ErrorBadRequest), w, err, requestID)
+}
+
+// ErrorInternal mocks base method.
+func (m *MockResponder) ErrorInternal(w http.ResponseWriter, err error, requestID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ErrorInternal", w, err, requestID)
+}
+
+// ErrorInternal indicates an expected call of ErrorInternal.
+func (mr *MockResponderMockRecorder) ErrorInternal(w, err, requestID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorInternal", reflect.TypeOf((*MockResponder)(nil).ErrorInternal), w, err, requestID)
+}
+
+// LogError mocks base method.
+func (m *MockResponder) LogError(err error, requestID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "LogError", err, requestID)
+}
+
+// LogError indicates an expected call of LogError.
+func (mr *MockResponderMockRecorder) LogError(err, requestID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LogError", reflect.TypeOf((*MockResponder)(nil).LogError), err, requestID)
+}
+
+// OutputJSON mocks base method.
+func (m *MockResponder) OutputJSON(w http.ResponseWriter, data any, requestID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OutputJSON", w, data, requestID)
+}
+
+// OutputJSON indicates an expected call of OutputJSON.
+func (mr *MockResponderMockRecorder) OutputJSON(w, data, requestID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutputJSON", reflect.TypeOf((*MockResponder)(nil).OutputJSON), w, data, requestID)
+}
+
+// OutputNoMoreContentJSON mocks base method.
+func (m *MockResponder) OutputNoMoreContentJSON(w http.ResponseWriter, requestID string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OutputNoMoreContentJSON", w, requestID)
+}
+
+// OutputNoMoreContentJSON indicates an expected call of OutputNoMoreContentJSON.
+func (mr *MockResponderMockRecorder) OutputNoMoreContentJSON(w, requestID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutputNoMoreContentJSON", reflect.TypeOf((*MockResponder)(nil).OutputNoMoreContentJSON), w, requestID)
 }

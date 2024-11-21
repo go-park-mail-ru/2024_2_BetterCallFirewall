@@ -32,7 +32,7 @@ type Test struct {
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
 	resID            []uint32
-	resHeader        models.Header
+	resHeader        *models.Header
 
 	err error
 }
@@ -595,7 +595,7 @@ func TestGetHeader(t *testing.T) {
 		{
 			ctx:       context.Background(),
 			userID:    1,
-			resHeader: models.Header{AuthorID: 1, Author: "Andrew Savvateev"},
+			resHeader: &models.Header{AuthorID: 1, Author: "Andrew Savvateev"},
 			err:       nil,
 		},
 		{
