@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -15,16 +17,16 @@ var errMock = errors.New("something with DB")
 
 type MockDB struct{}
 
-func (m MockDB) Create(user *models.User, ctx context.Context) (uint32, error) {
+func (m MockDB) Create(ctx context.Context, user *models.User) (uint32, error) {
 	if user.ID == 0 {
-		return user.ID, my_err.ErrUserNotFound
+		return user.ID, status.Error(codes.AlreadyExists, "")
 	}
 	return user.ID, nil
 }
 
-func (m MockDB) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+func (m MockDB) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	if email == "email@wrong.com" {
-		return nil, my_err.ErrUserNotFound
+		return nil, status.Error(codes.NotFound, "")
 	}
 
 	if email == "email@wrong2.com" {
@@ -48,9 +50,10 @@ func TestCreate(t *testing.T) {
 
 	testCases := []TestCase{
 		{models.User{ID: 1, Email: "email@email.com", Password: "some password"}, nil},
-		{models.User{ID: 0, Email: "email@email.com", Password: "some password"}, my_err.ErrUserNotFound},
+		{models.User{ID: 0, Email: "email@email.com", Password: "some password"}, my_err.ErrUserAlreadyExists},
 		{models.User{ID: 100, Email: "email", Password: "some password"}, my_err.ErrNonValidEmail},
-		{models.User{ID: 1, Email: "email@email.com", Password: "some very very long password, more then 74 symbols this password dont use anymore in real life and have validate on client"},
+		{models.User{ID: 1, Email: "email@email.com",
+			Password: "some very very long password, more then 74 symbols this password dont use anymore in real life and have validate on client"},
 			bcrypt.ErrPasswordTooLong},
 	}
 
