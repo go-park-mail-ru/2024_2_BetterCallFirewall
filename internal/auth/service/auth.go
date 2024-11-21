@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -39,8 +40,8 @@ func (a *AuthServiceImpl) Register(user models.User, ctx context.Context) (uint3
 	user.Password = string(hashPassword)
 
 	user.ID, err = a.db.Create(ctx, &user)
-	if err != nil {
-		return 0, fmt.Errorf("registration: %w", err)
+	if status.Code(err) == codes.AlreadyExists {
+		return 0, fmt.Errorf("auth service: %w", my_err.ErrUserAlreadyExists)
 	}
 
 	return user.ID, nil
@@ -52,7 +53,7 @@ func (a *AuthServiceImpl) Auth(user models.User, ctx context.Context) (uint32, e
 	}
 
 	dbUser, err := a.db.GetByEmail(ctx, user.Email)
-	if errors.Is(err, my_err.ErrUserNotFound) {
+	if status.Code(err) == codes.NotFound {
 		return 0, fmt.Errorf("auth service: %w", my_err.ErrWrongEmailOrPassword)
 	}
 
