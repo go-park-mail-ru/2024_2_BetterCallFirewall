@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS community_profile (
 CREATE TABLE IF NOT EXISTS post (
                                     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
-                                    community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT NULL,
+                                    community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT 0,
                                     content TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
                                     file_path TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -46,13 +46,13 @@ CREATE TABLE IF NOT EXISTS post (
 );
 
 CREATE TABLE IF NOT EXISTS message (
-                                    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                                    receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
-                                    sender INT REFERENCES profile(id) ON DELETE CASCADE ,
-                                    content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
-                                    is_read BOOLEAN DEFAULT FALSE,
-                                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                                       id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                       receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
+                                       sender INT REFERENCES profile(id) ON DELETE CASCADE ,
+                                       content TEXT CONSTRAINT content_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                       is_read BOOLEAN DEFAULT FALSE,
+                                       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS comment (
