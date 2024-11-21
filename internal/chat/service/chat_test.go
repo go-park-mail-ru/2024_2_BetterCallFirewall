@@ -11,7 +11,10 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-var errMock = errors.New("mock error")
+var (
+	errMock    = errors.New("mock error")
+	createTime = time.Now()
+)
 
 type MockRepo struct{}
 
@@ -26,7 +29,9 @@ func (m MockRepo) GetMessages(ctx context.Context, userID uint32, chatID uint32,
 	if userID == 0 || chatID == 0 {
 		return nil, errMock
 	}
-	return []*models.Message{}, nil
+	return []*models.Message{
+		{CreatedAt: createTime},
+	}, nil
 }
 
 func (m MockRepo) SendNewMessage(ctx context.Context, receiver uint32, sender uint32, message string) error {
@@ -93,7 +98,7 @@ func TestGetChat(t *testing.T) {
 		{
 			userID:      1,
 			chatID:      100,
-			wantMessage: []*models.Message{},
+			wantMessage: []*models.Message{{CreatedAt: convertTime(createTime)}},
 			wantErr:     nil,
 		},
 	}
