@@ -19,4 +19,4 @@ Backend проекта VK команды Better Call Firewall
 
 
 # Наш проект
-[Vilka](http://185.241.194.197:8000)
+[Vilka](http://vilka.online)
