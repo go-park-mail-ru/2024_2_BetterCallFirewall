@@ -15,6 +15,10 @@ type MockProfileDB struct {
 	Storage struct{}
 }
 
+func (m MockProfileDB) CheckFriendship(ctx context.Context, u uint32, u2 uint32) (bool, error) {
+	return false, nil
+}
+
 func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
 	return nil, nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/post"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/profile/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/profile/repository"
@@ -68,7 +69,8 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	profileService := service.NewProfileUsecase(repo, pp)
 	profileController := controller.NewProfileController(profileService, responder)
 
-	rout := profile.NewRouter(profileController, sm, logger)
+	metric, err := metrics.NewHTTPMetrics("profile")
+	rout := profile.NewRouter(profileController, sm, logger, metric)
 	server := &http.Server{
 		Handler:      rout,
 		Addr:         fmt.Sprintf(":%s", cfg.PROFILE.Port),
