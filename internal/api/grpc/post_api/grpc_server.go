@@ -3,6 +3,9 @@ package post_api
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -30,7 +33,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 
 	res, err := a.service.GetAuthorsPosts(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	resp := &Response{

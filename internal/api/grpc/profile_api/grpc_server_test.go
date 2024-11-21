@@ -7,8 +7,11 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type mocks struct {
@@ -46,7 +49,7 @@ func TestGetHeader(t *testing.T) {
 			ExpectedResult: func() (*HeaderResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *HeaderRequest, m *mocks) {
 				m.profileService.EXPECT().GetHeader(gomock.Any(), gomock.Any()).
 					Return(nil, errMock)
@@ -69,7 +72,7 @@ func TestGetHeader(t *testing.T) {
 					},
 				}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *HeaderRequest, m *mocks) {
 				m.profileService.EXPECT().GetHeader(gomock.Any(), gomock.Any()).
 					Return(&models.Header{AuthorID: 1, Author: "Alexey Zemliakov"}, nil)
@@ -99,9 +102,7 @@ func TestGetHeader(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
@@ -120,7 +121,7 @@ func TestGetFriendID(t *testing.T) {
 			ExpectedResult: func() (*FriendsResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *FriendsRequest, m *mocks) {
 				m.profileService.EXPECT().GetFriendsID(gomock.Any(), gomock.Any()).
 					Return(nil, errMock)
@@ -138,7 +139,7 @@ func TestGetFriendID(t *testing.T) {
 			ExpectedResult: func() (*FriendsResponse, error) {
 				return &FriendsResponse{UserID: []uint32{2, 5, 4, 3}}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *FriendsRequest, m *mocks) {
 				m.profileService.EXPECT().GetFriendsID(gomock.Any(), gomock.Any()).
 					Return([]uint32{2, 5, 4, 3}, nil)
@@ -168,9 +169,7 @@ func TestGetFriendID(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
@@ -189,7 +188,7 @@ func TestCreate(t *testing.T) {
 			ExpectedResult: func() (*CreateResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *CreateRequest, m *mocks) {
 				m.profileService.EXPECT().Create(gomock.Any(), gomock.Any()).
 					Return(uint32(0), errMock)
@@ -207,10 +206,28 @@ func TestCreate(t *testing.T) {
 			ExpectedResult: func() (*CreateResponse, error) {
 				return &CreateResponse{ID: 1}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *CreateRequest, m *mocks) {
 				m.profileService.EXPECT().Create(gomock.Any(), gomock.Any()).
 					Return(uint32(1), nil)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*CreateRequest, error) {
+				res := &CreateRequest{User: &User{ID: 0}}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *CreateRequest) (*CreateResponse, error) {
+				return implementation.Create(ctx, request)
+			},
+			ExpectedResult: func() (*CreateResponse, error) {
+				return nil, nil
+			},
+			ExpectedErrCode: codes.AlreadyExists,
+			SetupMock: func(request *CreateRequest, m *mocks) {
+				m.profileService.EXPECT().Create(gomock.Any(), gomock.Any()).
+					Return(uint32(0), my_err.ErrUserAlreadyExists)
 			},
 		},
 	}
@@ -237,9 +254,7 @@ func TestCreate(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
@@ -258,7 +273,7 @@ func TestGetByEmail(t *testing.T) {
 			ExpectedResult: func() (*GetByEmailResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *GetByEmailRequest, m *mocks) {
 				m.profileService.EXPECT().GetByEmail(gomock.Any(), gomock.Any()).
 					Return(nil, errMock)
@@ -276,10 +291,28 @@ func TestGetByEmail(t *testing.T) {
 			ExpectedResult: func() (*GetByEmailResponse, error) {
 				return &GetByEmailResponse{User: &User{ID: 1, Email: "alex.zem@gigamail.com"}}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *GetByEmailRequest, m *mocks) {
 				m.profileService.EXPECT().GetByEmail(gomock.Any(), gomock.Any()).
 					Return(&models.User{ID: 1, Email: "alex.zem@gigamail.com"}, nil)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*GetByEmailRequest, error) {
+				res := &GetByEmailRequest{Email: ""}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Adapter, request *GetByEmailRequest) (*GetByEmailResponse, error) {
+				return implementation.GetUserByEmail(ctx, request)
+			},
+			ExpectedResult: func() (*GetByEmailResponse, error) {
+				return nil, nil
+			},
+			ExpectedErrCode: codes.NotFound,
+			SetupMock: func(request *GetByEmailRequest, m *mocks) {
+				m.profileService.EXPECT().GetByEmail(gomock.Any(), gomock.Any()).
+					Return(nil, my_err.ErrUserNotFound)
 			},
 		},
 	}
@@ -306,18 +339,16 @@ func TestGetByEmail(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
 
 type TableTest[T, In any] struct {
-	name           string
-	SetupInput     func() (*In, error)
-	Run            func(context.Context, *Adapter, *In) (*T, error)
-	ExpectedResult func() (*T, error)
-	ExpectedErr    error
-	SetupMock      func(*In, *mocks)
+	name            string
+	SetupInput      func() (*In, error)
+	Run             func(context.Context, *Adapter, *In) (*T, error)
+	ExpectedResult  func() (*T, error)
+	ExpectedErrCode codes.Code
+	SetupMock       func(*In, *mocks)
 }

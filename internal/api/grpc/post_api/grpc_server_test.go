@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -47,7 +49,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 			ExpectedResult: func() (*Response, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *Request, m *mocks) {
 				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any()).
 					Return(nil, errMock)
@@ -74,7 +76,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 					},
 					nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *Request, m *mocks) {
 				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any()).
 					Return(
@@ -113,18 +115,16 @@ func TestGetAuthorsPosts(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
 
 type TableTest[T, In any] struct {
-	name           string
-	SetupInput     func() (*In, error)
-	Run            func(context.Context, *Adapter, *In) (*T, error)
-	ExpectedResult func() (*T, error)
-	ExpectedErr    error
-	SetupMock      func(*In, *mocks)
+	name            string
+	SetupInput      func() (*In, error)
+	Run             func(context.Context, *Adapter, *In) (*T, error)
+	ExpectedResult  func() (*T, error)
+	ExpectedErrCode codes.Code
+	SetupMock       func(*In, *mocks)
 }

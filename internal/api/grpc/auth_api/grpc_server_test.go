@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -48,7 +50,7 @@ func TestCreate(t *testing.T) {
 			ExpectedResult: func() (*CreateResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *CreateRequest, m *mocks) {
 				m.sessionManager.EXPECT().Create(gomock.Any()).Return(nil, errMock)
 			},
@@ -65,7 +67,7 @@ func TestCreate(t *testing.T) {
 			ExpectedResult: func() (*CreateResponse, error) {
 				return &CreateResponse{Sess: &Session{ID: "1", UserID: 1, CreatedAt: createTime}}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *CreateRequest, m *mocks) {
 				m.sessionManager.EXPECT().Create(gomock.Any()).Return(&models.Session{ID: "1", UserID: request.UserID, CreatedAt: createTime}, nil)
 			},
@@ -94,9 +96,7 @@ func TestCreate(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
@@ -116,7 +116,7 @@ func TestCheck(t *testing.T) {
 			ExpectedResult: func() (*CheckResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *CheckRequest, m *mocks) {
 				m.sessionManager.EXPECT().Check(gomock.Any()).Return(nil, errMock)
 			},
@@ -133,7 +133,7 @@ func TestCheck(t *testing.T) {
 			ExpectedResult: func() (*CheckResponse, error) {
 				return &CheckResponse{Sess: &Session{ID: "1", UserID: 1, CreatedAt: createTime}}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *CheckRequest, m *mocks) {
 				m.sessionManager.EXPECT().Check(gomock.Any()).Return(&models.Session{ID: "1", UserID: 1, CreatedAt: createTime}, nil)
 			},
@@ -162,9 +162,7 @@ func TestCheck(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
@@ -184,7 +182,7 @@ func TestDestroy(t *testing.T) {
 			ExpectedResult: func() (*EmptyResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: errMock,
+			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *DestroyRequest, m *mocks) {
 				m.sessionManager.EXPECT().Destroy(gomock.Any()).Return(errMock)
 			},
@@ -201,7 +199,7 @@ func TestDestroy(t *testing.T) {
 			ExpectedResult: func() (*EmptyResponse, error) {
 				return nil, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *DestroyRequest, m *mocks) {
 				m.sessionManager.EXPECT().Destroy(gomock.Any()).Return(nil)
 			},
@@ -230,18 +228,16 @@ func TestDestroy(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
 
 type TableTest[T, In any] struct {
-	name           string
-	SetupInput     func() (*In, error)
-	Run            func(context.Context, *Adapter, *In) (*T, error)
-	ExpectedResult func() (*T, error)
-	ExpectedErr    error
-	SetupMock      func(*In, *mocks)
+	name            string
+	SetupInput      func() (*In, error)
+	Run             func(context.Context, *Adapter, *In) (*T, error)
+	ExpectedResult  func() (*T, error)
+	ExpectedErrCode codes.Code
+	SetupMock       func(*In, *mocks)
 }
