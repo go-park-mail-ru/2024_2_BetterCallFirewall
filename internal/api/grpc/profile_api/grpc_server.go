@@ -2,8 +2,13 @@ package profile_api
 
 import (
 	"context"
+	"errors"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
@@ -29,7 +34,7 @@ func (a *Adapter) GetHeader(ctx context.Context, req *HeaderRequest) (*HeaderRes
 	userID := req.UserID
 	res, err := a.service.GetHeader(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp := &HeaderResponse{
@@ -73,6 +78,9 @@ func (a *Adapter) Create(ctx context.Context, req *CreateRequest) (*CreateRespon
 	}
 
 	res, err := a.service.Create(ctx, user)
+	if errors.Is(err, my_err.ErrUserAlreadyExists) {
+		return nil, status.Error(codes.AlreadyExists, err.Error())
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +96,10 @@ func (a *Adapter) GetUserByEmail(ctx context.Context, req *GetByEmailRequest) (*
 	email := req.Email
 
 	user, err := a.service.GetByEmail(ctx, email)
+
+	if errors.Is(err, my_err.ErrUserNotFound) {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
 	if err != nil {
 		return nil, err
 	}
