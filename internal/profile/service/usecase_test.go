@@ -8,11 +8,19 @@ import (
 	"testing"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type MockProfileDB struct {
 	Storage struct{}
+}
+
+func (m MockProfileDB) CheckFriendship(ctx context.Context, u uint32, u2 uint32) (bool, error) {
+	return false, nil
+}
+
+func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+	return nil, nil
 }
 
 type MockPostDB struct {
@@ -28,7 +36,7 @@ type Test struct {
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
 	resID            []uint32
-	resHeader        models.Header
+	resHeader        *models.Header
 
 	err error
 }
@@ -331,7 +339,7 @@ func TestSendFriendReq(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -367,7 +375,7 @@ func TestAcceptFriendReq(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -403,7 +411,7 @@ func TestRemoveFromFriends(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -439,7 +447,7 @@ func TestUnsubscribe(t *testing.T) {
 			ctx:      context.Background(),
 			userID:   1,
 			friendID: 1,
-			err:      myErr.ErrSameUser,
+			err:      my_err.ErrSameUser,
 		},
 		{
 			ctx:      context.Background(),
@@ -591,7 +599,7 @@ func TestGetHeader(t *testing.T) {
 		{
 			ctx:       context.Background(),
 			userID:    1,
-			resHeader: models.Header{AuthorID: 1, Author: "Andrew Savvateev"},
+			resHeader: &models.Header{AuthorID: 1, Author: "Andrew Savvateev"},
 			err:       nil,
 		},
 		{

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var (
@@ -26,6 +26,14 @@ var Posts = []*models.Post{
 
 type mockDB struct {
 	counter uint32
+}
+
+func (m *mockDB) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+	return 0, nil
+}
+
+func (m *mockDB) GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error) {
+	return nil, nil
 }
 
 func (m *mockDB) Create(ctx context.Context, post *models.Post) (uint32, error) {
@@ -107,12 +115,12 @@ func (m *mockDB) GetPostAuthor(ctx context.Context, postID uint32) (uint32, erro
 
 type profileRepositoryMock struct{}
 
-func (p *profileRepositoryMock) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (p *profileRepositoryMock) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	if userID == 0 {
-		return models.Header{}, errMockProfile
+		return nil, errMockProfile
 	}
 
-	return models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
+	return &models.Header{Author: "Alexey Zemliakov", AuthorID: 1}, nil
 }
 
 func (p *profileRepositoryMock) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
@@ -134,6 +142,12 @@ func (p *profileRepositoryMock) GetFriendsID(ctx context.Context, userID uint32)
 	return ids, nil
 }
 
+type communityRepositoryMock struct{}
+
+func (c *communityRepositoryMock) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
+	return false
+}
+
 type TestCaseCreate struct {
 	post    *models.Post
 	wantID  uint32
@@ -144,11 +158,12 @@ var (
 	baseId uint32 = 1
 	db            = &mockDB{counter: baseId}
 	pr            = &profileRepositoryMock{}
+	cr            = &communityRepositoryMock{}
 	ctx           = context.Background()
 )
 
 func TestPostServiceCreate(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 		return
@@ -178,7 +193,7 @@ type TestCaseGet struct {
 }
 
 func TestPostServiceGet(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -205,7 +220,7 @@ type TestCaseDelete struct {
 }
 
 func TestPostServiceDelete(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -230,7 +245,7 @@ type TestCaseUpdate struct {
 }
 
 func TestPostServiceUpdate(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -256,7 +271,7 @@ type TestCaseGetBatch struct {
 }
 
 func TestPostServiceGetBatch(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -287,7 +302,7 @@ type TestCaseGetBatchFromFriend struct {
 }
 
 func TestPostServiceGetBatchFromFriend(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}
@@ -296,7 +311,7 @@ func TestPostServiceGetBatchFromFriend(t *testing.T) {
 		{lastId: 10, userId: 10, wantPosts: nil, wantErr: errMockDB},
 		{lastId: 1, userId: 0, wantPosts: nil, wantErr: errMockProfile},
 		{lastId: 1, userId: 10, wantPosts: nil, wantErr: errMockProfile},
-		{lastId: 1, userId: 1, wantPosts: nil, wantErr: myErr.ErrNoMoreContent},
+		{lastId: 1, userId: 1, wantPosts: nil, wantErr: my_err.ErrNoMoreContent},
 		{lastId: 3, userId: 5, wantPosts: Posts[:3], wantErr: nil},
 		{lastId: 5, userId: 5, wantPosts: Posts[:], wantErr: nil},
 		{lastId: 2, userId: 3, wantPosts: Posts[:2], wantErr: nil},
@@ -318,7 +333,7 @@ type TestCaseGetAuthor struct {
 }
 
 func TestPostServiceGetAuthor(t *testing.T) {
-	service := NewPostServiceImpl(db, pr)
+	service := NewPostServiceImpl(db, pr, cr)
 	if service == nil {
 		t.Fatal("service is nil")
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Test struct {
@@ -65,7 +65,7 @@ func TestGetProfileById(t *testing.T) {
 		{
 			inputID:     100,
 			resProfile:  nil,
-			expectedErr: myErr.ErrProfileNotFound,
+			expectedErr: my_err.ErrProfileNotFound,
 			dbError:     sql.ErrNoRows,
 		},
 		{

@@ -10,8 +10,7 @@ import (
 	_ "github.com/jackc/pgx"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
-	"github.com/2024_2_BetterCallFirewall/internal/profile"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 const LIMIT = 20
@@ -20,11 +19,37 @@ type ProfileRepo struct {
 	DB *sql.DB
 }
 
-func NewProfileRepo(db *sql.DB) profile.Repository {
+func NewProfileRepo(db *sql.DB) *ProfileRepo {
 	repo := &ProfileRepo{
 		DB: db,
 	}
 	return repo
+}
+
+func (p *ProfileRepo) Create(user *models.User, ctx context.Context) (uint32, error) {
+	var id uint32
+	err := p.DB.QueryRowContext(ctx, CreateUser, user.FirstName, user.LastName, user.Email, user.Password).Scan(&id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("postgres create user: %w", my_err.ErrUserAlreadyExists)
+		}
+		return 0, fmt.Errorf("postgres create user: %w", err)
+	}
+
+	return id, nil
+}
+
+func (p *ProfileRepo) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+	user := &models.User{}
+	err := p.DB.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("postgres get user: %w", my_err.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf("postgres get user: %w", err)
+	}
+
+	return user, nil
 }
 
 func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.FullProfile, error) {
@@ -32,7 +57,7 @@ func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.Fu
 	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrProfileNotFound
+			return nil, my_err.ErrProfileNotFound
 		}
 		return nil, fmt.Errorf("get profile by id db: %w", err)
 	}
@@ -280,9 +305,27 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	err := p.DB.QueryRowContext(ctx, GetShortProfile, u).Scan(&profile.Author, &profile.Avatar)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrProfileNotFound
+			return nil, my_err.ErrProfileNotFound
 		}
 		return nil, fmt.Errorf("get header db: %w", err)
 	}
 	return profile, nil
+}
+
+func (p *ProfileRepo) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+	var subs []*models.ShortProfile
+	rows, err := p.DB.QueryContext(ctx, GetCommunitySubs, communityID, lastInsertId, LIMIT)
+	if err != nil {
+		return nil, fmt.Errorf("get community subs db: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		profile := &models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
+		if err != nil {
+			return nil, fmt.Errorf("get community subs db: %w", err)
+		}
+		subs = append(subs, profile)
+	}
+	return subs, nil
 }

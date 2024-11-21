@@ -19,4 +19,6 @@ type ProfileHandler interface {
 	GetAllFriends(w http.ResponseWriter, r *http.Request)
 	GetAllSubs(w http.ResponseWriter, r *http.Request)
 	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
+
+	GetCommunitySubs(w http.ResponseWriter, r *http.Request)
 }

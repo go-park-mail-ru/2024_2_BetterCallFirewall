@@ -1,0 +1,18 @@
+syntax="proto3";
+
+package community_api;
+
+option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/community_api";
+
+service CommunityService{
+  rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse){}
+}
+
+message CheckAccessRequest{
+  uint32 UserID = 1;
+  uint32 CommunityID = 2;
+}
+
+message CheckAccessResponse {
+  bool Access = 1;
+}

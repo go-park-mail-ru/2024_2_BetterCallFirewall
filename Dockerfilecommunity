@@ -1,0 +1,24 @@
+FROM golang:alpine AS build
+
+WORKDIR /community
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN go build cmd/community/main.go
+
+FROM alpine:latest
+
+WORKDIR /community
+
+EXPOSE 8086
+
+COPY .env .
+
+COPY --from=build /community/main /community/main
+
+CMD ["./main"]

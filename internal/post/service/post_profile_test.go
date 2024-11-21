@@ -25,17 +25,6 @@ func (m mockProfileDB) GetAuthorPosts(ctx context.Context, header *models.Header
 	return posts, nil
 }
 
-type mockFileService struct{}
-
-func (m mockFileService) GetPostPicture(ctx context.Context, postID uint32) *models.Picture {
-	if postID == 0 {
-		return nil
-	}
-
-	res := models.Picture("")
-	return &res
-}
-
 type TestCase struct {
 	header   *models.Header
 	wantPost []*models.Post
@@ -48,7 +37,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 		{header: &models.Header{}, wantPost: posts, wantErr: nil},
 	}
 
-	serv := NewPostProfileImpl(mockFileService{}, mockProfileDB{})
+	serv := NewPostProfileImpl(mockProfileDB{})
 
 	for _, test := range tests {
 		post, err := serv.GetAuthorsPosts(context.Background(), test.header)

@@ -8,8 +8,8 @@ import (
 	"slices"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type ProfileUsecaseImplementation struct {
@@ -29,7 +29,7 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 
 	sess, err := models.SessionFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get session usecase: %w", myErr.ErrSessionNotFound)
+		return nil, fmt.Errorf("get session usecase: %w", my_err.ErrSessionNotFound)
 	}
 
 	self := sess.UserID
@@ -95,7 +95,7 @@ func (p ProfileUsecaseImplementation) DeleteProfile(u uint32) error {
 
 func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint32) error {
 	if receiver == sender {
-		return myErr.ErrSameUser
+		return my_err.ErrSameUser
 	}
 	has, err := p.repo.CheckFriendship(context.Background(), sender, receiver)
 	if err != nil {
@@ -115,7 +115,7 @@ func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint
 
 func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) error {
 	if who == whose {
-		return myErr.ErrSameUser
+		return my_err.ErrSameUser
 	}
 	err := p.repo.AcceptFriendsReq(who, whose)
 	if err != nil {
@@ -126,7 +126,7 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 
 func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32) error {
 	if who == whom {
-		return myErr.ErrSameUser
+		return my_err.ErrSameUser
 	}
 	err := p.repo.RemoveSub(who, whom)
 	if err != nil {
@@ -137,7 +137,7 @@ func (p ProfileUsecaseImplementation) RemoveFromFriends(who uint32, whom uint32)
 
 func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error {
 	if who == whom {
-		return myErr.ErrSameUser
+		return my_err.ErrSameUser
 	}
 
 	err := p.repo.MoveToSubs(who, whom)
@@ -150,7 +150,7 @@ func (p ProfileUsecaseImplementation) Unsubscribe(who uint32, whom uint32) error
 func (p ProfileUsecaseImplementation) setStatuses(ctx context.Context, profiles []*models.ShortProfile) error {
 	sess, err := models.SessionFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("get self session usecase: %w", myErr.ErrSessionNotFound)
+		return fmt.Errorf("get self session usecase: %w", my_err.ErrSessionNotFound)
 	}
 	selfId := sess.UserID
 
@@ -213,20 +213,20 @@ func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, i
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetFriendsID(ctx context.Context, userID uint32) ([]uint32, error) {
-	res, err := p.repo.GetFriendsID(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("get friends id usecase: %w", err)
-	}
-
-	return res, nil
-}
-
-func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (models.Header, error) {
+func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint32) (*models.Header, error) {
 	header, err := p.repo.GetHeader(ctx, userID)
 	if err != nil {
-		return models.Header{}, fmt.Errorf("get header usecase: %w", err)
+		return nil, fmt.Errorf("get header usecase: %w", err)
 	}
 
-	return *header, nil
+	return header, nil
+}
+
+func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, communityID, lastId uint32) ([]*models.ShortProfile, error) {
+	subs, err := p.repo.GetCommunitySubs(ctx, communityID, lastId)
+	if err != nil {
+		return nil, fmt.Errorf("get subs: %w", err)
+	}
+
+	return subs, nil
 }

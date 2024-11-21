@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type MocSessDB struct {
@@ -24,7 +24,7 @@ type Test struct {
 func (m *MocSessDB) CreateSession(session *models.Session) error {
 	for _, val := range m.Storage {
 		if val.UserID == session.UserID {
-			return myErr.ErrSessionAlreadyExists
+			return my_err.ErrSessionAlreadyExists
 		}
 	}
 	m.Storage[session.ID] = session
@@ -34,14 +34,14 @@ func (m *MocSessDB) CreateSession(session *models.Session) error {
 func (m *MocSessDB) FindSession(sessID string) (*models.Session, error) {
 	session, ok := m.Storage[sessID]
 	if !ok {
-		return nil, myErr.ErrNoAuth
+		return nil, my_err.ErrNoAuth
 	}
 	return session, nil
 }
 
 func (m *MocSessDB) DestroySession(sessID string) error {
 	if _, ok := m.Storage[sessID]; !ok {
-		return myErr.ErrSessionNotFound
+		return my_err.ErrSessionNotFound
 	}
 	return nil
 }
@@ -74,7 +74,7 @@ func TestCheck(t *testing.T) {
 	tests := []Test{
 		{
 			testCookie: CookieNotInBase,
-			err:        myErr.ErrNoAuth,
+			err:        my_err.ErrNoAuth,
 		},
 		{
 			testCookie: CookieInBase,
@@ -86,7 +86,7 @@ func TestCheck(t *testing.T) {
 		},
 		{
 			testCookie: "",
-			err:        myErr.ErrNoAuth,
+			err:        my_err.ErrNoAuth,
 		},
 	}
 
@@ -119,7 +119,7 @@ func TestCreateSession(t *testing.T) {
 		{
 			testId:  IdInBase,
 			testRes: nil,
-			err:     myErr.ErrSessionAlreadyExists,
+			err:     my_err.ErrSessionAlreadyExists,
 		},
 	}
 
@@ -148,11 +148,11 @@ func TestDestroy(t *testing.T) {
 		},
 		{
 			testSession: inactiveSession,
-			err:         myErr.ErrSessionNotFound,
+			err:         my_err.ErrSessionNotFound,
 		},
 		{
 			testSession: nil,
-			err:         myErr.ErrNoAuth,
+			err:         my_err.ErrNoAuth,
 		},
 	}
 

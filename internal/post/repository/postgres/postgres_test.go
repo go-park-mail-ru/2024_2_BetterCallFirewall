@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var errMockDB = errors.New("mock db error")
@@ -44,7 +44,7 @@ func TestGet(t *testing.T) {
 
 	tests := []TestCaseGet{
 		{ID: ID, wantPost: expect[0], wantErr: nil, dbErr: nil},
-		{ID: 100, wantPost: nil, wantErr: myErr.ErrPostNotFound, dbErr: sql.ErrNoRows},
+		{ID: 100, wantPost: nil, wantErr: my_err.ErrPostNotFound, dbErr: sql.ErrNoRows},
 		{ID: 10, wantPost: nil, wantErr: errMockDB, dbErr: errMockDB},
 	}
 
@@ -118,8 +118,8 @@ func TestDelete(t *testing.T) {
 
 	tests := []TestCaseDelete{
 		{ID: 1, wantErr: nil, rowsAffected: 1, dbErr: nil},
-		{ID: 1, wantErr: myErr.ErrPostNotFound, rowsAffected: 0, dbErr: nil},
-		{ID: 100, wantErr: myErr.ErrPostNotFound, rowsAffected: 0, dbErr: nil},
+		{ID: 1, wantErr: my_err.ErrPostNotFound, rowsAffected: 0, dbErr: nil},
+		{ID: 100, wantErr: my_err.ErrPostNotFound, rowsAffected: 0, dbErr: nil},
 		{ID: 10, wantErr: errMockDB, rowsAffected: 0, dbErr: errMockDB},
 	}
 
@@ -154,7 +154,7 @@ func TestUpdate(t *testing.T) {
 
 	tests := []TestCaseUpdate{
 		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
-		{post: &models.Post{ID: 2, PostContent: models.Content{Text: "wrong ID", UpdatedAt: time.Now()}}, wantErr: myErr.ErrPostNotFound, dbErr: nil, rowsAffected: 0},
+		{post: &models.Post{ID: 2, PostContent: models.Content{Text: "wrong ID", UpdatedAt: time.Now()}}, wantErr: my_err.ErrPostNotFound, dbErr: nil, rowsAffected: 0},
 		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post who was update early", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
 		{post: &models.Post{ID: 5, PostContent: models.Content{Text: "wrong query", UpdatedAt: time.Now()}}, wantErr: errMockDB, dbErr: errMockDB, rowsAffected: 0},
 	}
@@ -192,7 +192,7 @@ func TestGetPostAuthor(t *testing.T) {
 
 	tests := []TestCaseGetPostAuthor{
 		{postID: ID, wantAuthorID: 1, wantErr: nil},
-		{postID: 100, wantAuthorID: 0, wantErr: myErr.ErrPostNotFound, dbErr: sql.ErrNoRows},
+		{postID: 100, wantAuthorID: 0, wantErr: my_err.ErrPostNotFound, dbErr: sql.ErrNoRows},
 		{postID: 100, wantAuthorID: 0, wantErr: errMockDB, dbErr: errMockDB},
 	}
 
@@ -248,7 +248,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 		{
 			Author:    &models.Header{AuthorID: 3},
 			wantPosts: nil,
-			wantErr:   myErr.ErrNoMoreContent,
+			wantErr:   my_err.ErrNoMoreContent,
 			dbErr:     sql.ErrNoRows,
 		},
 		{
@@ -309,7 +309,7 @@ func TestGetPosts(t *testing.T) {
 	repo := NewAdapter(db)
 
 	tests := []TestCaseGetPosts{
-		{lastID: 0, wantPost: nil, wantErr: myErr.ErrNoMoreContent, dbErr: sql.ErrNoRows},
+		{lastID: 0, wantPost: nil, wantErr: my_err.ErrNoMoreContent, dbErr: sql.ErrNoRows},
 		{lastID: 1, wantPost: nil, wantErr: errMockDB, dbErr: errMockDB},
 		{
 			lastID:   3,
@@ -397,12 +397,12 @@ func TestGetFriendsPosts(t *testing.T) {
 	repo := NewAdapter(db)
 
 	tests := []GetFriendsPosts{
-		{lastID: 0, friendsID: []uint32{}, wantPost: nil, wantErr: myErr.ErrNoMoreContent, dbErr: sql.ErrNoRows},
+		{lastID: 0, friendsID: []uint32{}, wantPost: nil, wantErr: my_err.ErrNoMoreContent, dbErr: sql.ErrNoRows},
 		{lastID: 1, friendsID: []uint32{}, wantPost: nil, wantErr: errMockDB, dbErr: errMockDB},
 		{lastID: 3, friendsID: []uint32{1, 2}, wantPost: expect[:3], wantErr: nil, dbErr: nil},
 		{lastID: 11, friendsID: []uint32{3, 6, 4}, wantPost: expect[4:7], wantErr: nil, dbErr: nil},
 		{lastID: 11, friendsID: []uint32{1, 2, 5, 3, 6, 4}, wantPost: expect[1:], wantErr: nil, dbErr: nil},
-		{lastID: 11, friendsID: []uint32{}, wantPost: nil, wantErr: myErr.ErrNoMoreContent, dbErr: nil},
+		{lastID: 11, friendsID: []uint32{}, wantPost: nil, wantErr: my_err.ErrNoMoreContent, dbErr: nil},
 	}
 
 	for _, test := range tests {

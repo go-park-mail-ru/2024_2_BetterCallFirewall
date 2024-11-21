@@ -8,7 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 func fullUnwrap(err error) error {
@@ -89,7 +89,7 @@ func (r *Respond) ErrorInternal(w http.ResponseWriter, err error, requestID stri
 
 	w.WriteHeader(http.StatusInternalServerError)
 
-	if err := json.NewEncoder(w).Encode(&Response{Success: false, Message: myErr.ErrInternal.Error()}); err != nil {
+	if err := json.NewEncoder(w).Encode(&Response{Success: false, Message: my_err.ErrInternal.Error()}); err != nil {
 		r.logger.Errorf("req: %s: %v", requestID, err)
 	}
 }

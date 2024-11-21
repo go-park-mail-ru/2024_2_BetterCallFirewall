@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS profile (
                                        email TEXT NOT NULL UNIQUE NOT NULL CONSTRAINT email_length CHECK (CHAR_LENGTH(email) <= 50),
                                        hashed_password TEXT NOT NULL,
                                        bio TEXT CONSTRAINT bio_length CHECK (CHAR_LENGTH(bio) <= 255) DEFAULT 'Что расскажете о себе?',
-                                       avatar INT DEFAULT 1,
+                                       avatar TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(avatar) <= 100) DEFAULT '/image/default',
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS friend (
 CREATE TABLE IF NOT EXISTS community (
                                          id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                          name text CONSTRAINT community_name_length CHECK(CHAR_LENGTH(name) <= 50),
-                                         avatar INT DEFAULT '/default_community',
+                                         avatar TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(avatar) <= 100) DEFAULT '/image/default_community',
                                          about TEXT CONSTRAINT about_length CHECK (CHAR_LENGTH(about) <= 500) DEFAULT 'Опишите ваше сообщество',
                                          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -35,21 +35,12 @@ CREATE TABLE IF NOT EXISTS community_profile (
                                                  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS file (
-                                    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                                    post_id INT DEFAULT NULL,
-                                    comment_id INT DEFAULT NULL,
-                                    profile_id INT DEFAULT NULL,
-                                    file_path TEXT DEFAULT '/image/default',
-                                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS post (
                                     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
                                     community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT 0,
                                     content TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                    file_path TEXT CONSTRAINT text_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -77,23 +68,10 @@ CREATE TABLE IF NOT EXISTS reaction (
                                         post_id INT REFERENCES post(id) ON DELETE CASCADE DEFAULT NULL,
                                         comment_id INT REFERENCES comment(id) ON DELETE CASCADE DEFAULT NULL,
                                         user_id INT REFERENCES profile(id) ON DELETE CASCADE DEFAULT NULL,
-                                        file_id INT REFERENCES file(id) ON DELETE CASCADE DEFAULT NULL,
                                         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE profile
-    ADD FOREIGN KEY ("avatar") REFERENCES file(id) ON DELETE SET DEFAULT;
-
 ALTER TABLE friend
     ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
     ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
-
-ALTER TABLE community ADD FOREIGN KEY ("avatar") REFERENCES file(id) ON DELETE SET DEFAULT;
-
-ALTER TABLE file
-    ADD FOREIGN KEY ("post_id") REFERENCES post(id) ON DELETE CASCADE ,
-    ADD FOREIGN KEY ("comment_id") REFERENCES comment(id) ON DELETE CASCADE ,
-    ADD FOREIGN KEY ("profile_id") REFERENCES profile(id) ON DELETE CASCADE;
-
-INSERT INTO file(file_path) VALUES ('/image/default');
