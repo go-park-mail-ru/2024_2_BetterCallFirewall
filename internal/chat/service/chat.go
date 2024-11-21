@@ -35,6 +35,10 @@ func (cs *ChatService) GetChat(ctx context.Context, userID uint32, chatID uint32
 		return nil, fmt.Errorf("get all messages: %w", err)
 	}
 
+	for i, m := range messages {
+		messages[i].CreatedAt = convertTime(m.CreatedAt)
+	}
+
 	return messages, nil
 }
 
@@ -45,4 +49,9 @@ func (cs *ChatService) SendNewMessage(ctx context.Context, receiver uint32, send
 	}
 
 	return nil
+}
+
+func convertTime(t time.Time) time.Time {
+	newTime, _ := time.Parse("2006-01-02T15:04:05.000000Z", t.Format("2006-01-02T15:04:05.000000Z"))
+	return newTime
 }
