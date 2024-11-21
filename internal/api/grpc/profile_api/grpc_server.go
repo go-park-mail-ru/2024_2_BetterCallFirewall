@@ -53,7 +53,7 @@ func (a *Adapter) GetFriendsID(ctx context.Context, req *FriendsRequest) (*Frien
 	userID := req.UserID
 	res, err := a.service.GetFriendsID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp := &FriendsResponse{
@@ -82,7 +82,7 @@ func (a *Adapter) Create(ctx context.Context, req *CreateRequest) (*CreateRespon
 		return nil, status.Error(codes.AlreadyExists, err.Error())
 	}
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp := &CreateResponse{
@@ -101,7 +101,7 @@ func (a *Adapter) GetUserByEmail(ctx context.Context, req *GetByEmailRequest) (*
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp := &GetByEmailResponse{

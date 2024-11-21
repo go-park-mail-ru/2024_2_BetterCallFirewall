@@ -2,11 +2,12 @@ package community_api
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type mocks struct {
@@ -42,7 +43,7 @@ func TestCheckAccess(t *testing.T) {
 			ExpectedResult: func() (*CheckAccessResponse, error) {
 				return &CheckAccessResponse{Access: false}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *CheckAccessRequest, m *mocks) {
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(false)
@@ -60,7 +61,7 @@ func TestCheckAccess(t *testing.T) {
 			ExpectedResult: func() (*CheckAccessResponse, error) {
 				return &CheckAccessResponse{Access: true}, nil
 			},
-			ExpectedErr: nil,
+			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *CheckAccessRequest, m *mocks) {
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(true)
@@ -90,18 +91,16 @@ func TestCheckAccess(t *testing.T) {
 
 			actual, err := v.Run(ctx, adapter, input)
 			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
+			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
 		})
 	}
 }
 
 type TableTest[T, In any] struct {
-	name           string
-	SetupInput     func() (*In, error)
-	Run            func(context.Context, *Adapter, *In) (*T, error)
-	ExpectedResult func() (*T, error)
-	ExpectedErr    error
-	SetupMock      func(*In, *mocks)
+	name            string
+	SetupInput      func() (*In, error)
+	Run             func(context.Context, *Adapter, *In) (*T, error)
+	ExpectedResult  func() (*T, error)
+	ExpectedErrCode codes.Code
+	SetupMock       func(*In, *mocks)
 }

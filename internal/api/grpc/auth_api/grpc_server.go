@@ -3,6 +3,9 @@ package auth_api
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -28,7 +31,7 @@ func (a *Adapter) Check(ctx context.Context, reqGRPC *CheckRequest) (*CheckRespo
 	req := reqGRPC.Cookie
 	sess, err := a.authServer.Check(req)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	res := &CheckResponse{
@@ -46,7 +49,7 @@ func (a *Adapter) Create(ctx context.Context, reqGRPC *CreateRequest) (*CreateRe
 	req := reqGRPC.UserID
 	sess, err := a.authServer.Create(req)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	res := &CreateResponse{
 		Sess: &Session{
@@ -66,6 +69,9 @@ func (a *Adapter) Destroy(ctx context.Context, reqGRPC *DestroyRequest) (*EmptyR
 		CreatedAt: reqGRPC.Sess.CreatedAt,
 	}
 	err := a.authServer.Destroy(req)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
 
-	return nil, err
+	return nil, nil
 }
