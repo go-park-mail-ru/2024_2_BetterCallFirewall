@@ -495,6 +495,218 @@ func TestCheckAccess(t *testing.T) {
 	}
 }
 
+type userCommunity struct {
+	userID      uint32
+	communityID uint32
+}
+
+func TestJoinCommunity(t *testing.T) {
+	tests := []TableTest[struct{}, userCommunity]{
+		{
+			name: "1",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.JoinCommunity(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().JoinCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.JoinCommunity(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().JoinCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getService(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
+func TestLeaveFromCommunity(t *testing.T) {
+	tests := []TableTest[struct{}, userCommunity]{
+		{
+			name: "1",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.LeaveCommunity(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().LeaveCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.LeaveCommunity(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().LeaveCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getService(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
+func TestAddAdmin(t *testing.T) {
+	tests := []TableTest[struct{}, userCommunity]{
+		{
+			name: "1",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.AddAdmin(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().NewAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*userCommunity, error) {
+				input := userCommunity{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input userCommunity) (struct{}, error) {
+				err := implementation.AddAdmin(ctx, input.userID, input.communityID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input userCommunity, m *mocks) {
+				m.repo.EXPECT().NewAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getService(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
 type TableTest[T, In any] struct {
 	name           string
 	SetupInput     func() (*In, error)

@@ -16,6 +16,9 @@ type CommunityController interface {
 	Update(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 	Create(w http.ResponseWriter, r *http.Request)
+	JoinToCommunity(w http.ResponseWriter, r *http.Request)
+	LeaveFromCommunity(w http.ResponseWriter, r *http.Request)
+	AddAdmin(w http.ResponseWriter, r *http.Request)
 }
 
 type SessionManager interface {
@@ -32,6 +35,9 @@ func NewRouter(communityController CommunityController, sm SessionManager, logge
 	router.HandleFunc("/api/v1/community/{id}", communityController.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}", communityController.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/community", communityController.GetAll).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}/join", communityController.JoinToCommunity).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}/leave", communityController.LeaveFromCommunity).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("api/v1/community/{id}/add_admin", communityController.AddAdmin).Methods(http.MethodPost, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

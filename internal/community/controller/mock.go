@@ -119,6 +119,20 @@ func (m *MockcommunityService) EXPECT() *MockcommunityServiceMockRecorder {
 	return m.recorder
 }
 
+// AddAdmin mocks base method.
+func (m *MockcommunityService) AddAdmin(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddAdmin", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddAdmin indicates an expected call of AddAdmin.
+func (mr *MockcommunityServiceMockRecorder) AddAdmin(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAdmin", reflect.TypeOf((*MockcommunityService)(nil).AddAdmin), ctx, communityId, author)
+}
+
 // CheckAccess mocks base method.
 func (m *MockcommunityService) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
 	m.ctrl.T.Helper()
@@ -189,6 +203,34 @@ func (m *MockcommunityService) GetOne(ctx context.Context, id uint32) (*models.C
 func (mr *MockcommunityServiceMockRecorder) GetOne(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOne", reflect.TypeOf((*MockcommunityService)(nil).GetOne), ctx, id)
+}
+
+// JoinCommunity mocks base method.
+func (m *MockcommunityService) JoinCommunity(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinCommunity", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// JoinCommunity indicates an expected call of JoinCommunity.
+func (mr *MockcommunityServiceMockRecorder) JoinCommunity(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinCommunity", reflect.TypeOf((*MockcommunityService)(nil).JoinCommunity), ctx, communityId, author)
+}
+
+// LeaveCommunity mocks base method.
+func (m *MockcommunityService) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LeaveCommunity", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LeaveCommunity indicates an expected call of LeaveCommunity.
+func (mr *MockcommunityServiceMockRecorder) LeaveCommunity(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LeaveCommunity", reflect.TypeOf((*MockcommunityService)(nil).LeaveCommunity), ctx, communityId, author)
 }
 
 // Update mocks base method.

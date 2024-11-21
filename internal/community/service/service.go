@@ -15,6 +15,9 @@ type Repo interface {
 	Update(ctx context.Context, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	JoinCommunity(ctx context.Context, communityId, author uint32) error
+	LeaveCommunity(ctx context.Context, communityId, author uint32) error
+	NewAdmin(ctx context.Context, communityId uint32, author uint32) error
 }
 
 type Service struct {
@@ -76,4 +79,31 @@ func (s *Service) Delete(ctx context.Context, id uint32) error {
 
 func (s *Service) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
 	return s.repo.CheckAccess(ctx, communityID, userID)
+}
+
+func (s *Service) JoinCommunity(ctx context.Context, communityId, author uint32) error {
+	err := s.repo.JoinCommunity(ctx, communityId, author)
+	if err != nil {
+		return fmt.Errorf("join community: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
+	err := s.repo.LeaveCommunity(ctx, communityId, author)
+	if err != nil {
+		return fmt.Errorf("leave community: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) AddAdmin(ctx context.Context, communityId, author uint32) error {
+	err := s.repo.NewAdmin(ctx, communityId, author)
+	if err != nil {
+		return fmt.Errorf("add admin: %w", err)
+	}
+
+	return nil
 }
