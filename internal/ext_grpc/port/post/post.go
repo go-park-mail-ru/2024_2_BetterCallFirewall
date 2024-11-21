@@ -32,8 +32,8 @@ func UnmarshalResponse(response *post_api.Response) []*models.Post {
 			PostContent: models.Content{
 				Text:      post.PostContent.Text,
 				File:      models.Picture(post.PostContent.File),
-				CreatedAt: time.Unix(0, post.PostContent.CreatedAt),
-				UpdatedAt: time.Unix(0, post.PostContent.UpdatedAt),
+				CreatedAt: time.Unix(post.PostContent.CreatedAt, 0),
+				UpdatedAt: time.Unix(post.PostContent.UpdatedAt, 0),
 			},
 		})
 	}
