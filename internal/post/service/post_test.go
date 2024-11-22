@@ -28,6 +28,21 @@ type mockDB struct {
 	counter uint32
 }
 
+func (m *mockDB) SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *mockDB) DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *mockDB) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *mockDB) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
 	return 0, nil
 }

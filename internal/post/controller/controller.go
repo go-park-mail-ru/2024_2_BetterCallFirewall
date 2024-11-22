@@ -368,7 +368,7 @@ func (pc *PostController) checkAccessToCommunity(r *http.Request, communityID ui
 	return pc.postService.CheckAccessToCommunity(r.Context(), userID, communityID)
 }
 
-func (pc *PostController) SetLikeToPost(w http.ResponseWriter, r *http.Request) {
+func (pc *PostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
