@@ -330,6 +330,26 @@ func (p *ProfileRepo) GetCommunitySubs(ctx context.Context, communityID uint32, 
 	return subs, nil
 }
 
-func (p *ProfileRepo) Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error) {
-	return nil, nil
+func (p *ProfileRepo) Search(ctx context.Context, query string, lastID uint32) ([]*models.ShortProfile, error) {
+	res := make([]*models.ShortProfile, 0)
+
+	rows, err := p.DB.QueryContext(ctx, Search, query, lastID, LIMIT)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("search community: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		profile := &models.ShortProfile{}
+		err = rows.Scan(&profile.ID, &profile.FirstName, &profile.LastName, &profile.Avatar)
+		if err != nil {
+			return nil, fmt.Errorf("search community: %w", err)
+		}
+
+		res = append(res, profile)
+	}
+
+	return res, nil
 }

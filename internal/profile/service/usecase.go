@@ -237,5 +237,6 @@ func (p ProfileUsecaseImplementation) Search(ctx context.Context, subStr string,
 		return nil, fmt.Errorf("search: %w", err)
 	}
 
+	err = p.setStatuses(ctx, profiles)
 	return profiles, nil
 }
