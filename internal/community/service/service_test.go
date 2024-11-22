@@ -495,6 +495,80 @@ func TestCheckAccess(t *testing.T) {
 	}
 }
 
+type InputSearch struct {
+	query  string
+	lastID uint32
+}
+
+func TestSearch(t *testing.T) {
+	tests := []TableTest[[]*models.CommunityCard, InputSearch]{
+		{
+			name: "1",
+			SetupInput: func() (*InputSearch, error) {
+				input := InputSearch{query: "", lastID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input InputSearch) ([]*models.CommunityCard, error) {
+				res, err := implementation.Search(ctx, input.query, input.lastID)
+				return res, err
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input InputSearch, m *mocks) {
+				m.repo.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*InputSearch, error) {
+				input := InputSearch{query: "community", lastID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input InputSearch) ([]*models.CommunityCard, error) {
+				res, err := implementation.Search(ctx, input.query, input.lastID)
+				return res, err
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return []*models.CommunityCard{{ID: 1, Name: "community"}}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input InputSearch, m *mocks) {
+				m.repo.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*models.CommunityCard{{ID: 1, Name: "community"}}, nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getService(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
 type TableTest[T, In any] struct {
 	name           string
 	SetupInput     func() (*In, error)

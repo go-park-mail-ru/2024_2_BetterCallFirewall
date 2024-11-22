@@ -31,6 +31,7 @@ type communityService interface {
 	Delete(ctx context.Context, id uint32) error
 	Create(ctx context.Context, community *models.Community, authorID uint32) error
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
 }
 
 type Controller struct {
@@ -197,6 +198,43 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.responder.OutputJSON(w, newCommunity.ID, reqID)
+}
+
+func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		subStr    = r.URL.Query().Get("q")
+		lastID    = r.URL.Query().Get("id")
+		id        uint64
+		err       error
+	)
+
+	if !ok {
+		c.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if len(subStr) < 3 {
+		c.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
+	if lastID == "" {
+		id = math.MaxInt32
+	} else {
+		id, err = strconv.ParseUint(lastID, 10, 32)
+		if err != nil {
+			c.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+			return
+		}
+	}
+
+	cards, err := c.service.Search(r.Context(), subStr, uint32(id))
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	c.responder.OutputJSON(w, cards, reqID)
 }
 
 func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, error) {

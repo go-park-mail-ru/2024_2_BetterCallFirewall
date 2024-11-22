@@ -98,7 +98,6 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
 			resConn.Receive <- msg
 		}
 	}
-	return
 }
 
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {

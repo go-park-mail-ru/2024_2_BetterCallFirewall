@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -133,4 +134,28 @@ func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userI
 		}
 	}
 	return false
+}
+
+func (c CommunityRepository) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	res := make([]*models.CommunityCard, 0)
+
+	rows, err := c.db.QueryContext(ctx, Search, query, lastID, LIMIT)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("search community: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		community := &models.CommunityCard{}
+		err = rows.Scan(&community.ID, &community.Name, &community.Avatar, &community.About)
+		if err != nil {
+			return nil, fmt.Errorf("search community: %w", err)
+		}
+
+		res = append(res, community)
+	}
+
+	return res, nil
 }

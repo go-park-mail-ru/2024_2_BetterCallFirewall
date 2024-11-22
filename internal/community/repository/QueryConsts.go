@@ -20,4 +20,13 @@ ORDER BY community.id ASC
 LIMIT $2;`
 	JoinCommunity  = `INSERT INTO community_profile(community_id, profile_id)  VALUES ($1, $2);`
 	LeaveCommunity = `DELETE FROM community_profile WHERE community_id = $1 AND profile_id = $2;`
+
+	Search = `
+SELECT community.id, name, avatar, about
+FROM community
+WHERE 
+    (name ILIKE '%' || $1 || '%' OR about ILIKE '%' || $1 || '%')
+	AND community.id > $2
+ORDER BY community.name ASC
+LIMIT $3;`
 )
