@@ -14,6 +14,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/profile"
+	metrics "github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/auth"
@@ -47,6 +48,10 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	authMetrics, err := metrics.NewHTTPMetrics("auth")
+	if err != nil {
+		return nil, err
+	}
 	prof := profile.New(profileProvider)
 
 	authServ := service.NewAuthServiceImpl(prof)
@@ -55,7 +60,7 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	sessionManager := service.NewSessionManager(sessionRepo)
 	control := controller.NewAuthController(responder, authServ, sessionManager)
 
-	rout := auth.NewRouter(control, sessionManager, logger)
+	rout := auth.NewRouter(control, sessionManager, logger, authMetrics)
 
 	server := http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.AUTH.Port),
