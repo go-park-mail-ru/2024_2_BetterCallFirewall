@@ -39,12 +39,10 @@ type MockPostDB struct {
 type Test struct {
 	ctx              context.Context
 	userID           uint32
-	profile          *models.FullProfile
 	friendID         uint32
 	inputProfile     *models.FullProfile
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
-	resID            []uint32
 	resHeader        *models.Header
 
 	err error
@@ -293,7 +291,7 @@ func TestUpdateProfile(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		err := pu.UpdateProfile(nil, test.inputProfile)
+		err := pu.UpdateProfile(context.Background(), test.inputProfile)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}

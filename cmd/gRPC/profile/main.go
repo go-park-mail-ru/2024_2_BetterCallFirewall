@@ -20,6 +20,9 @@ func main() {
 	}
 
 	grpcServer, err := profile.GetGRPCServer(cfg)
+	if err != nil {
+		panic(err)
+	}
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.PROFILEGRPC.Port))
 	if err != nil {
 		panic(err)
