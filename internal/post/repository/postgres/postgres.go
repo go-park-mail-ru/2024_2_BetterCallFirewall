@@ -139,7 +139,6 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 	var posts []*models.Post
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
-	defer rows.Close()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -149,6 +148,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
 	}
 
+	defer rows.Close()
 	for rows.Next() {
 		var post models.Post
 		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
@@ -180,7 +180,7 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)

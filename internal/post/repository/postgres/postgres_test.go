@@ -32,12 +32,12 @@ func TestGet(t *testing.T) {
 	defer db.Close()
 
 	var ID uint32 = 1
-	rows := sqlmock.NewRows([]string{"id", "author_id", "content", "created_at"})
+	rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
 	expect := []*models.Post{
-		{ID: ID, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: time.Now()}},
+		{ID: ID, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", File: "http://somefile", CreatedAt: time.Now()}},
 	}
 	for _, post := range expect {
-		rows = rows.AddRow(ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.CreatedAt)
+		rows = rows.AddRow(ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
 	}
 
 	repo := NewAdapter(db)
@@ -80,13 +80,13 @@ func TestCreate(t *testing.T) {
 
 	tests := []TestCaseCreate{
 		{post: &models.Post{Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1"}}, wantID: 1, wantErr: nil, dbErr: nil},
-		{post: &models.Post{Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2"}}, wantID: 2, wantErr: nil, dbErr: nil},
+		{post: &models.Post{Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", File: "http://someFile"}}, wantID: 2, wantErr: nil, dbErr: nil},
 		{post: &models.Post{Header: models.Header{AuthorID: 10}, PostContent: models.Content{Text: "wrong query"}}, wantID: 0, wantErr: errMockDB, dbErr: errMockDB},
 	}
 
 	for _, test := range tests {
 		mock.ExpectQuery(regexp.QuoteMeta(createPost)).
-			WithArgs(test.post.Header.AuthorID, test.post.PostContent.Text).
+			WithArgs(test.post.Header.AuthorID, test.post.PostContent.Text, test.post.PostContent.File).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(test.wantID)).
 			WillReturnError(test.dbErr)
 
@@ -153,7 +153,7 @@ func TestUpdate(t *testing.T) {
 	repo := NewAdapter(db)
 
 	tests := []TestCaseUpdate{
-		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
+		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post", File: "http://someFile", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
 		{post: &models.Post{ID: 2, PostContent: models.Content{Text: "wrong ID", UpdatedAt: time.Now()}}, wantErr: my_err.ErrPostNotFound, dbErr: nil, rowsAffected: 0},
 		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post who was update early", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
 		{post: &models.Post{ID: 5, PostContent: models.Content{Text: "wrong query", UpdatedAt: time.Now()}}, wantErr: errMockDB, dbErr: errMockDB, rowsAffected: 0},
@@ -161,7 +161,7 @@ func TestUpdate(t *testing.T) {
 
 	for _, test := range tests {
 		mock.ExpectExec(regexp.QuoteMeta(updatePost)).
-			WithArgs(test.post.PostContent.Text, test.post.PostContent.UpdatedAt, test.post.ID).
+			WithArgs(test.post.PostContent.Text, test.post.PostContent.UpdatedAt, test.post.PostContent.File, test.post.ID).
 			WillReturnResult(sqlmock.NewResult(0, test.rowsAffected)).
 			WillReturnError(test.dbErr)
 
@@ -231,8 +231,16 @@ func TestGetAuthorsPosts(t *testing.T) {
 		{
 			Author: &models.Header{AuthorID: 1},
 			wantPosts: []*models.Post{
-				{ID: 1, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-				{ID: 2, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "another content from user 1", CreatedAt: createTime}},
+				{
+					ID:          1,
+					Header:      models.Header{AuthorID: 1},
+					PostContent: models.Content{Text: "content from user 1", File: "http://somefile", CreatedAt: createTime},
+				},
+				{
+					ID:          2,
+					Header:      models.Header{AuthorID: 1},
+					PostContent: models.Content{Text: "another content from user 1", File: "http://somefile2", CreatedAt: createTime},
+				},
 			},
 			wantErr: nil,
 			dbErr:   nil,
@@ -260,9 +268,9 @@ func TestGetAuthorsPosts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		rows := sqlmock.NewRows([]string{"id", "content", "created_at"})
+		rows := sqlmock.NewRows([]string{"id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPosts {
-			rows = rows.AddRow(post.ID, post.PostContent.Text, post.PostContent.CreatedAt)
+			rows = rows.AddRow(post.ID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getProfilePosts)).
 			WithArgs(test.Author.AuthorID).
@@ -326,9 +334,9 @@ func TestGetPosts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "created_at"})
+		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPost {
-			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.CreatedAt)
+			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getPostBatch)).
 			WithArgs(test.lastID).
@@ -406,9 +414,9 @@ func TestGetFriendsPosts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "created_at"})
+		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPost {
-			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.CreatedAt)
+			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getFriendsPost)).
 			WithArgs(test.lastID, convertSliceToString(test.friendsID)).

@@ -4,8 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -39,6 +41,7 @@ func NewRouter(
 	profileControl ProfileController,
 	sm SessionManager,
 	logger *logrus.Logger,
+	httpMetric *metrics.HttpMetrics,
 ) http.Handler {
 	router := mux.NewRouter()
 
@@ -57,9 +60,12 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/community/{id}/subs", profileControl.GetCommunitySubs).Methods(http.MethodGet, http.MethodOptions)
 
+	router.Handle("/api/v1/metrics", promhttp.Handler())
+
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
+	res = middleware.HttpMetricsMiddleware(httpMetric, res)
 
 	return res
 }
