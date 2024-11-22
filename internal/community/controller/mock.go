@@ -191,18 +191,18 @@ func (mr *MockcommunityServiceMockRecorder) Get(ctx, lastID interface{}) *gomock
 }
 
 // GetOne mocks base method.
-func (m *MockcommunityService) GetOne(ctx context.Context, id uint32) (*models.Community, error) {
+func (m *MockcommunityService) GetOne(ctx context.Context, id, userID uint32) (*models.Community, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOne", ctx, id)
+	ret := m.ctrl.Call(m, "GetOne", ctx, id, userID)
 	ret0, _ := ret[0].(*models.Community)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOne indicates an expected call of GetOne.
-func (mr *MockcommunityServiceMockRecorder) GetOne(ctx, id interface{}) *gomock.Call {
+func (mr *MockcommunityServiceMockRecorder) GetOne(ctx, id, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOne", reflect.TypeOf((*MockcommunityService)(nil).GetOne), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOne", reflect.TypeOf((*MockcommunityService)(nil).GetOne), ctx, id, userID)
 }
 
 // JoinCommunity mocks base method.

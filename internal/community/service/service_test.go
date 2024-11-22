@@ -127,7 +127,7 @@ func TestGetOne(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) (*models.Community, error) {
-				return implementation.GetOne(ctx, input)
+				return implementation.GetOne(ctx, input, 1)
 			},
 			ExpectedResult: func() (*models.Community, error) {
 				return nil, nil
@@ -144,14 +144,15 @@ func TestGetOne(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) (*models.Community, error) {
-				return implementation.GetOne(ctx, input)
+				return implementation.GetOne(ctx, input, 2)
 			},
 			ExpectedResult: func() (*models.Community, error) {
-				return nil, nil
+				return &models.Community{IsAdmin: true}, nil
 			},
 			ExpectedErr: nil,
 			SetupMock: func(input uint32, m *mocks) {
-				m.repo.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.repo.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(&models.Community{IsAdmin: true}, nil)
+				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 			},
 		},
 		{
@@ -161,16 +162,17 @@ func TestGetOne(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) (*models.Community, error) {
-				return implementation.GetOne(ctx, input)
+				return implementation.GetOne(ctx, input, 3)
 			},
 			ExpectedResult: func() (*models.Community, error) {
-				return &models.Community{ID: 1}, nil
+				return &models.Community{ID: 1, IsAdmin: false}, nil
 			},
 			ExpectedErr: nil,
 			SetupMock: func(input uint32, m *mocks) {
 				m.repo.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(
 					&models.Community{ID: 1},
 					nil)
+				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
 			},
 		},
 	}

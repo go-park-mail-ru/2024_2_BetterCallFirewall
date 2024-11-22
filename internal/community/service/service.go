@@ -39,11 +39,12 @@ func (s *Service) Get(ctx context.Context, lastID uint32) ([]*models.CommunityCa
 	return coms, nil
 }
 
-func (s *Service) GetOne(ctx context.Context, id uint32) (*models.Community, error) {
+func (s *Service) GetOne(ctx context.Context, id, userID uint32) (*models.Community, error) {
 	com, err := s.repo.GetOne(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get community: %w", err)
 	}
+	com.IsAdmin = s.CheckAccess(ctx, id, userID)
 
 	return com, nil
 }

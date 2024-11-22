@@ -70,6 +70,7 @@ func TestGetOne(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/1", nil)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -84,7 +85,7 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
 					request.w.Write([]byte("error"))
@@ -97,6 +98,7 @@ func TestGetOne(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/1", nil)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "jovbn"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -123,6 +125,7 @@ func TestGetOne(t *testing.T) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/1", nil)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -137,10 +140,36 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))
+				})
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "1"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Controller, request Request) (Response, error) {
+				implementation.GetOne(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
 				})
 			},
 		},
