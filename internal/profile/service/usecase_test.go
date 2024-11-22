@@ -43,7 +43,6 @@ type Test struct {
 	inputProfile     *models.FullProfile
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
-	resID            []uint32
 	resHeader        *models.Header
 
 	err error
