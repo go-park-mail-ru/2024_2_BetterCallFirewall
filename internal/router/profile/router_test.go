@@ -55,6 +55,8 @@ func (m mockProfileController) GetAllSubscriptions(w http.ResponseWriter, r *htt
 
 func (m mockProfileController) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {}
 
+func (m mockProfileController) SearchProfile(w http.ResponseWriter, r *http.Request) {}
+
 func TestNewRouter(t *testing.T) {
 	r := NewRouter(mockProfileController{}, mockSessionManager{}, logrus.New(), &metrics.HttpMetrics{})
 	assert.NotNil(t, r)

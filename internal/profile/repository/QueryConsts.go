@@ -27,4 +27,13 @@ const (
 	GetShortProfile    = "SELECT first_name || ' ' || last_name AS name, avatar FROM profile WHERE profile.id = $1 LIMIT 1;"
 
 	GetCommunitySubs = `WITH subs AS (SELECT profile_id AS id FROM community_profile WHERE community_id = $1) SELECT p.id, first_name, last_name, avatar FROM profile p JOIN subs ON p.id = subs.id WHERE id > $2 ORDER BY id LIMIT $3;`
+
+	Search = `
+SELECT id, first_name, last_name, avatar
+FROM profile
+WHERE 
+    (first_name || ' ' || last_name ILIKE '%' || $1 || '%' OR last_name || ' ' || first_name  ILIKE '%' || $1 || '%')
+	AND id > $2
+ORDER BY first_name ASC
+LIMIT $3;`
 )

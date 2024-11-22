@@ -15,6 +15,7 @@ type Repo interface {
 	Update(ctx context.Context, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
 }
 
 type Service struct {
@@ -76,4 +77,13 @@ func (s *Service) Delete(ctx context.Context, id uint32) error {
 
 func (s *Service) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
 	return s.repo.CheckAccess(ctx, communityID, userID)
+}
+
+func (s *Service) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	cards, err := s.repo.Search(ctx, query, lastID)
+	if err != nil {
+		return nil, fmt.Errorf("search community: %w", err)
+	}
+
+	return cards, nil
 }

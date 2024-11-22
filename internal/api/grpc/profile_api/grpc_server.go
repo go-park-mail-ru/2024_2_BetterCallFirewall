@@ -60,9 +60,7 @@ func (a *Adapter) GetFriendsID(ctx context.Context, req *FriendsRequest) (*Frien
 		UserID: make([]uint32, 0, len(res)),
 	}
 
-	for _, id := range res {
-		resp.UserID = append(resp.UserID, id)
-	}
+	resp.UserID = append(resp.UserID, res...)
 
 	return resp, nil
 }
