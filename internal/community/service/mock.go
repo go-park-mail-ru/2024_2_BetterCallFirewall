@@ -108,6 +108,48 @@ func (mr *MockRepoMockRecorder) GetOne(ctx, id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOne", reflect.TypeOf((*MockRepo)(nil).GetOne), ctx, id)
 }
 
+// JoinCommunity mocks base method.
+func (m *MockRepo) JoinCommunity(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinCommunity", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// JoinCommunity indicates an expected call of JoinCommunity.
+func (mr *MockRepoMockRecorder) JoinCommunity(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinCommunity", reflect.TypeOf((*MockRepo)(nil).JoinCommunity), ctx, communityId, author)
+}
+
+// LeaveCommunity mocks base method.
+func (m *MockRepo) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LeaveCommunity", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// LeaveCommunity indicates an expected call of LeaveCommunity.
+func (mr *MockRepoMockRecorder) LeaveCommunity(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LeaveCommunity", reflect.TypeOf((*MockRepo)(nil).LeaveCommunity), ctx, communityId, author)
+}
+
+// NewAdmin mocks base method.
+func (m *MockRepo) NewAdmin(ctx context.Context, communityId, author uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewAdmin", ctx, communityId, author)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// NewAdmin indicates an expected call of NewAdmin.
+func (mr *MockRepoMockRecorder) NewAdmin(ctx, communityId, author interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAdmin", reflect.TypeOf((*MockRepo)(nil).NewAdmin), ctx, communityId, author)
+}
+
 // Search mocks base method.
 func (m *MockRepo) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
 	m.ctrl.T.Helper()

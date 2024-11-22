@@ -13,7 +13,7 @@ type mocksHelper struct {
 	repo *MockrepoHelper
 }
 
-func getServiceHelper(ctrl *gomock.Controller) (*ServiceHelper, *mocksHelper) {
+func getHelper(ctrl *gomock.Controller) (*ServiceHelper, *mocksHelper) {
 	m := &mocksHelper{
 		repo: NewMockrepoHelper(ctrl),
 	}
@@ -24,7 +24,7 @@ func getServiceHelper(ctrl *gomock.Controller) (*ServiceHelper, *mocksHelper) {
 func TestNewServiceHelper(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	res, _ := getServiceHelper(ctrl)
+	res, _ := getHelper(ctrl)
 	assert.NotNil(t, res)
 }
 
@@ -73,7 +73,7 @@ func TestCheckAccessHelper(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv, mock := getServiceHelper(ctrl)
+			serv, mock := getHelper(ctrl)
 			ctx := context.Background()
 
 			input, err := v.SetupInput()
