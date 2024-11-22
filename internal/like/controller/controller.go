@@ -10,7 +10,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/like"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	my_err "github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Responder interface {
@@ -45,7 +45,7 @@ func getIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
-		return 0, myErr.ErrEmptyId
+		return 0, my_err.ErrEmptyId
 	}
 
 	uid, err := strconv.ParseUint(id, 10, 32)
@@ -53,7 +53,7 @@ func getIdFromURL(r *http.Request) (uint32, error) {
 		return 0, err
 	}
 	if uid > math.MaxInt {
-		return 0, myErr.ErrBigId
+		return 0, my_err.ErrBigId
 	}
 	return uint32(uid), nil
 }
@@ -73,7 +73,7 @@ func getId(r *http.Request) (uint32, uint32, error) {
 func (l LikeController) SetLikeToPost(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, postID, err := getId(r)
@@ -94,7 +94,7 @@ func (l LikeController) SetLikeToPost(w http.ResponseWriter, r *http.Request) {
 func (l LikeController) SetLikeToComment(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, commentID, err := getId(r)
@@ -115,7 +115,7 @@ func (l LikeController) SetLikeToComment(w http.ResponseWriter, r *http.Request)
 func (l LikeController) SetLikeToFile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, fileID, err := getId(r)
@@ -136,7 +136,7 @@ func (l LikeController) SetLikeToFile(w http.ResponseWriter, r *http.Request) {
 func (l LikeController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, postID, err := getId(r)
@@ -157,7 +157,7 @@ func (l LikeController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Reques
 func (l LikeController) DeleteLikeFromComment(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, commentID, err := getId(r)
@@ -178,7 +178,7 @@ func (l LikeController) DeleteLikeFromComment(w http.ResponseWriter, r *http.Req
 func (l LikeController) DeleteLikeFromFile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	userID, fileID, err := getId(r)
@@ -199,7 +199,7 @@ func (l LikeController) DeleteLikeFromFile(w http.ResponseWriter, r *http.Reques
 func (l LikeController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		l.Responder.LogError(myErr.ErrInvalidContext, "")
+		l.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	postID, err := getIdFromURL(r)
@@ -210,7 +210,7 @@ func (l LikeController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
 
 	likes, err := l.LikeManager.GetLikesOnPost(r.Context(), postID)
 	if err != nil {
-		if errors.Is(err, myErr.ErrWrongPost) {
+		if errors.Is(err, my_err.ErrWrongPost) {
 			l.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}

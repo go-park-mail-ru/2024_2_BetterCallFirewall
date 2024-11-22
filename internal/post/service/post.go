@@ -20,6 +20,10 @@ type DB interface {
 
 	CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error)
 	GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error)
+
+	SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error
+	DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error
+	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
 }
 
 type ProfileRepo interface {
@@ -174,4 +178,28 @@ func (s *PostServiceImpl) CheckAccessToCommunity(ctx context.Context, userID uin
 
 func convertTime(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
+}
+
+func (s *PostServiceImpl) SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error {
+	err := s.db.SetLikeToPost(ctx, postID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *PostServiceImpl) DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error {
+	err := s.db.DeleteLikeFromPost(ctx, postID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *PostServiceImpl) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	likes, err := s.db.GetLikesOnPost(ctx, postID)
+	if err != nil {
+		return 0, err
+	}
+	return likes, nil
 }

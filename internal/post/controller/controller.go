@@ -28,6 +28,10 @@ type PostService interface {
 	GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error)
 	CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error)
 	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool
+
+	SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error
+	DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error
+	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
 }
 
 type Responder interface {
@@ -105,7 +109,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	postID, err := getIDFromQuery(r)
+	postID, err := getIDFromURL(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -129,7 +133,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = getIDFromQuery(r)
+		id, err   = getIDFromURL(r)
 		community = r.URL.Query().Get("community")
 	)
 
@@ -181,7 +185,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok   = r.Context().Value("requestID").(string)
-		postID, err = getIDFromQuery(r)
+		postID, err = getIDFromURL(r)
 		community   = r.URL.Query().Get("community")
 	)
 
@@ -304,7 +308,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	return &newPost, nil
 }
 
-func getIDFromQuery(r *http.Request) (uint32, error) {
+func getIDFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 
 	id := vars["id"]
@@ -362,4 +366,81 @@ func (pc *PostController) checkAccessToCommunity(r *http.Request, communityID ui
 	userID := sess.UserID
 
 	return pc.postService.CheckAccessToCommunity(r.Context(), userID, communityID)
+}
+
+func (pc *PostController) SetLikeToPost(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	postID, err := getIDFromURL(r)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	sess, errSession := models.SessionFromContext(r.Context())
+	if errSession != nil {
+		pc.responder.ErrorBadRequest(w, errSession, reqID)
+		return
+	}
+
+	err = pc.postService.SetLikeToPost(r.Context(), postID, sess.UserID)
+	if err != nil {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, "like is set on post", reqID)
+}
+
+func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	postID, err := getIDFromURL(r)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+	sess, errSession := models.SessionFromContext(r.Context())
+	if errSession != nil {
+		pc.responder.ErrorBadRequest(w, errSession, reqID)
+		return
+	}
+
+	err = pc.postService.DeleteLikeFromPost(r.Context(), postID, sess.UserID)
+	if err != nil {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, "like is unset from post", reqID)
+}
+
+func (pc *PostController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	postID, err := getIDFromURL(r)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	likes, err := pc.postService.GetLikesOnPost(r.Context(), postID)
+	if err != nil {
+		if errors.Is(err, my_err.ErrWrongPost) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+	pc.responder.OutputJSON(w, likes, reqID)
 }

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	my_err "github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type LikeRepository struct {
@@ -21,7 +21,7 @@ func NewLikeRepository(db *sql.DB) *LikeRepository {
 func (lr *LikeRepository) SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error {
 	res, err := lr.DB.ExecContext(ctx, AddLikeToPost, postID, userID)
 	if num, err := res.RowsAffected(); err == nil && num == 0 {
-		return myErr.ErrLikeAlreadyExists
+		return my_err.ErrLikeAlreadyExists
 	}
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (lr *LikeRepository) SetLikeToPost(ctx context.Context, postID uint32, user
 func (lr *LikeRepository) SetLikeToComment(ctx context.Context, commentID uint32, userID uint32) error {
 	res, err := lr.DB.ExecContext(ctx, AddLikeToComment, commentID, userID)
 	if num, err := res.RowsAffected(); err == nil && num == 0 {
-		return myErr.ErrLikeAlreadyExists
+		return my_err.ErrLikeAlreadyExists
 	}
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (lr *LikeRepository) SetLikeToComment(ctx context.Context, commentID uint32
 func (lr *LikeRepository) SetLikeToFile(ctx context.Context, fileID uint32, userID uint32) error {
 	res, err := lr.DB.ExecContext(ctx, AddLikeToFile, fileID, userID)
 	if num, err := res.RowsAffected(); err == nil && num == 0 {
-		return myErr.ErrLikeAlreadyExists
+		return my_err.ErrLikeAlreadyExists
 	}
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (lr *LikeRepository) GetLikesOnPost(ctx context.Context, postID uint32) (ui
 	err := lr.DB.QueryRowContext(ctx, GetLikesOnPost, postID).Scan(&likes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, myErr.ErrWrongPost
+			return 0, my_err.ErrWrongPost
 		}
 		return 0, err
 	}
