@@ -134,3 +134,7 @@ func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userI
 	}
 	return false
 }
+
+func (c CommunityRepository) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	return nil, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+//go:generate mockgen -destination=mock_helper.go -source=$GOFILE -package=${GOPACKAGE}
 type repoHelper interface {
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
