@@ -25,11 +25,13 @@ func NewCommunityRepository(db *sql.DB) *CommunityRepository {
 
 func (c CommunityRepository) GetBatch(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error) {
 	var res []*models.CommunityCard
+
 	rows, err := c.db.QueryContext(ctx, GetBatch, lastID, LIMIT)
 	if err != nil {
 		return nil, fmt.Errorf("get community batch db: %w", err)
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		community := &models.CommunityCard{}
 		err = rows.Scan(&community.ID, &community.Name, &community.Avatar, &community.About)
@@ -38,6 +40,7 @@ func (c CommunityRepository) GetBatch(ctx context.Context, lastID uint32) ([]*mo
 		}
 		res = append(res, community)
 	}
+
 	return res, nil
 }
 
@@ -47,6 +50,7 @@ func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Com
 	if err != nil {
 		return nil, fmt.Errorf("get community db: %w", err)
 	}
+
 	return res, nil
 }
 
@@ -61,6 +65,7 @@ func (c CommunityRepository) Create(ctx context.Context, community *models.Commu
 	}
 	id := uint32(lastId)
 	c.adminList[id] = append(c.adminList[id], author)
+
 	return id, nil
 }
 
@@ -74,6 +79,7 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 	if err != nil {
 		return fmt.Errorf("update community: %w", err)
 	}
+
 	return nil
 }
 
@@ -82,6 +88,7 @@ func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 	if err != nil {
 		return fmt.Errorf("delete community: %w", err)
 	}
+
 	return nil
 }
 
@@ -132,5 +139,6 @@ func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userI
 			return true
 		}
 	}
+
 	return false
 }

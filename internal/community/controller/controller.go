@@ -288,6 +288,10 @@ func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.AddAdmin(r.Context(), id, newAdmin)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}

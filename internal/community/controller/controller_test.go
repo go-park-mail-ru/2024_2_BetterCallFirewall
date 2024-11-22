@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type mocks struct {
@@ -1261,6 +1262,35 @@ func TestAddAdmin(t *testing.T) {
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))
+				})
+			},
+		},
+		{
+			name: "7",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)))
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				req = mux.SetURLVars(req, map[string]string{"id": "1"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Controller, request Request) (Response, error) {
+				implementation.AddAdmin(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
+				m.communityService.EXPECT().AddAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(my_err.ErrWrongCommunity)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
 				})
 			},
 		},
