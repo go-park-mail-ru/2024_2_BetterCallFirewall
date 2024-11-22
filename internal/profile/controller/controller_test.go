@@ -2278,6 +2278,32 @@ func TestSearch(t *testing.T) {
 				})
 			},
 		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/profile/search?q=waha", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+				implementation.SearchProfile(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, my_err.ErrSessionNotFound)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
+				})
+			},
+		},
 	}
 
 	for _, v := range tests {

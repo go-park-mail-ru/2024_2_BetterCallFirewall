@@ -624,6 +624,7 @@ func TestGetHeader(t *testing.T) {
 type TestSearchInput struct {
 	str string
 	ID  uint32
+	ctx context.Context
 
 	want []*models.ShortProfile
 	err  error
@@ -631,12 +632,14 @@ type TestSearchInput struct {
 
 func TestSearch(t *testing.T) {
 	tests := []TestSearchInput{
-		{str: "", ID: 0, want: nil, err: ErrExec},
-		{str: "alexey", ID: 1, want: nil, err: nil},
+		{str: "", ID: 0, ctx: context.Background(), want: nil, err: ErrExec},
+		{str: "alexey", ID: 1, ctx: context.Background(), want: nil, err: my_err.ErrSessionNotFound},
+		{str: "alexey", ID: 10, ctx: models.ContextWithSession(context.Background(), &models.Session{ID: "1", UserID: 10}),
+			want: nil, err: nil},
 	}
 
 	for caseNum, test := range tests {
-		res, err := pu.Search(context.Background(), test.str, test.ID)
+		res, err := pu.Search(test.ctx, test.str, test.ID)
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}

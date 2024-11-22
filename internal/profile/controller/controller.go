@@ -514,6 +514,11 @@ func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *h
 
 	profiles, err := h.ProfileManager.Search(r.Context(), subStr, uint32(id))
 	if err != nil {
+		if errors.Is(err, my_err.ErrSessionNotFound) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
