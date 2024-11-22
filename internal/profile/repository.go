@@ -13,6 +13,7 @@ type Repository interface {
 	UpdateProfile(context.Context, *models.FullProfile) error
 	UpdateWithAvatar(context.Context, *models.FullProfile) error
 	DeleteProfile(uint32) error
+	Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error)
 
 	CheckFriendship(context.Context, uint32, uint32) (bool, error)
 	AddFriendsReq(receiver uint32, sender uint32) error

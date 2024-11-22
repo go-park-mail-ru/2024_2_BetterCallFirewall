@@ -70,6 +70,10 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	profileController := controller.NewProfileController(profileService, responder)
 
 	metric, err := metrics.NewHTTPMetrics("profile")
+	if err != nil {
+		return nil, err
+	}
+
 	rout := profile.NewRouter(profileController, sm, logger, metric)
 	server := &http.Server{
 		Handler:      rout,

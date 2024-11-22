@@ -230,3 +230,17 @@ func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, comm
 
 	return subs, nil
 }
+
+func (p ProfileUsecaseImplementation) Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error) {
+	profiles, err := p.repo.Search(ctx, subStr, lastId)
+	if err != nil {
+		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	err = p.setStatuses(ctx, profiles)
+	if err != nil {
+		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	return profiles, nil
+}

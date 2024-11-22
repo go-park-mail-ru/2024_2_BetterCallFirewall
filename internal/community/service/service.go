@@ -18,6 +18,7 @@ type Repo interface {
 	JoinCommunity(ctx context.Context, communityId, author uint32) error
 	LeaveCommunity(ctx context.Context, communityId, author uint32) error
 	NewAdmin(ctx context.Context, communityId uint32, author uint32) error
+	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
 }
 
 type Service struct {
@@ -107,4 +108,13 @@ func (s *Service) AddAdmin(ctx context.Context, communityId, author uint32) erro
 	}
 
 	return nil
+}
+
+func (s *Service) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	cards, err := s.repo.Search(ctx, query, lastID)
+	if err != nil {
+		return nil, fmt.Errorf("search community: %w", err)
+	}
+
+	return cards, nil
 }

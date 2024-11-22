@@ -233,6 +233,21 @@ func (mr *MockcommunityServiceMockRecorder) LeaveCommunity(ctx, communityId, aut
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LeaveCommunity", reflect.TypeOf((*MockcommunityService)(nil).LeaveCommunity), ctx, communityId, author)
 }
 
+// Search mocks base method.
+func (m *MockcommunityService) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Search", ctx, query, lastID)
+	ret0, _ := ret[0].([]*models.CommunityCard)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Search indicates an expected call of Search.
+func (mr *MockcommunityServiceMockRecorder) Search(ctx, query, lastID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockcommunityService)(nil).Search), ctx, query, lastID)
+}
+
 // Update mocks base method.
 func (m *MockcommunityService) Update(ctx context.Context, id uint32, community *models.Community) error {
 	m.ctrl.T.Helper()

@@ -150,6 +150,21 @@ func (mr *MockRepoMockRecorder) NewAdmin(ctx, communityId, author interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAdmin", reflect.TypeOf((*MockRepo)(nil).NewAdmin), ctx, communityId, author)
 }
 
+// Search mocks base method.
+func (m *MockRepo) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Search", ctx, query, lastID)
+	ret0, _ := ret[0].([]*models.CommunityCard)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Search indicates an expected call of Search.
+func (mr *MockRepoMockRecorder) Search(ctx, query, lastID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockRepo)(nil).Search), ctx, query, lastID)
+}
+
 // Update mocks base method.
 func (m *MockRepo) Update(ctx context.Context, community *models.Community) error {
 	m.ctrl.T.Helper()

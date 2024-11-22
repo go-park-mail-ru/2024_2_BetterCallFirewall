@@ -19,6 +19,7 @@ type CommunityController interface {
 	JoinToCommunity(w http.ResponseWriter, r *http.Request)
 	LeaveFromCommunity(w http.ResponseWriter, r *http.Request)
 	AddAdmin(w http.ResponseWriter, r *http.Request)
+	SearchCommunity(w http.ResponseWriter, r *http.Request)
 }
 
 type SessionManager interface {
@@ -38,6 +39,7 @@ func NewRouter(communityController CommunityController, sm SessionManager, logge
 	router.HandleFunc("/api/v1/community/{id}/join", communityController.JoinToCommunity).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}/leave", communityController.LeaveFromCommunity).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("api/v1/community/{id}/add_admin", communityController.AddAdmin).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/search", communityController.SearchCommunity).Methods(http.MethodGet, http.MethodOptions)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

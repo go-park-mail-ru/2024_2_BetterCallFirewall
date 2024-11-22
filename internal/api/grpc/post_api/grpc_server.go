@@ -33,7 +33,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 
 	res, err := a.service.GetAuthorsPosts(ctx, request)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp := &Response{

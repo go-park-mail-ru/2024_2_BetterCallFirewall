@@ -42,6 +42,8 @@ func (m mockCommunityController) Delete(w http.ResponseWriter, r *http.Request) 
 
 func (m mockCommunityController) Create(w http.ResponseWriter, r *http.Request) {}
 
+func (m mockCommunityController) SearchCommunity(w http.ResponseWriter, r *http.Request) {}
+
 func TestNewRouter(t *testing.T) {
 	r := NewRouter(mockCommunityController{}, mockSessionManager{}, logrus.New())
 	assert.NotNil(t, r)

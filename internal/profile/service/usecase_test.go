@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -23,6 +24,14 @@ func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32,
 	return nil, nil
 }
 
+func (m MockProfileDB) Search(ctx context.Context, search string, id uint32) ([]*models.ShortProfile, error) {
+	if search == "" {
+		return nil, ErrExec
+	}
+
+	return nil, nil
+}
+
 type MockPostDB struct {
 	Storage struct{}
 }
@@ -30,12 +39,10 @@ type MockPostDB struct {
 type Test struct {
 	ctx              context.Context
 	userID           uint32
-	profile          *models.FullProfile
 	friendID         uint32
 	inputProfile     *models.FullProfile
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
-	resID            []uint32
 	resHeader        *models.Header
 
 	err error
@@ -190,9 +197,7 @@ func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header) 
 	if header.AuthorID == 1 {
 		return []*models.Post{examplePost}, nil
 	}
-	/*if header.AuthorID == 2 {
-		return nil, nil
-	}*/
+
 	return nil, nil
 }
 
@@ -242,9 +247,7 @@ func TestGetProfileByID(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resProfile) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resProfile, res)
-		}
+		assert.Equal(t, res, test.resProfile)
 	}
 }
 
@@ -274,9 +277,7 @@ func TestGetAll(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -290,7 +291,7 @@ func TestUpdateProfile(t *testing.T) {
 	}
 
 	for caseNum, test := range tests {
-		err := pu.UpdateProfile(nil, test.inputProfile)
+		err := pu.UpdateProfile(context.Background(), test.inputProfile)
 		if err != nil && test.err == nil {
 			t.Errorf("[%d] unexpected error: %#v", caseNum, err)
 		}
@@ -506,9 +507,7 @@ func TestGetAllFriends(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -547,9 +546,7 @@ func TestGetAllSubs(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -588,9 +585,7 @@ func TestGetAllSubscriptions(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -620,8 +615,32 @@ func TestGetHeader(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resHeader) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
+		assert.Equal(t, res, test.resHeader)
+	}
+}
+
+type TestSearchInput struct {
+	str string
+	ID  uint32
+	ctx context.Context
+
+	want []*models.ShortProfile
+	err  error
+}
+
+func TestSearch(t *testing.T) {
+	tests := []TestSearchInput{
+		{str: "", ID: 0, ctx: context.Background(), want: nil, err: ErrExec},
+		{str: "alexey", ID: 1, ctx: context.Background(), want: nil, err: my_err.ErrSessionNotFound},
+		{str: "alexey", ID: 10, ctx: models.ContextWithSession(context.Background(), &models.Session{ID: "1", UserID: 10}),
+			want: nil, err: nil},
+	}
+
+	for caseNum, test := range tests {
+		res, err := pu.Search(test.ctx, test.str, test.ID)
+		if !errors.Is(err, test.err) {
+			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
+		assert.Equal(t, res, test.want)
 	}
 }

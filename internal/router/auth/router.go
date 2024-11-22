@@ -30,5 +30,6 @@ func NewRouter(authControl AuthController, sm SessionManager, logger *logrus.Log
 
 	res := middleware.Preflite(router)
 	res = middleware.AccessLog(logger, router)
+
 	return res
 }

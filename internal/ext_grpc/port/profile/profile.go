@@ -28,9 +28,7 @@ func NewGetFriendsIDRequest(userID uint32) *profile_api.FriendsRequest {
 
 func UnmarshallGetFriendsIDResponse(users *profile_api.FriendsResponse) []uint32 {
 	res := make([]uint32, 0, len(users.UserID))
-	for _, id := range users.UserID {
-		res = append(res, id)
-	}
+	res = append(res, users.UserID...)
 
 	return res
 }
