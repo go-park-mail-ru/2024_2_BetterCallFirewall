@@ -30,13 +30,11 @@ type MockPostDB struct {
 type Test struct {
 	ctx              context.Context
 	userID           uint32
-	profile          *models.FullProfile
 	friendID         uint32
 	inputProfile     *models.FullProfile
 	resProfile       *models.FullProfile
 	resShortProfiles []*models.ShortProfile
 	resID            []uint32
-	resHeader        *models.Header
 
 	err error
 }
