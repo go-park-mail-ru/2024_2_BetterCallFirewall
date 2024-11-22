@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -20,6 +21,14 @@ func (m MockProfileDB) CheckFriendship(ctx context.Context, u uint32, u2 uint32)
 }
 
 func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+	return nil, nil
+}
+
+func (m MockProfileDB) Search(ctx context.Context, search string, id uint32) ([]*models.ShortProfile, error) {
+	if search == "" {
+		return nil, ErrExec
+	}
+
 	return nil, nil
 }
 
@@ -190,9 +199,7 @@ func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header) 
 	if header.AuthorID == 1 {
 		return []*models.Post{examplePost}, nil
 	}
-	/*if header.AuthorID == 2 {
-		return nil, nil
-	}*/
+
 	return nil, nil
 }
 
@@ -242,9 +249,7 @@ func TestGetProfileByID(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resProfile) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resProfile, res)
-		}
+		assert.Equal(t, res, test.resProfile)
 	}
 }
 
@@ -274,9 +279,7 @@ func TestGetAll(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -506,9 +509,7 @@ func TestGetAllFriends(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -547,9 +548,7 @@ func TestGetAllSubs(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -588,9 +587,7 @@ func TestGetAllSubscriptions(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resShortProfiles) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
-		}
+		assert.Equal(t, res, test.resShortProfiles)
 	}
 }
 
@@ -620,8 +617,29 @@ func TestGetHeader(t *testing.T) {
 		if !errors.Is(err, test.err) {
 			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
-		if !reflect.DeepEqual(res, test.resHeader) {
-			t.Errorf("[%d] wrong result, expected %#v, got %#v", caseNum, test.resShortProfiles, res)
+		assert.Equal(t, res, test.resHeader)
+	}
+}
+
+type TestSearchInput struct {
+	str string
+	ID  uint32
+
+	want []*models.ShortProfile
+	err  error
+}
+
+func TestSearch(t *testing.T) {
+	tests := []TestSearchInput{
+		{str: "", ID: 0, want: nil, err: ErrExec},
+		{str: "alexey", ID: 1, want: nil, err: nil},
+	}
+
+	for caseNum, test := range tests {
+		res, err := pu.Search(context.Background(), test.str, test.ID)
+		if !errors.Is(err, test.err) {
+			t.Errorf("[%d] wrong error, expected: %#v, got: %#v", caseNum, test.err, err)
 		}
+		assert.Equal(t, res, test.want)
 	}
 }
