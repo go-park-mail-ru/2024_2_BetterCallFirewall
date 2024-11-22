@@ -94,6 +94,20 @@ func (mr *MockPostServiceMockRecorder) Delete(ctx, postID interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockPostService)(nil).Delete), ctx, postID)
 }
 
+// DeleteLikeFromPost mocks base method.
+func (m *MockPostService) DeleteLikeFromPost(ctx context.Context, postID, userID uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteLikeFromPost", ctx, postID, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteLikeFromPost indicates an expected call of DeleteLikeFromPost.
+func (mr *MockPostServiceMockRecorder) DeleteLikeFromPost(ctx, postID, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLikeFromPost", reflect.TypeOf((*MockPostService)(nil).DeleteLikeFromPost), ctx, postID, userID)
+}
+
 // Get mocks base method.
 func (m *MockPostService) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	m.ctrl.T.Helper()
@@ -154,6 +168,21 @@ func (mr *MockPostServiceMockRecorder) GetCommunityPost(ctx, communityID, lastID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPost", reflect.TypeOf((*MockPostService)(nil).GetCommunityPost), ctx, communityID, lastID)
 }
 
+// GetLikesOnPost mocks base method.
+func (m *MockPostService) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLikesOnPost", ctx, postID)
+	ret0, _ := ret[0].(uint32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLikesOnPost indicates an expected call of GetLikesOnPost.
+func (mr *MockPostServiceMockRecorder) GetLikesOnPost(ctx, postID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLikesOnPost", reflect.TypeOf((*MockPostService)(nil).GetLikesOnPost), ctx, postID)
+}
+
 // GetPostAuthorID mocks base method.
 func (m *MockPostService) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
 	m.ctrl.T.Helper()
@@ -167,6 +196,20 @@ func (m *MockPostService) GetPostAuthorID(ctx context.Context, postID uint32) (u
 func (mr *MockPostServiceMockRecorder) GetPostAuthorID(ctx, postID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPostAuthorID", reflect.TypeOf((*MockPostService)(nil).GetPostAuthorID), ctx, postID)
+}
+
+// SetLikeToPost mocks base method.
+func (m *MockPostService) SetLikeToPost(ctx context.Context, postID, userID uint32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLikeToPost", ctx, postID, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLikeToPost indicates an expected call of SetLikeToPost.
+func (mr *MockPostServiceMockRecorder) SetLikeToPost(ctx, postID, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLikeToPost", reflect.TypeOf((*MockPostService)(nil).SetLikeToPost), ctx, postID, userID)
 }
 
 // Update mocks base method.
