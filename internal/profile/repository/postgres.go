@@ -329,3 +329,7 @@ func (p *ProfileRepo) GetCommunitySubs(ctx context.Context, communityID uint32, 
 	}
 	return subs, nil
 }
+
+func (p *ProfileRepo) Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error) {
+	return nil, nil
+}

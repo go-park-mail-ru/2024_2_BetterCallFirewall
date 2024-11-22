@@ -203,11 +203,12 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		subStr = r.URL.Query().Get("q")
-		lastID = r.URL.Query().Get("id")
-		id uint64
-		err error
+		subStr    = r.URL.Query().Get("q")
+		lastID    = r.URL.Query().Get("id")
+		id        uint64
+		err       error
 	)
+
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}

@@ -483,3 +483,40 @@ func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r
 
 	h.Responder.OutputJSON(w, subs, reqID)
 }
+
+func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		subStr    = r.URL.Query().Get("q")
+		lastID    = r.URL.Query().Get("id")
+		id        uint64
+		err       error
+	)
+
+	if !ok {
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if len(subStr) < 3 {
+		h.Responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
+	if lastID == "" {
+		id = math.MaxInt32
+	} else {
+		id, err = strconv.ParseUint(lastID, 10, 32)
+		if err != nil {
+			h.Responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+			return
+		}
+	}
+
+	profiles, err := h.ProfileManager.Search(r.Context(), subStr, uint32(id))
+	if err != nil {
+		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	h.Responder.OutputJSON(w, profiles, reqID)
+}
