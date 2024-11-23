@@ -2,12 +2,14 @@ package csat_api
 
 import (
 	"context"
+	"time"
 )
 
 type CSATService interface {
 	NewLike(id uint32)
 	NewFriend(id uint32)
 	NewMessage(id uint32)
+	TimeSpent(id uint32, dur time.Duration)
 }
 
 type Adapter struct {
@@ -31,5 +33,10 @@ func (a *Adapter) NewFriend(ctx context.Context, req *Request) (*EmptyResponse, 
 
 func (a *Adapter) NewMessage(ctx context.Context, req *Request) (*EmptyResponse, error) {
 	a.service.NewMessage(req.UserID)
+	return &EmptyResponse{}, nil
+}
+
+func (a *Adapter) TimeSpent(ctx context.Context, req *RequestWithTime) (*EmptyResponse, error) {
+	a.service.TimeSpent(req.UserID, time.Duration(req.SpentTime))
 	return &EmptyResponse{}, nil
 }

@@ -22,6 +22,7 @@ const (
 	CsatService_NewLike_FullMethodName    = "/csat_api.CsatService/NewLike"
 	CsatService_NewMessage_FullMethodName = "/csat_api.CsatService/NewMessage"
 	CsatService_NewFriend_FullMethodName  = "/csat_api.CsatService/NewFriend"
+	CsatService_TimeSpent_FullMethodName  = "/csat_api.CsatService/TimeSpent"
 )
 
 // CsatServiceClient is the client API for CsatService service.
@@ -31,6 +32,7 @@ type CsatServiceClient interface {
 	NewLike(ctx context.Context, in *Request, opts ...grpc.CallOption) (*EmptyResponse, error)
 	NewMessage(ctx context.Context, in *Request, opts ...grpc.CallOption) (*EmptyResponse, error)
 	NewFriend(ctx context.Context, in *Request, opts ...grpc.CallOption) (*EmptyResponse, error)
+	TimeSpent(ctx context.Context, in *RequestWithTime, opts ...grpc.CallOption) (*EmptyResponse, error)
 }
 
 type csatServiceClient struct {
@@ -71,6 +73,16 @@ func (c *csatServiceClient) NewFriend(ctx context.Context, in *Request, opts ...
 	return out, nil
 }
 
+func (c *csatServiceClient) TimeSpent(ctx context.Context, in *RequestWithTime, opts ...grpc.CallOption) (*EmptyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EmptyResponse)
+	err := c.cc.Invoke(ctx, CsatService_TimeSpent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CsatServiceServer is the server API for CsatService service.
 // All implementations must embed UnimplementedCsatServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type CsatServiceServer interface {
 	NewLike(context.Context, *Request) (*EmptyResponse, error)
 	NewMessage(context.Context, *Request) (*EmptyResponse, error)
 	NewFriend(context.Context, *Request) (*EmptyResponse, error)
+	TimeSpent(context.Context, *RequestWithTime) (*EmptyResponse, error)
 	mustEmbedUnimplementedCsatServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedCsatServiceServer) NewMessage(context.Context, *Request) (*Em
 }
 func (UnimplementedCsatServiceServer) NewFriend(context.Context, *Request) (*EmptyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewFriend not implemented")
+}
+func (UnimplementedCsatServiceServer) TimeSpent(context.Context, *RequestWithTime) (*EmptyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TimeSpent not implemented")
 }
 func (UnimplementedCsatServiceServer) mustEmbedUnimplementedCsatServiceServer() {}
 func (UnimplementedCsatServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +188,24 @@ func _CsatService_NewFriend_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CsatService_TimeSpent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestWithTime)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CsatServiceServer).TimeSpent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CsatService_TimeSpent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CsatServiceServer).TimeSpent(ctx, req.(*RequestWithTime))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CsatService_ServiceDesc is the grpc.ServiceDesc for CsatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var CsatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NewFriend",
 			Handler:    _CsatService_NewFriend_Handler,
+		},
+		{
+			MethodName: "TimeSpent",
+			Handler:    _CsatService_TimeSpent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
