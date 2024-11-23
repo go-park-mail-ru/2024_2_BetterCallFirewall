@@ -7,8 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/2024_2_BetterCallFirewall/internal/CSAT/repository"
+	"github.com/2024_2_BetterCallFirewall/internal/CSAT/service"
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/csat_api"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
 
@@ -18,7 +21,7 @@ type Service interface {
 	NewMessage(id uint32)
 }
 
-func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
+func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -38,30 +41,29 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 
 	DB, err := start_postgres.StartPostgres(connStr, logger)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return nil, nil
+	repo := repository.NewCSATRepository(DB)
+	serv := service.NewCSATServiceImpl(repo)
+	grpcServer := getGRPC(serv)
+	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
+	if err != nil {
+		return nil, nil, err
+	}
+	sm := auth.New(provider)
+	//	controller := controller.NewCSATController(serv)
+	httpServer := &http.Server{
+		Addr: fmt.Sprintf(":%s", cfg.POST.Port),
+		// Handler:      controller,
+		ReadTimeout:  cfg.POST.ReadTimeout,
+		WriteTimeout: cfg.POST.WriteTimeout,
+	}
+	return httpServer, grpcServer, nil
 }
 
 func getGRPC(serv Service) *grpc.Server {
 	server := grpc.NewServer()
 	csat_api.RegisterCsatServiceServer(server, csat_api.NewAdapter(serv))
 	return server
-}
-
-func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
-	logger := logrus.New()
-	logger.Formatter = &logrus.TextFormatter{
-		FullTimestamp:   true,
-		DisableColors:   false,
-		TimestampFormat: "2006-01-02 15:04:05",
-		ForceColors:     true,
-	}
-
-	repo := NewRepo(DB)
-	serv := NewService(repo)
-	grpcServer := getGRPC(serv)
-
-	return grpcServer, nil
 }
