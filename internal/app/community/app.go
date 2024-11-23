@@ -14,6 +14,7 @@ import (
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/community"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
@@ -58,7 +59,12 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	}
 	sm := auth.New(provider)
 
-	rout := community.NewRouter(communityControl, sm, logger)
+	communityMetrics, err := metrics.NewHTTPMetrics("community")
+	if err != nil {
+		return nil, err
+	}
+
+	rout := community.NewRouter(communityControl, sm, logger, communityMetrics)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.COMMUNITY.Port),

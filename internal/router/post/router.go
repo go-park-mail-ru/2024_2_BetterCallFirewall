@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -28,7 +29,7 @@ type Controller interface {
 	GetLikesOnPost(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger) http.Handler {
+func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger, postMetric *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/feed", contr.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", contr.GetOne).Methods(http.MethodGet, http.MethodOptions)
@@ -43,6 +44,7 @@ func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger) http.
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
+	res = middleware.HttpMetricsMiddleware(postMetric, res)
 
 	return res
 }

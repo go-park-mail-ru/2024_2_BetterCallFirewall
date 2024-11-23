@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -28,7 +29,7 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-func NewRouter(communityController CommunityController, sm SessionManager, logger *logrus.Logger) http.Handler {
+func NewRouter(communityController CommunityController, sm SessionManager, logger *logrus.Logger, communityMetrics *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/v1/community", communityController.Create).Methods(http.MethodPost, http.MethodOptions)
@@ -44,6 +45,7 @@ func NewRouter(communityController CommunityController, sm SessionManager, logge
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
+	res = middleware.HttpMetricsMiddleware(communityMetrics, res)
 
 	return res
 }

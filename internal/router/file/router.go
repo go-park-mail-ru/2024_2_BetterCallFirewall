@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -21,7 +22,7 @@ type FileController interface {
 	Download(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger) http.Handler {
+func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger, fileMetric *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/image/{name}", fc.Upload).Methods(http.MethodGet, http.MethodOptions)
@@ -30,6 +31,7 @@ func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger) http
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
+	res = middleware.HttpMetricsMiddleware(fileMetric, res)
 
 	return res
 }
