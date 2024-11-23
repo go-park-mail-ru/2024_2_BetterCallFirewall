@@ -11,6 +11,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/profile_api"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/csat"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/post"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -66,7 +67,14 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	pp := post.New(postProvider)
 
 	repo := repository.NewProfileRepo(postgresDB)
-	profileService := service.NewProfileUsecase(repo, pp)
+
+	csatProvider, err := csat.GetCSATProvider(cfg.CSATGRPC.Host, cfg.CSATGRPC.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	cs := csat.New(csatProvider)
+	profileService := service.NewProfileUsecase(repo, pp, cs)
 	profileController := controller.NewProfileController(profileService, responder)
 
 	metric, err := metrics.NewHTTPMetrics("profile")

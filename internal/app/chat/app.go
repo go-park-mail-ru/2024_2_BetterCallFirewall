@@ -11,6 +11,7 @@ import (
 	chatService "github.com/2024_2_BetterCallFirewall/internal/chat/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/csat"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/chat"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
@@ -41,9 +42,15 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 
 	responder := router.NewResponder(logger)
 
+	csatProvider, err := csat.GetCSATProvider(cfg.CSATGRPC.Host, cfg.CSATGRPC.Port)
+	if err != nil {
+		return nil, err
+	}
+	cs := csat.New(csatProvider)
+
 	chatRepo := chatRepository.NewChatRepository(postgresDB)
-	chatServ := chatService.NewChatService(chatRepo)
-	chatControl := ChatController.NewChatController(chatServ, responder)
+	chatServ := chatService.NewChatService(chatRepo, cs)
+	chatControl := ChatController.NewChatController(chatServ, responder, cs)
 	//defer close(chatControl.Messages)
 
 	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
@@ -51,7 +58,6 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 		return nil, err
 	}
 	sm := auth.New(provider)
-
 	rout := chat.NewRouter(chatControl, sm, logger)
 
 	server := &http.Server{

@@ -25,17 +25,23 @@ type Responder interface {
 	LogError(err error, requestId string)
 }
 
+type CSATStat interface {
+	TimeSpent(uint32, time.Duration)
+}
+
 type ChatController struct {
 	chatService chat.ChatService
+	stat        CSATStat
 	Messages    chan *models.Message
 	responder   Responder
 }
 
-func NewChatController(service chat.ChatService, responder Responder) *ChatController {
+func NewChatController(service chat.ChatService, responder Responder, stat CSATStat) *ChatController {
 	return &ChatController{
 		chatService: service,
 		Messages:    make(chan *models.Message),
 		responder:   responder,
+		stat:        stat,
 	}
 }
 
@@ -68,6 +74,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 		cc.responder.LogError(err, reqID)
 		return
 	}
+	begin := time.Now()
 
 	client := &Client{
 		Socket:         socket,
@@ -77,6 +84,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 	mapUserConn[sess.UserID] = client
 	defer func() {
 		delete(mapUserConn, sess.UserID)
+		cc.stat.TimeSpent(sess.UserID, time.Since(begin))
 		close(client.Receive)
 	}()
 	go client.Write()

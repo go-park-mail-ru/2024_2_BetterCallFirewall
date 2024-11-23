@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -41,6 +42,14 @@ func (g *GRPCSender) NewMessage(id uint32) {
 func (g *GRPCSender) NewFriend(id uint32) {
 	req := csat.NewRequest(id)
 	_, err := g.client.NewFriend(context.Background(), req)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (g *GRPCSender) TimeSpent(id uint32, dur time.Duration) {
+	req := csat.NewReqWithTime(id, dur)
+	_, err := g.client.TimeSpent(context.Background(), req)
 	if err != nil {
 		log.Println(err)
 	}

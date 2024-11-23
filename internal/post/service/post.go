@@ -35,17 +35,26 @@ type CommunityRepo interface {
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
 }
 
+type CSATStat interface {
+	NewLike(uint32)
+}
+
 type PostServiceImpl struct {
 	db            DB
 	profileRepo   ProfileRepo
 	communityRepo CommunityRepo
+	csatService   CSATStat
 }
 
-func NewPostServiceImpl(db DB, profileRepo ProfileRepo, repo CommunityRepo) *PostServiceImpl {
+func NewPostServiceImpl(db DB,
+	profileRepo ProfileRepo,
+	repo CommunityRepo,
+	stat CSATStat) *PostServiceImpl {
 	return &PostServiceImpl{
 		db:            db,
 		profileRepo:   profileRepo,
 		communityRepo: repo,
+		csatService:   stat,
 	}
 }
 
@@ -185,6 +194,7 @@ func (s *PostServiceImpl) SetLikeToPost(ctx context.Context, postID uint32, user
 	if err != nil {
 		return err
 	}
+	s.csatService.NewLike(userID)
 	return nil
 }
 

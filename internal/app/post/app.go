@@ -12,6 +12,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/community"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/csat"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/profile"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/post/controller"
@@ -69,7 +70,12 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	}
 	cp := community.New(communityProvider)
 
-	postService := service.NewPostServiceImpl(repo, pp, cp)
+	csatProvider, err := csat.GetCSATProvider(cfg.CSATGRPC.Host, cfg.CSATGRPC.Port)
+	if err != nil {
+		return nil, err
+	}
+	cs := csat.New(csatProvider)
+	postService := service.NewPostServiceImpl(repo, pp, cp, cs)
 	postController := controller.NewPostController(postService, responder)
 
 	rout := post.NewRouter(postController, sm, logger)

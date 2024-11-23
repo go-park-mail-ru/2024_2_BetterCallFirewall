@@ -35,3 +35,7 @@ type Repository interface {
 type PostGetter interface {
 	GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
 }
+
+type CSATStat interface {
+	NewFriend(uint32)
+}

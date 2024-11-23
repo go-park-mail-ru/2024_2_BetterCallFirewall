@@ -9,13 +9,19 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-type ChatService struct {
-	repo chat.ChatRepository
+type CSATStat interface {
+	NewMessage(uint32)
 }
 
-func NewChatService(repo chat.ChatRepository) *ChatService {
+type ChatService struct {
+	repo chat.ChatRepository
+	stat CSATStat
+}
+
+func NewChatService(repo chat.ChatRepository, csat CSATStat) *ChatService {
 	return &ChatService{
 		repo: repo,
+		stat: csat,
 	}
 }
 
@@ -47,7 +53,7 @@ func (cs *ChatService) SendNewMessage(ctx context.Context, receiver uint32, send
 	if err != nil {
 		return fmt.Errorf("send new message: %w", err)
 	}
-
+	cs.stat.NewMessage(sender)
 	return nil
 }
 

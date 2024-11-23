@@ -15,10 +15,13 @@ import (
 type ProfileUsecaseImplementation struct {
 	repo        profile.Repository
 	postManager profile.PostGetter
+	csatManager profile.CSATStat
 }
 
-func NewProfileUsecase(profileRepo profile.Repository, postRepo profile.PostGetter) *ProfileUsecaseImplementation {
-	return &ProfileUsecaseImplementation{repo: profileRepo, postManager: postRepo}
+func NewProfileUsecase(profileRepo profile.Repository,
+	postRepo profile.PostGetter,
+	csat profile.CSATStat) *ProfileUsecaseImplementation {
+	return &ProfileUsecaseImplementation{repo: profileRepo, postManager: postRepo, csatManager: csat}
 }
 
 func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint32) (*models.FullProfile, error) {
@@ -110,6 +113,7 @@ func (p ProfileUsecaseImplementation) SendFriendReq(receiver uint32, sender uint
 		return fmt.Errorf("add friend req usecase: %w", err)
 	}
 
+	p.csatManager.NewFriend(sender)
 	return nil
 }
 
@@ -121,6 +125,7 @@ func (p ProfileUsecaseImplementation) AcceptFriendReq(who uint32, whose uint32) 
 	if err != nil {
 		return fmt.Errorf("accept friend req usecase: %w", err)
 	}
+	p.csatManager.NewFriend(who)
 	return nil
 }
 

@@ -8,10 +8,16 @@ service CsatService{
   rpc NewLike(Request) returns(EmptyResponse){}
   rpc NewMessage(Request) returns(EmptyResponse){}
   rpc NewFriend(Request) returns(EmptyResponse){}
+  rpc TimeSpent(RequestWithTime) returns(EmptyResponse){}
 }
 
 message Request {
   uint32 UserID = 1;
+}
+
+message RequestWithTime {
+  uint32 UserID = 1;
+  int64 SpentTime = 2;
 }
 
 message EmptyResponse{}
