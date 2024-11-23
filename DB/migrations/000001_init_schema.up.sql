@@ -76,8 +76,6 @@ ALTER TABLE friend
     ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
     ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
 
-ALTER TABLE community ADD FOREIGN KEY ("avatar") REFERENCES file(id) ON DELETE SET NULL;
-
 ALTER TABLE reaction
     ADD CONSTRAINT unique_user_post UNIQUE (post_id, user_id),
     ADD CONSTRAINT unique_user_comment UNIQUE (comment_id, user_id);
