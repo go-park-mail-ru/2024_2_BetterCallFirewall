@@ -70,10 +70,13 @@ func (cs *CSATServiceImpl) CheckExperience(userID uint32) bool {
 }
 
 func (cs *CSATServiceImpl) SaveMetrics(ctx context.Context, csat *models.CSAT, userID uint32) error {
-	err := cs.DB.SaveMetrics(ctx, csat)
-	if err != nil {
-		return err
+	if csat.Feed > 0 || csat.InTotal > 0 {
+		err := cs.DB.SaveMetrics(ctx, csat)
+		if err != nil {
+			return err
+		}
 	}
+
 	repo.mutex.Lock()
 	_, ok := repo.mapUserExperience[userID]
 	if ok {

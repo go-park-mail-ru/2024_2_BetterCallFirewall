@@ -21,7 +21,7 @@ func NewCSATRepository(db *sql.DB) *CSATRepository {
 }
 
 func (cs *CSATRepository) SaveMetrics(ctx context.Context, csat *models.CSAT) error {
-	_, err := cs.DB.ExecContext(ctx, InsertNewMetric, csat.InTotal, csat.Review)
+	_, err := cs.DB.ExecContext(ctx, InsertNewMetric, csat.InTotal, csat.Review, csat.Feed)
 	if err != nil {
 		return err
 	}
@@ -34,5 +34,6 @@ func (cs *CSATRepository) GetMetrics(ctx context.Context, since, before time.Tim
 	if err != nil {
 		return nil, err
 	}
+	err = cs.DB.QueryRowContext(ctx, GetFeedMetrics, pq.FormatTimestamp(since), pq.FormatTimestamp(before)).Scan(&res.FeedGrade)
 	return res, nil
 }
