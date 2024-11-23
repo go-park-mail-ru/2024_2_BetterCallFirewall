@@ -72,7 +72,7 @@ func GetConfig(configFilePath string) (*Config, error) {
 			CSATDB: DBConnect{
 				Port:    os.Getenv("DB_CSAT_PORT"),
 				Host:    os.Getenv("DB_CSAT_HOST"),
-				DBName:  os.Getenv("DB_CSAT_DBNAME"),
+				DBName:  os.Getenv("DB_CSAT_NAME"),
 				User:    os.Getenv("DB_CSAT_USER"),
 				Pass:    os.Getenv("DB_CSAT_PASSWORD"),
 				SSLMode: os.Getenv("DB_CSAT_SSLMODE"),
