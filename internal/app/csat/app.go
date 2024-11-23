@@ -36,12 +36,12 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+		cfg.CSATDB.Host,
+		cfg.CSATDB.Port,
+		cfg.CSATDB.User,
+		cfg.CSATDB.Pass,
+		cfg.CSATDB.DBName,
+		cfg.CSATDB.SSLMode,
 	)
 
 	DB, err := start_postgres.StartPostgres(connStr, logger)

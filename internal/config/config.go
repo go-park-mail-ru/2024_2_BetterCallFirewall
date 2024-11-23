@@ -38,6 +38,7 @@ type GRPCServer struct {
 
 type Config struct {
 	DB            DBConnect
+	CSATDB        DBConnect
 	REDIS         Redis
 	AUTH          Server
 	FILE          Server
@@ -67,6 +68,14 @@ func GetConfig(configFilePath string) (*Config, error) {
 				Pass:    os.Getenv("DB_PASSWORD"),
 				DBName:  os.Getenv("DB_NAME"),
 				SSLMode: os.Getenv("DB_SSLMODE"),
+			},
+			CSATDB: DBConnect{
+				Port:    os.Getenv("DB_CSAT_PORT"),
+				Host:    os.Getenv("DB_CSAT_HOST"),
+				DBName:  os.Getenv("DB_CSAT_DBNAME"),
+				User:    os.Getenv("DB_CSAT_USER"),
+				Pass:    os.Getenv("DB_CSAT_PASSWORD"),
+				SSLMode: os.Getenv("DB_CSAT_SSLMODE"),
 			},
 			REDIS: Redis{
 				Host:      os.Getenv("REDIS_HOST"),

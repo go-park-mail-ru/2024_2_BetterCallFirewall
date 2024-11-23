@@ -140,6 +140,23 @@ services:
       test: "pg_isready --username=postgres && psql --username=postgres --list"
       timeout: 10s
       retries: 20
+  csatdb:
+    image: postgres:latest
+    ports:
+      - "5430:5430"
+    environment:
+      - POSTGRES_DB=${DB_CSAT_NAME}
+      - POSTGRES_USER=${DB_CSAT_USER}
+      - POSTGRES_PASSWORD=${DB_CSAT_PASSWORD}
+      - DATABASE_HOST=${DB_CSAT_HOST}
+    volumes:
+      - postgres_data_csat:/var/lib/postgresql/vk_csat_app_data
+    expose:
+      - 5430
+    healthcheck:
+      test: "pg_isready --username=postgres && psql --username=postgres --list"
+      timeout: 10s
+      retries: 20
   redis:
     image: redis:latest
     ports:
