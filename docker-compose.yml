@@ -37,6 +37,7 @@ services:
       - "7076:7076"
     depends_on:
       - db
+      - authgrpc
 
   auth:
     build:
@@ -60,6 +61,7 @@ services:
       - "8083:8083"
     depends_on:
       - authgrpc
+      - auth
 
   profile:
     build:
@@ -72,6 +74,7 @@ services:
       - db
       - authgrpc
       - postgrpc
+      - file
 
   post:
     build:
@@ -85,6 +88,7 @@ services:
       - authgrpc
       - profilegrpc
       - communitygrpc
+      - profile
 
   community:
     build:
@@ -96,6 +100,7 @@ services:
     depends_on:
       - db
       - authgrpc
+      - post
 
   chat:
     build:
@@ -107,6 +112,7 @@ services:
     depends_on:
       - db
       - authgrpc
+      - community
 
   db:
     image: postgres:latest

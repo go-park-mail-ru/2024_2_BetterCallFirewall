@@ -1436,7 +1436,7 @@ func TestSearch(t *testing.T) {
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=thebest&id=lnjbkh", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=thebest&last_id=lnjbkh", nil)
 				w := httptest.NewRecorder()
 				res := &Request{r: req, w: w}
 				return res, nil

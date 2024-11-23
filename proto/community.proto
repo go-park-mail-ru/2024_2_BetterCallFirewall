@@ -6,6 +6,7 @@ option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/comm
 
 service CommunityService{
   rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse){}
+  rpc GetHeader(GetHeaderRequest) returns(GetHeaderResponse){}
 }
 
 message CheckAccessRequest{
@@ -15,4 +16,19 @@ message CheckAccessRequest{
 
 message CheckAccessResponse {
   bool Access = 1;
+}
+
+message Header {
+  uint32 AuthorID = 1;
+  uint32 CommunityID = 2;
+  string Author = 3;
+  string Avatar = 4;
+}
+
+message GetHeaderRequest{
+  uint32 CommunityID = 1;
+}
+
+message GetHeaderResponse{
+  Header Head = 1;
 }

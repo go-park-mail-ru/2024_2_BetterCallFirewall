@@ -33,7 +33,7 @@ SELECT id, first_name, last_name, avatar
 FROM profile
 WHERE 
     (first_name || ' ' || last_name ILIKE '%' || $1 || '%' OR last_name || ' ' || first_name  ILIKE '%' || $1 || '%')
-	AND id > $2
+	AND id < $2
 ORDER BY first_name ASC
 LIMIT $3;`
 )

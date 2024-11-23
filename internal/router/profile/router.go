@@ -60,7 +60,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/community/{id}/subs", profileControl.GetCommunitySubs).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/search", profileControl.SearchProfile).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/search/", profileControl.SearchProfile).Methods(http.MethodGet, http.MethodOptions)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
 

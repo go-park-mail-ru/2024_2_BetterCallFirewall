@@ -15,7 +15,7 @@ WHERE community.id = $1;`
 	GetBatch            = `
 SELECT community.id, name, avatar, about 
 FROM community  
-WHERE community.id > $1 
+WHERE community.id < $1 
 ORDER BY community.id ASC 
 LIMIT $2;`
 	JoinCommunity  = `INSERT INTO community_profile(community_id, profile_id)  VALUES ($1, $2);`
@@ -26,7 +26,7 @@ SELECT community.id, name, avatar, about
 FROM community
 WHERE 
     (name ILIKE '%' || $1 || '%' OR about ILIKE '%' || $1 || '%')
-	AND community.id > $2
+	AND community.id < $2
 ORDER BY community.name ASC
 LIMIT $3;`
 )
