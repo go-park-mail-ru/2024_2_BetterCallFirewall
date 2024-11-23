@@ -11,7 +11,7 @@ WITH good_total_reviews AS (
 	WHERE created_at > $1 AND created_at < $2
 	GROUP BY total 
 	HAVING total > 3
-) SELECT COUNT(*) * 100 / (SELECT * FROM good_total_reviews) AS total_grade 
+) SELECT (SELECT * FROM good_total_reviews) * 100 / COUNT(*) AS total_grade 
 FROM csat_metric
 WHERE created_at > $1 AND created_at < $2;
 `
