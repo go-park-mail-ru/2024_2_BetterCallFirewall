@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -25,11 +26,13 @@ func NewCommunityRepository(db *sql.DB) *CommunityRepository {
 
 func (c CommunityRepository) GetBatch(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error) {
 	var res []*models.CommunityCard
+
 	rows, err := c.db.QueryContext(ctx, GetBatch, lastID, LIMIT)
 	if err != nil {
 		return nil, fmt.Errorf("get community batch db: %w", err)
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		community := &models.CommunityCard{}
 		err = rows.Scan(&community.ID, &community.Name, &community.Avatar, &community.About)
@@ -38,6 +41,7 @@ func (c CommunityRepository) GetBatch(ctx context.Context, lastID uint32) ([]*mo
 		}
 		res = append(res, community)
 	}
+
 	return res, nil
 }
 
@@ -47,6 +51,7 @@ func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Com
 	if err != nil {
 		return nil, fmt.Errorf("get community db: %w", err)
 	}
+
 	return res, nil
 }
 
@@ -61,6 +66,7 @@ func (c CommunityRepository) Create(ctx context.Context, community *models.Commu
 	}
 	id := uint32(lastId)
 	c.adminList[id] = append(c.adminList[id], author)
+
 	return id, nil
 }
 
@@ -74,6 +80,7 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 	if err != nil {
 		return fmt.Errorf("update community: %w", err)
 	}
+
 	return nil
 }
 
@@ -82,6 +89,7 @@ func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 	if err != nil {
 		return fmt.Errorf("delete community: %w", err)
 	}
+
 	return nil
 }
 
@@ -132,5 +140,30 @@ func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userI
 			return true
 		}
 	}
+
 	return false
+}
+
+func (c CommunityRepository) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+	res := make([]*models.CommunityCard, 0)
+
+	rows, err := c.db.QueryContext(ctx, Search, query, lastID, LIMIT)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("search community: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		community := &models.CommunityCard{}
+		err = rows.Scan(&community.ID, &community.Name, &community.Avatar, &community.About)
+		if err != nil {
+			return nil, fmt.Errorf("search community: %w", err)
+		}
+
+		res = append(res, community)
+	}
+
+	return res, nil
 }

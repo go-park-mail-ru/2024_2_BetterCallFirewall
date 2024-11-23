@@ -26,6 +26,12 @@ func (m mockSessionManager) Destroy(sess *models.Session) error {
 
 type mockCommunityController struct{}
 
+func (m mockCommunityController) JoinToCommunity(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) AddAdmin(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockCommunityController) GetAll(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockCommunityController) GetOne(w http.ResponseWriter, r *http.Request) {}
@@ -35,6 +41,8 @@ func (m mockCommunityController) Update(w http.ResponseWriter, r *http.Request) 
 func (m mockCommunityController) Delete(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockCommunityController) Create(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockCommunityController) SearchCommunity(w http.ResponseWriter, r *http.Request) {}
 
 func TestNewRouter(t *testing.T) {
 	r := NewRouter(mockCommunityController{}, mockSessionManager{}, logrus.New())

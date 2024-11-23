@@ -11,6 +11,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/port/community"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type GrpcSender struct {
 	client community_api.CommunityServiceClient
 }

@@ -20,6 +20,10 @@ func main() {
 	}
 
 	grpcServer, err := community.GetGRPCServer(cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.POSTGRPC.Port))
 	if err != nil {
 		panic(err)

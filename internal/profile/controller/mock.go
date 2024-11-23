@@ -183,6 +183,21 @@ func (mr *MockProfileUsecaseMockRecorder) RemoveFromFriends(who, whose interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFromFriends", reflect.TypeOf((*MockProfileUsecase)(nil).RemoveFromFriends), who, whose)
 }
 
+// Search mocks base method.
+func (m *MockProfileUsecase) Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Search", ctx, subStr, lastId)
+	ret0, _ := ret[0].([]*models.ShortProfile)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Search indicates an expected call of Search.
+func (mr *MockProfileUsecaseMockRecorder) Search(ctx, subStr, lastId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockProfileUsecase)(nil).Search), ctx, subStr, lastId)
+}
+
 // SendFriendReq mocks base method.
 func (m *MockProfileUsecase) SendFriendReq(receiver, sender uint32) error {
 	m.ctrl.T.Helper()

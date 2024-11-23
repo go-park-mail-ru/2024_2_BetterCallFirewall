@@ -26,11 +26,15 @@ type responder interface {
 
 type communityService interface {
 	Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error)
-	GetOne(ctx context.Context, id uint32) (*models.Community, error)
+	GetOne(ctx context.Context, id, userID uint32) (*models.Community, error)
 	Update(ctx context.Context, id uint32, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
 	Create(ctx context.Context, community *models.Community, authorID uint32) error
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	AddAdmin(ctx context.Context, communityId, author uint32) error
+	LeaveCommunity(ctx context.Context, communityId, author uint32) error
+	JoinCommunity(ctx context.Context, communityId, author uint32) error
+	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
 }
 
 type Controller struct {
@@ -57,7 +61,13 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	community, err := c.service.GetOne(r.Context(), id)
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	community, err := c.service.GetOne(r.Context(), id, sess.UserID)
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
@@ -197,6 +207,140 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.responder.OutputJSON(w, newCommunity.ID, reqID)
+}
+
+func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	id, err := getIDFromQuery(r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	err = c.service.JoinCommunity(r.Context(), id, sess.UserID)
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	c.responder.OutputJSON(w, "join to community", reqID)
+}
+
+func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	id, err := getIDFromQuery(r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	err = c.service.LeaveCommunity(r.Context(), id, sess.UserID)
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	c.responder.OutputJSON(w, "leave community", reqID)
+}
+
+func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		c.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	id, err := getIDFromQuery(r)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	if !c.service.CheckAccess(r.Context(), id, sess.UserID) {
+		c.responder.ErrorBadRequest(w, my_err.ErrAccessDenied, reqID)
+		return
+	}
+
+	var newAdmin uint32
+	err = json.NewDecoder(r.Body).Decode(&newAdmin)
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	err = c.service.AddAdmin(r.Context(), id, newAdmin)
+	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	c.responder.OutputJSON(w, "admin added", reqID)
+}
+
+func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		subStr    = r.URL.Query().Get("q")
+		lastID    = r.URL.Query().Get("id")
+		id        uint64
+		err       error
+	)
+
+	if !ok {
+		c.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if len(subStr) < 3 {
+		c.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
+	if lastID == "" {
+		id = math.MaxInt32
+	} else {
+		id, err = strconv.ParseUint(lastID, 10, 32)
+		if err != nil {
+			c.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+			return
+		}
+	}
+
+	cards, err := c.service.Search(r.Context(), subStr, uint32(id))
+	if err != nil {
+		c.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	c.responder.OutputJSON(w, cards, reqID)
 }
 
 func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, error) {

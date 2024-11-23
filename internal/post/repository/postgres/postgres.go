@@ -23,6 +23,10 @@ const (
 
 	createCommunityPost = `INSERT INTO post (community_id, content, file_path) VALUES ($1, $2, $3) RETURNING id;`
 	getCommunityPosts   = `SELECT id, community_id, content, file_path, created_at FROM post WHERE community_id = $1 AND id < $2 ORDER BY id DESC LIMIT 10;`
+
+	AddLikeToPost      = `INSERT INTO reaction (post_id, user_id) VALUES ($1, $2);`
+	DeleteLikeFromPost = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
+	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
 )
 
 type Adapter struct {
@@ -135,7 +139,6 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 	var posts []*models.Post
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
-	defer rows.Close()
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -145,6 +148,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
 	}
 
+	defer rows.Close()
 	for rows.Next() {
 		var post models.Post
 		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
@@ -176,7 +180,7 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)
@@ -236,4 +240,35 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func (a *Adapter) SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error {
+	res, err := a.db.ExecContext(ctx, AddLikeToPost, postID, userID)
+	if num, err := res.RowsAffected(); err == nil && num == 0 {
+		return my_err.ErrLikeAlreadyExists
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Adapter) DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error {
+	_, err := a.db.ExecContext(ctx, DeleteLikeFromPost, postID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Adapter) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	var likes uint32
+	err := a.db.QueryRowContext(ctx, GetLikesOnPost, postID).Scan(&likes)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, my_err.ErrWrongPost
+		}
+		return 0, err
+	}
+	return likes, nil
 }
