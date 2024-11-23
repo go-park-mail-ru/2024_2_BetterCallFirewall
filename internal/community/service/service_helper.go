@@ -9,6 +9,7 @@ import (
 //go:generate mockgen -destination=mock_helper.go -source=$GOFILE -package=${GOPACKAGE}
 type repoHelper interface {
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	GetHeader(ctx context.Context, communityID uint32) (*models.Header, error)
 }
 
 type ServiceHelper struct {
@@ -25,4 +26,11 @@ func (s *ServiceHelper) CheckAccess(ctx context.Context, communityID, userID uin
 	return s.repo.CheckAccess(ctx, communityID, userID)
 }
 
-func (s *ServiceHelper) GetHeader(ctx context.Context, communityID uint32) (*models.Header, error) {}
+func (s *ServiceHelper) GetHeader(ctx context.Context, communityID uint32) (*models.Header, error) {
+	header, err := s.repo.GetHeader(ctx, communityID)
+	if err != nil {
+		return nil, err
+	}
+
+	return header, nil
+}

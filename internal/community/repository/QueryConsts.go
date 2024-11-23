@@ -29,4 +29,6 @@ WHERE
 	AND community.id < $2
 ORDER BY community.name ASC
 LIMIT $3;`
+
+	GetHeader = `SELECT id, name, avatar FROM community WHERE id = $1`
 )

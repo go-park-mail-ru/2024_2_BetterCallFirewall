@@ -167,3 +167,17 @@ func (c CommunityRepository) Search(ctx context.Context, query string, lastID ui
 
 	return res, nil
 }
+
+func (c CommunityRepository) GetHeader(ctx context.Context, communityID uint32) (*models.Header, error) {
+	row := c.db.QueryRow(GetHeader, communityID)
+	header := &models.Header{}
+	if row.Err() != nil {
+		return nil, my_err.ErrWrongCommunity
+	}
+
+	if err := row.Scan(&header.CommunityID, &header.Author, &header.Avatar); err != nil {
+		return nil, fmt.Errorf("get header: %w", err)
+	}
+
+	return header, nil
+}
