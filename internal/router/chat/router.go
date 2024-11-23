@@ -27,7 +27,7 @@ func NewRouter(cc ChatController, sm SessionManager, logger *logrus.Logger) http
 
 	router.HandleFunc("/api/v1/messages/chats", cc.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", cc.GetChat).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/ws", cc.SetConnection)
+	router.HandleFunc("/api/v1/messages/ws", cc.SetConnection)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
