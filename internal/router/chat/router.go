@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
@@ -28,7 +29,8 @@ func NewRouter(cc ChatController, sm SessionManager, logger *logrus.Logger, chat
 
 	router.HandleFunc("/api/v1/messages/chats", cc.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", cc.GetChat).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/ws", cc.SetConnection)
+	router.HandleFunc("/api/v1/message/ws", cc.SetConnection)
+	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

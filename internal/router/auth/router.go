@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
@@ -28,6 +29,7 @@ func NewRouter(authControl AuthController, sm SessionManager, logger *logrus.Log
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost, http.MethodOptions)
+	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Preflite(router)
 	res = middleware.AccessLog(logger, res)

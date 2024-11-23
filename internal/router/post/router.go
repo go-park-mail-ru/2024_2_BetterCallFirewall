@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
@@ -40,6 +41,7 @@ func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger, postM
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.SetLikeOnPost).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.DeleteLikeFromPost).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.GetLikesOnPost).Methods(http.MethodGet, http.MethodOptions)
+	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
