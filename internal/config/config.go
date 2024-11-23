@@ -45,10 +45,12 @@ type Config struct {
 	POST          Server
 	PROFILE       Server
 	COMMUNITY     Server
+	CSAT          Server
 	AUTHGRPC      GRPCServer
 	PROFILEGRPC   GRPCServer
 	POSTGRPC      GRPCServer
 	COMMUNITYGRPC GRPCServer
+	CSATGRPC      GRPCServer
 }
 
 func GetConfig(configFilePath string) (*Config, error) {
@@ -117,6 +119,15 @@ func GetConfig(configFilePath string) (*Config, error) {
 			COMMUNITYGRPC: GRPCServer{
 				Port: os.Getenv("COMMUNITY_GRPC_PORT"),
 				Host: os.Getenv("COMMUNITY_GRPC_HOST"),
+			},
+			CSATGRPC: GRPCServer{
+				Port: os.Getenv("CSAT_GRPC_PORT"),
+				Host: os.Getenv("CSAT_GRPC_HOST"),
+			},
+			CSAT: Server{
+				Port:         os.Getenv("CSAT_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},
 		},
 		nil

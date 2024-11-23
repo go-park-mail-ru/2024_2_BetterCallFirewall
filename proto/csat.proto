@@ -1,0 +1,17 @@
+syntax="proto3";
+
+package csat_api;
+
+option go_package = "github.com/2024_2_BetterCallFirewall/internal/api/grpc/csat_api";
+
+service CsatService{
+  rpc NewLike(Request) returns(EmptyResponse){}
+  rpc NewMessage(Request) returns(EmptyResponse){}
+  rpc NewFriend(Request) returns(EmptyResponse){}
+}
+
+message Request {
+  uint32 UserID = 1;
+}
+
+message EmptyResponse{}
