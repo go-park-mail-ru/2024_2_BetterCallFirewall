@@ -78,7 +78,7 @@ func (cs *Controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if csat.InTotal > 5 {
-		cs.responder.ErrorBadRequest(w, err, reqID)
+		cs.responder.ErrorBadRequest(w, my_err.ErrWrongPoint, reqID)
 		return
 	}
 
