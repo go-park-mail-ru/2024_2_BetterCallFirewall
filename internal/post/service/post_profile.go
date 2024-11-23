@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 type PostProfileDB interface {
 	GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
+	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
+	CheckLikes(ctx context.Context, postID, userID uint32) (bool, error)
 }
 
 type PostProfileImpl struct {
@@ -19,8 +22,27 @@ func NewPostProfileImpl(db PostProfileDB) *PostProfileImpl {
 		db: db,
 	}
 }
+
 func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
 	posts, err := p.db.GetAuthorPosts(ctx, header)
+	for _, post := range posts {
+		likes, err := p.db.GetLikesOnPost(ctx, post.ID)
+		if err != nil {
+			return nil, fmt.Errorf("get likes: %w", err)
+		}
+		post.LikesCount = likes
+
+		sess, err := models.SessionFromContext(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get session: %w", err)
+		}
+
+		liked, err := p.db.CheckLikes(ctx, post.ID, sess.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("check likes: %w", err)
+		}
+		post.IsLiked = liked
+	}
 	if err != nil {
 		return nil, err
 	}

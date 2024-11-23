@@ -27,7 +27,7 @@ func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger, file
 	router := mux.NewRouter()
 
 	router.HandleFunc("/image/{name}", fc.Upload).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/image", fc.Upload).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/image", fc.Download).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Auth(sm, router)
