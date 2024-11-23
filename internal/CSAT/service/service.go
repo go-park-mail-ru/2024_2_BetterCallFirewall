@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"sync"
 	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -17,7 +19,67 @@ type UserExperience struct {
 	addedFriends uint32
 	sentMessages uint32
 	likes        uint32
+	isSentCSAT   bool
 	spentTime    time.Duration
+}
+
+type UERepo struct {
+	mapUserExperience map[uint32]*UserExperience
+	mutex             sync.RWMutex
+}
+
+var (
+	repo = UERepo{
+		make(map[uint32]*UserExperience),
+		sync.RWMutex{},
+	}
+)
+
+type CSATRepo interface {
+	GetMetrics(ctx context.Context, since, before time.Time) (*models.CSATResult, error)
+	SaveMetrics(ctx context.Context, csat *models.CSAT) error
+}
+
+type CSATServiceImpl struct {
+	DB CSATRepo
+}
+
+func NewCSATServiceImpl(db CSATRepo) *CSATServiceImpl {
+	return &CSATServiceImpl{
+		DB: db,
+	}
+}
+
+func (cs *CSATServiceImpl) CheckExperience(userID uint32) bool {
+	if repo.mapUserExperience[userID] == nil {
+		repo.mapUserExperience[userID] = new(UserExperience)
+		return false
+	}
+
+	isReady := repo.mapUserExperience[userID].addedFriends >= FRIENDS &&
+		repo.mapUserExperience[userID].sentMessages >= MESSAGES &&
+		repo.mapUserExperience[userID].likes >= LIKES &&
+		repo.mapUserExperience[userID].spentTime >= TIME &&
+		!repo.mapUserExperience[userID].isSentCSAT
+
+	return isReady
+}
+
+func (cs *CSATServiceImpl) SaveMetrics(ctx context.Context, csat *models.CSAT, userID uint32) error {
+	err := cs.DB.SaveMetrics(ctx, csat)
+	if err != nil {
+		return err
+	}
+	repo.mapUserExperience[userID].isSentCSAT = true
+	return nil
+}
+
+func (cs *CSATServiceImpl) GetMetrics(ctx context.Context, since, before time.Time) (*models.CSATResult, error) {
+	res, err := cs.DB.GetMetrics(ctx, since, before)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (ue *UserExperience) NewFriend() {
@@ -36,40 +98,20 @@ func (ue *UserExperience) TimeSpent(sessTiming time.Duration) {
 	ue.spentTime += sessTiming
 }
 
-var mapUserExperiences = make(map[uint32]*UserExperience)
-
-type CSATRepo interface {
-	GetMetrics(since, before time.Time) (float32, error)
-	SaveMetrics(csat models.CSAT) error
+func (cs *CSATServiceImpl) NewFriend(userID uint32) {
+	repo.mutex.Lock()
+	repo.mapUserExperience[userID].NewFriend()
+	repo.mutex.Unlock()
 }
 
-type CSATServiceImpl struct {
-	DB CSATRepo
+func (cs *CSATServiceImpl) NewMessage(userID uint32) {
+	repo.mapUserExperience[userID].NewMessage()
 }
 
-func NewCSATServiceImpl(db CSATRepo) *CSATServiceImpl {
-	return &CSATServiceImpl{
-		DB: db,
-	}
+func (cs *CSATServiceImpl) NewLike(userID uint32) {
+	repo.mapUserExperience[userID].NewLike()
 }
 
-func (cs *CSATServiceImpl) CheckExperience(userID uint32) bool {
-	if mapUserExperiences[userID] == nil {
-		mapUserExperiences[userID] = new(UserExperience)
-		return false
-	}
-	isReady := mapUserExperiences[userID].addedFriends >= FRIENDS &&
-		mapUserExperiences[userID].sentMessages >= MESSAGES &&
-		mapUserExperiences[userID].likes >= LIKES &&
-		mapUserExperiences[userID].spentTime >= TIME
-
-	return isReady
-}
-
-func (cs *CSATServiceImpl) SaveMetrics(csat *models.CSAT) error {
-	err := cs.SaveMetrics(csat)
-	if err != nil {
-		return err
-	}
-	return nil
+func (cs *CSATServiceImpl) TimeSpent(userID uint32, dur time.Duration) {
+	repo.mapUserExperience[userID].TimeSpent(dur)
 }

@@ -1,5 +1,10 @@
 package models
 
 type CSAT struct {
-	TotalOpinions uint8
+	InTotal uint8
+	Review  string
+}
+
+type CSATResult struct {
+	InTotalGrade float32
 }
