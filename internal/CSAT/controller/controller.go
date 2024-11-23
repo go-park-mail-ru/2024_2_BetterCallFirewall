@@ -74,6 +74,12 @@ func (cs *Controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&csat)
 	if err != nil {
 		cs.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	if csat.InTotal > 5 {
+		cs.responder.ErrorBadRequest(w, err, reqID)
+		return
 	}
 
 	err = cs.service.SaveMetrics(r.Context(), &csat, sess.UserID)
@@ -112,7 +118,8 @@ func getTimeFromQuery(r *http.Request) (time.Time, time.Time) {
 	}
 	beforeTime, err := time.Parse(time.RFC3339, before)
 	if err != nil {
-		beforeTime = time.Time{}
+		beforeTime = time.Now()
 	}
+
 	return sinceTime, beforeTime
 }

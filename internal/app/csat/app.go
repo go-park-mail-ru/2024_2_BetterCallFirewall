@@ -63,7 +63,7 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	control := controller.NewCSATController(serv, responder)
 	rout := csat.NewRouter(control, sm, logger)
 	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%s", cfg.POST.Port),
+		Addr:         fmt.Sprintf(":%s", cfg.CSAT.Port),
 		Handler:      rout,
 		ReadTimeout:  cfg.POST.ReadTimeout,
 		WriteTimeout: cfg.POST.WriteTimeout,

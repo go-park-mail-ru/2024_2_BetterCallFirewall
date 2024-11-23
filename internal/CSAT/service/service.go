@@ -75,7 +75,12 @@ func (cs *CSATServiceImpl) SaveMetrics(ctx context.Context, csat *models.CSAT, u
 		return err
 	}
 	repo.mutex.Lock()
-	repo.mapUserExperience[userID].isSentCSAT = true
+	_, ok := repo.mapUserExperience[userID]
+	if ok {
+		repo.mapUserExperience[userID].isSentCSAT = true
+	} else {
+		repo.mapUserExperience[userID] = &UserExperience{isSentCSAT: ok}
+	}
 	repo.mutex.Unlock()
 	return nil
 }
