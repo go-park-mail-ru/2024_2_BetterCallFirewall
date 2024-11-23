@@ -12,6 +12,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/csat_api"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/router/csat"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
 
@@ -52,10 +53,11 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 		return nil, nil, err
 	}
 	sm := auth.New(provider)
-	//	controller := controller.NewCSATController(serv)
+	controller := controller.NewCSATController(serv)
+	rout := csat.NewRouter(controller, sm, logger)
 	httpServer := &http.Server{
-		Addr: fmt.Sprintf(":%s", cfg.POST.Port),
-		// Handler:      controller,
+		Addr:         fmt.Sprintf(":%s", cfg.POST.Port),
+		Handler:      rout,
 		ReadTimeout:  cfg.POST.ReadTimeout,
 		WriteTimeout: cfg.POST.WriteTimeout,
 	}
