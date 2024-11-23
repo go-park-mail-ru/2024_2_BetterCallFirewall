@@ -10,6 +10,7 @@ services:
       - "7072:7072"
     depends_on:
       - redis
+
   profilegrpc:
     build:
       context: .
@@ -19,6 +20,7 @@ services:
       - "7074:7074"
     depends_on:
       - db
+
   postgrpc:
     build:
       context: .
@@ -28,6 +30,7 @@ services:
       - "7075:7075"
     depends_on:
       - db
+
   communitygrpc:
     build:
       context: .
@@ -37,6 +40,18 @@ services:
       - "7076:7076"
     depends_on:
       - db
+
+  csat:
+    build:
+      context: .
+      dockerfile: Dockerfilecsat
+    restart: always
+    ports:
+      - "8081:8081"
+      - "8071:8071"
+    depends_on:
+      - db
+      - authgrpc
 
   auth:
     build:
