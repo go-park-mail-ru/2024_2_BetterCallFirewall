@@ -72,12 +72,6 @@ CREATE TABLE IF NOT EXISTS reaction (
                                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS csat_metric (
-                                           total INT DEFAULT NULL,
-                                           review TEXT CONSTRAINT review_length CHECK (CHAR_LENGTH(review) <= 500) DEFAULT '',
-                                           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 ALTER TABLE friend
     ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
     ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
