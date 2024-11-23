@@ -34,6 +34,7 @@ type ProfileRepo interface {
 
 type CommunityRepo interface {
 	CheckAccess(ctx context.Context, communityID, userID uint32) bool
+	GetHeader(ctx context.Context, communityID uint32) (*models.Header, error)
 }
 
 type PostServiceImpl struct {
@@ -65,23 +66,9 @@ func (s *PostServiceImpl) Get(ctx context.Context, postID, userID uint32) (*mode
 		return nil, fmt.Errorf("get post: %w", err)
 	}
 
-	post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
-
-	header, err := s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
-	if err != nil {
-		return nil, fmt.Errorf("get header:%w", err)
+	if err := s.setPostFields(ctx, post, userID); err != nil {
+		return nil, fmt.Errorf("set post fields: %w", err)
 	}
-	post.Header = *header
-	likes, err := s.db.GetLikesOnPost(ctx, post.ID)
-	if err != nil {
-		return nil, fmt.Errorf("get likes: %w", err)
-	}
-	post.LikesCount = likes
-	liked, err := s.db.CheckLikes(ctx, post.ID, userID)
-	if err != nil {
-		return nil, fmt.Errorf("check likes: %w", err)
-	}
-	post.IsLiked = liked
 
 	return post, nil
 }
@@ -107,44 +94,21 @@ func (s *PostServiceImpl) Update(ctx context.Context, post *models.Post) error {
 }
 
 func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error) {
-	var (
-		err    error
-		header *models.Header
-	)
-
 	posts, err := s.db.GetPosts(ctx, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
 	}
 
 	for _, post := range posts {
-		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
-		if err != nil {
-			return nil, fmt.Errorf("get header: %w", err)
+		if err := s.setPostFields(ctx, post, userID); err != nil {
+			return nil, fmt.Errorf("set post fields: %w", err)
 		}
-		post.Header = *header
-		likes, err := s.db.GetLikesOnPost(ctx, post.ID)
-		if err != nil {
-			return nil, fmt.Errorf("get likes: %w", err)
-		}
-		post.LikesCount = likes
-		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
-		liked, err := s.db.CheckLikes(ctx, post.ID, userID)
-		if err != nil {
-			return nil, fmt.Errorf("check likes: %w", err)
-		}
-		post.IsLiked = liked
 	}
 
 	return posts, nil
 }
 
 func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
-	var (
-		err    error
-		header *models.Header
-	)
-
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
@@ -160,22 +124,9 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 	}
 
 	for _, post := range posts {
-		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
-		if err != nil {
-			return nil, fmt.Errorf("get header: %w", err)
+		if err := s.setPostFields(ctx, post, userID); err != nil {
+			return nil, fmt.Errorf("set post fields: %w", err)
 		}
-		post.Header = *header
-		likes, err := s.db.GetLikesOnPost(ctx, post.ID)
-		if err != nil {
-			return nil, fmt.Errorf("get likes: %w", err)
-		}
-		post.LikesCount = likes
-		post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
-		liked, err := s.db.CheckLikes(ctx, post.ID, userID)
-		if err != nil {
-			return nil, fmt.Errorf("check likes: %w", err)
-		}
-		post.IsLiked = liked
 	}
 
 	return posts, err
@@ -234,4 +185,39 @@ func (s *PostServiceImpl) CheckLikes(ctx context.Context, postID, userID uint32)
 	}
 
 	return res, nil
+}
+
+func (s *PostServiceImpl) setPostFields(ctx context.Context, post *models.Post, userID uint32) error {
+	var (
+		header *models.Header
+		err    error
+	)
+	if post.Header.CommunityID == 0 {
+		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
+		if err != nil {
+			return fmt.Errorf("get header: %w", err)
+		}
+	} else {
+		header, err = s.communityRepo.GetHeader(ctx, post.Header.CommunityID)
+		if err != nil {
+			return fmt.Errorf("get community header: %w", err)
+		}
+	}
+	post.Header = *header
+
+	likes, err := s.db.GetLikesOnPost(ctx, post.ID)
+	if err != nil {
+		return fmt.Errorf("get likes: %w", err)
+	}
+	post.LikesCount = likes
+
+	liked, err := s.db.CheckLikes(ctx, post.ID, userID)
+	if err != nil {
+		return fmt.Errorf("check likes: %w", err)
+	}
+	post.IsLiked = liked
+
+	post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
+
+	return nil
 }
