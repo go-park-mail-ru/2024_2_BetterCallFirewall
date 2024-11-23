@@ -1,0 +1,25 @@
+FROM golang:alpine AS build
+
+WORKDIR /csat
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN go build cmd/csat/main.go
+
+FROM alpine:latest
+
+WORKDIR /csat
+
+EXPOSE 8081
+EXPOSE 7071
+
+COPY .env .
+
+COPY --from=build /csat/main /csat/main
+
+CMD ["./main"]
