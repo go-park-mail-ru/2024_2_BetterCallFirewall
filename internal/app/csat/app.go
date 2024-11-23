@@ -3,6 +3,7 @@ package csat
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -22,6 +23,7 @@ type Service interface {
 	NewLike(id uint32)
 	NewFriend(id uint32)
 	NewMessage(id uint32)
+	TimeSpent(id uint32, dur time.Duration)
 }
 
 func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
