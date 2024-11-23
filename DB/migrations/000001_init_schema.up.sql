@@ -78,5 +78,4 @@ ALTER TABLE friend
 
 ALTER TABLE reaction
     ADD CONSTRAINT unique_user_post UNIQUE (post_id, user_id),
-    ADD CONSTRAINT unique_user_comment UNIQUE (comment_id, user_id),
-    ADD CONSTRAINT unique_user_file UNIQUE (file_id, user_id);
+    ADD CONSTRAINT unique_user_comment UNIQUE (comment_id, user_id);
