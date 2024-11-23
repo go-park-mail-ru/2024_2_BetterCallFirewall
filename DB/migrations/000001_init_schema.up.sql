@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS community_profile (
 CREATE TABLE IF NOT EXISTS post (
                                     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
-                                    community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT 0,
+                                    community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT NULL,
                                     content TEXT CONSTRAINT content_post_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
                                     file_path TEXT CONSTRAINT file_path_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
