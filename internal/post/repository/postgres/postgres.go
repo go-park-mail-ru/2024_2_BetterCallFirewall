@@ -27,6 +27,7 @@ const (
 	AddLikeToPost      = `INSERT INTO reaction (post_id, user_id) VALUES ($1, $2);`
 	DeleteLikeFromPost = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
 	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
+	CheckLike          = `SELECT COUNT(*) FROM reaction WHERE post_id = $1 AND user_id=$2;`
 )
 
 type Adapter struct {
@@ -271,4 +272,18 @@ func (a *Adapter) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, er
 		return 0, err
 	}
 	return likes, nil
+}
+
+func (a *Adapter) CheckLikes(ctx context.Context, postID, userID uint32) (bool, error) {
+	var likes uint32
+	err := a.db.QueryRowContext(ctx, CheckLike, postID, userID).Scan(&likes)
+	if err != nil {
+		return false, fmt.Errorf("postgres check likes on post %d: %w", postID, err)
+	}
+
+	if likes == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

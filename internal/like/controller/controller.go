@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"math"
 	"net/http"
 	"strconv"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/like"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	my_err "github.com/2024_2_BetterCallFirewall/pkg/my_err"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Responder interface {
@@ -70,27 +69,6 @@ func getId(r *http.Request) (uint32, uint32, error) {
 	return userID, postID, nil
 }
 
-func (l LikeController) SetLikeToPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		l.Responder.LogError(my_err.ErrInvalidContext, "")
-	}
-
-	userID, postID, err := getId(r)
-	if err != nil {
-		l.Responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	err = l.LikeManager.SetLikeToPost(r.Context(), postID, userID)
-	if err != nil {
-		l.Responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	l.Responder.OutputJSON(w, "like is set on post", reqID)
-}
-
 func (l LikeController) SetLikeToComment(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
@@ -133,27 +111,6 @@ func (l LikeController) SetLikeToFile(w http.ResponseWriter, r *http.Request) {
 	l.Responder.OutputJSON(w, "like is set on file", reqID)
 }
 
-func (l LikeController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		l.Responder.LogError(my_err.ErrInvalidContext, "")
-	}
-
-	userID, postID, err := getId(r)
-	if err != nil {
-		l.Responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	err = l.LikeManager.DeleteLikeFromPost(r.Context(), postID, userID)
-	if err != nil {
-		l.Responder.ErrorInternal(w, err, reqID)
-		return
-	}
-
-	l.Responder.OutputJSON(w, "like is unset from post", reqID)
-}
-
 func (l LikeController) DeleteLikeFromComment(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
@@ -194,28 +151,4 @@ func (l LikeController) DeleteLikeFromFile(w http.ResponseWriter, r *http.Reques
 	}
 
 	l.Responder.OutputJSON(w, "like is unset from file", reqID)
-}
-
-func (l LikeController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		l.Responder.LogError(my_err.ErrInvalidContext, "")
-	}
-
-	postID, err := getIdFromURL(r)
-	if err != nil {
-		l.Responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	likes, err := l.LikeManager.GetLikesOnPost(r.Context(), postID)
-	if err != nil {
-		if errors.Is(err, my_err.ErrWrongPost) {
-			l.Responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-		l.Responder.ErrorInternal(w, err, reqID)
-		return
-	}
-	l.Responder.OutputJSON(w, likes, reqID)
 }

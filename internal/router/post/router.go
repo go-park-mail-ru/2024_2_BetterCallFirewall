@@ -27,7 +27,6 @@ type Controller interface {
 
 	SetLikeOnPost(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
-	GetLikesOnPost(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger, postMetric *metrics.HttpMetrics) http.Handler {
@@ -39,8 +38,7 @@ func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger, postM
 	router.HandleFunc("/api/v1/feed", contr.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.SetLikeOnPost).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/feed/{id}/like", contr.DeleteLikeFromPost).Methods(http.MethodDelete, http.MethodOptions)
-	router.HandleFunc("/api/v1/feed/{id}/like", contr.GetLikesOnPost).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/unlike", contr.DeleteLikeFromPost).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/api/v1/metrics", promhttp.Handler())
 
 	res := middleware.Auth(sm, router)
