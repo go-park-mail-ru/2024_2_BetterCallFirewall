@@ -14,6 +14,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/community"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/csat"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/profile"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/post/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/post/repository/postgres"
@@ -78,7 +79,12 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	postService := service.NewPostServiceImpl(repo, pp, cp, cs)
 	postController := controller.NewPostController(postService, responder)
 
-	rout := post.NewRouter(postController, sm, logger)
+	postMetric, err := metrics.NewHTTPMetrics("post")
+	if err != nil {
+		return nil, err
+	}
+
+	rout := post.NewRouter(postController, sm, logger, postMetric)
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.POST.Port),
 		Handler:      rout,

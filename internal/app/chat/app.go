@@ -12,6 +12,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/csat"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/chat"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
@@ -58,7 +59,13 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 		return nil, err
 	}
 	sm := auth.New(provider)
-	rout := chat.NewRouter(chatControl, sm, logger)
+
+	chatMetrics, err := metrics.NewHTTPMetrics("chat")
+	if err != nil {
+		return nil, err
+	}
+
+	rout := chat.NewRouter(chatControl, sm, logger, chatMetrics)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.CHAT.Port),

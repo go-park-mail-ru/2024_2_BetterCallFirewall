@@ -10,6 +10,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/file"
 )
@@ -33,7 +34,12 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	}
 	sm := auth.New(provider)
 
-	rout := file.NewRouter(fileController, sm, logger)
+	fileMetrics, err := metrics.NewHTTPMetrics("file")
+	if err != nil {
+		return nil, err
+	}
+
+	rout := file.NewRouter(fileController, sm, logger, fileMetrics)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.FILE.Port),
