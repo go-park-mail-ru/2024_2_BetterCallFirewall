@@ -51,17 +51,21 @@ func NewCSATServiceImpl(db CSATRepo) *CSATServiceImpl {
 }
 
 func (cs *CSATServiceImpl) CheckExperience(userID uint32) bool {
+
 	if repo.mapUserExperience[userID] == nil {
+		repo.mutex.Lock()
 		repo.mapUserExperience[userID] = new(UserExperience)
+		repo.mutex.Unlock()
 		return false
 	}
 
+	repo.mutex.RLock()
 	isReady := repo.mapUserExperience[userID].addedFriends >= FRIENDS &&
 		repo.mapUserExperience[userID].sentMessages >= MESSAGES &&
 		repo.mapUserExperience[userID].likes >= LIKES &&
 		repo.mapUserExperience[userID].spentTime >= TIME &&
 		!repo.mapUserExperience[userID].isSentCSAT
-
+	repo.mutex.RUnlock()
 	return isReady
 }
 
@@ -70,7 +74,9 @@ func (cs *CSATServiceImpl) SaveMetrics(ctx context.Context, csat *models.CSAT, u
 	if err != nil {
 		return err
 	}
+	repo.mutex.Lock()
 	repo.mapUserExperience[userID].isSentCSAT = true
+	repo.mutex.Unlock()
 	return nil
 }
 
@@ -105,13 +111,19 @@ func (cs *CSATServiceImpl) NewFriend(userID uint32) {
 }
 
 func (cs *CSATServiceImpl) NewMessage(userID uint32) {
+	repo.mutex.Lock()
 	repo.mapUserExperience[userID].NewMessage()
+	repo.mutex.Unlock()
 }
 
 func (cs *CSATServiceImpl) NewLike(userID uint32) {
+	repo.mutex.Lock()
 	repo.mapUserExperience[userID].NewLike()
+	repo.mutex.Unlock()
 }
 
 func (cs *CSATServiceImpl) TimeSpent(userID uint32, dur time.Duration) {
+	repo.mutex.Lock()
 	repo.mapUserExperience[userID].TimeSpent(dur)
+	repo.mutex.Unlock()
 }

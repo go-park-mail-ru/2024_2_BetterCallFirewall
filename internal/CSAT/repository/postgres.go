@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/lib/pq"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -28,7 +30,7 @@ func (cs *CSATRepository) SaveMetrics(ctx context.Context, csat *models.CSAT) er
 
 func (cs *CSATRepository) GetMetrics(ctx context.Context, since, before time.Time) (*models.CSATResult, error) {
 	res := &models.CSATResult{}
-	err := cs.DB.QueryRowContext(ctx, GetMetrics, since, before).Scan(&res.InTotalGrade)
+	err := cs.DB.QueryRowContext(ctx, GetMetrics, pq.FormatTimestamp(since), pq.FormatTimestamp(before)).Scan(&res.InTotalGrade)
 	if err != nil {
 		return nil, err
 	}
