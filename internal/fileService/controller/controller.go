@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"net/http"
 
@@ -64,6 +65,8 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
+	log.Println("GET REQUEST FOR CREATE FILE")
+
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
@@ -76,6 +79,8 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("PARSE FILE")
+
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		file = nil
@@ -87,6 +92,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	defer file.Close()
+	log.Println("DOWNLOAD FILE")
 
 	url, err := fc.fileService.Download(r.Context(), file)
 	if err != nil {
