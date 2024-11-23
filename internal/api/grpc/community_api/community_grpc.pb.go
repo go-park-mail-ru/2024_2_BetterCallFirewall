@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CommunityService_CheckAccess_FullMethodName = "/community_api.CommunityService/CheckAccess"
+	CommunityService_GetHeader_FullMethodName   = "/community_api.CommunityService/GetHeader"
 )
 
 // CommunityServiceClient is the client API for CommunityService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommunityServiceClient interface {
 	CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
+	GetHeader(ctx context.Context, in *GetHeaderRequest, opts ...grpc.CallOption) (*GetHeaderResponse, error)
 }
 
 type communityServiceClient struct {
@@ -47,11 +49,22 @@ func (c *communityServiceClient) CheckAccess(ctx context.Context, in *CheckAcces
 	return out, nil
 }
 
+func (c *communityServiceClient) GetHeader(ctx context.Context, in *GetHeaderRequest, opts ...grpc.CallOption) (*GetHeaderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetHeaderResponse)
+	err := c.cc.Invoke(ctx, CommunityService_GetHeader_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommunityServiceServer is the server API for CommunityService service.
 // All implementations must embed UnimplementedCommunityServiceServer
 // for forward compatibility.
 type CommunityServiceServer interface {
 	CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error)
+	GetHeader(context.Context, *GetHeaderRequest) (*GetHeaderResponse, error)
 	mustEmbedUnimplementedCommunityServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedCommunityServiceServer struct{}
 
 func (UnimplementedCommunityServiceServer) CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAccess not implemented")
+}
+func (UnimplementedCommunityServiceServer) GetHeader(context.Context, *GetHeaderRequest) (*GetHeaderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHeader not implemented")
 }
 func (UnimplementedCommunityServiceServer) mustEmbedUnimplementedCommunityServiceServer() {}
 func (UnimplementedCommunityServiceServer) testEmbeddedByValue()                          {}
@@ -104,6 +120,24 @@ func _CommunityService_CheckAccess_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CommunityService_GetHeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHeaderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommunityServiceServer).GetHeader(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CommunityService_GetHeader_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommunityServiceServer).GetHeader(ctx, req.(*GetHeaderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CommunityService_ServiceDesc is the grpc.ServiceDesc for CommunityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var CommunityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckAccess",
 			Handler:    _CommunityService_CheckAccess_Handler,
+		},
+		{
+			MethodName: "GetHeader",
+			Handler:    _CommunityService_GetHeader_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
