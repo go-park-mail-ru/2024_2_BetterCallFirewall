@@ -7,11 +7,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/2024_2_BetterCallFirewall/internal/CSAT/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/CSAT/repository"
 	"github.com/2024_2_BetterCallFirewall/internal/CSAT/service"
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/csat_api"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/csat"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
@@ -45,6 +47,8 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 		return nil, nil, err
 	}
 
+	responder := router.NewResponder(logger)
+
 	repo := repository.NewCSATRepository(DB)
 	serv := service.NewCSATServiceImpl(repo)
 	grpcServer := getGRPC(serv)
@@ -52,9 +56,10 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	sm := auth.New(provider)
-	controller := controller.NewCSATController(serv)
-	rout := csat.NewRouter(controller, sm, logger)
+	control := controller.NewCSATController(serv, responder)
+	rout := csat.NewRouter(control, sm, logger)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.POST.Port),
 		Handler:      rout,
