@@ -193,7 +193,7 @@ func (m MockProfileDB) GetStatuses(context.Context, uint32) ([]uint32, []uint32,
 	return nil, nil, nil, nil
 }
 
-func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
+func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error) {
 	if header.AuthorID == 1 {
 		return []*models.Post{examplePost}, nil
 	}
