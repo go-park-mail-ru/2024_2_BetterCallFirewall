@@ -21,7 +21,7 @@ WHERE community.id = $1;`
 SELECT community.id, name, avatar, about 
 FROM community  
 WHERE community.id < $1 
-ORDER BY community.id ASC 
+ORDER BY community.id DESC 
 LIMIT $2;`
 	JoinCommunity  = `INSERT INTO community_profile(community_id, profile_id)  VALUES ($1, $2);`
 	LeaveCommunity = `DELETE FROM community_profile WHERE community_id = $1 AND profile_id = $2;`
