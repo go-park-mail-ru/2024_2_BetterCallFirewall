@@ -2,8 +2,8 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"net/http"
 
@@ -19,6 +19,7 @@ var fileFormat = map[string]struct{}{
 	"image/webp": {},
 }
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
 	Download(ctx context.Context, file multipart.File) (string, error)
@@ -55,6 +56,11 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
+	if name == "" {
+		fc.responder.ErrorBadRequest(w, errors.New("name is empty"), reqID)
+		return
+	}
+
 	res, err := fc.fileService.Upload(r.Context(), name)
 	if err != nil {
 		fc.responder.ErrorBadRequest(w, fmt.Errorf("%w: %w", err, my_err.ErrWrongFile), reqID)
@@ -65,8 +71,6 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
-	log.Println("GET REQUEST FOR CREATE FILE")
-
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
@@ -79,8 +83,6 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("PARSE FILE")
-
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		file = nil
@@ -92,7 +94,6 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	defer file.Close()
-	log.Println("DOWNLOAD FILE")
 
 	url, err := fc.fileService.Download(r.Context(), file)
 	if err != nil {
