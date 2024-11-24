@@ -236,6 +236,7 @@ func TestGetAll(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community", nil)
 				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -250,7 +251,7 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
 					request.w.Write([]byte("error"))
@@ -262,6 +263,7 @@ func TestGetAll(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community?id=1", nil)
 				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -276,7 +278,7 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
 					request.w.WriteHeader(http.StatusNoContent)
 				})
@@ -287,6 +289,7 @@ func TestGetAll(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community", nil)
 				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -301,12 +304,37 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
+				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.CommunityCard{{ID: 1}},
 					nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))
+				})
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/community", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Controller, request Request) (Response, error) {
+				implementation.GetAll(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
 				})
 			},
 		},
@@ -1386,6 +1414,7 @@ func TestSearch(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=mycommunity", nil)
 				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -1400,7 +1429,7 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
+				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
 					request.w.Write([]byte("error"))
@@ -1412,6 +1441,7 @@ func TestSearch(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=thebest", nil)
 				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
@@ -1426,7 +1456,7 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))
@@ -1436,7 +1466,33 @@ func TestSearch(t *testing.T) {
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=thebest&last_id=lnjbkh", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/community/search?q=thebest&id=lnjbkh", nil)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Controller, request Request) (Response, error) {
+				implementation.SearchCommunity(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
+				})
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/community?q=mjfkv", nil)
 				w := httptest.NewRecorder()
 				res := &Request{r: req, w: w}
 				return res, nil

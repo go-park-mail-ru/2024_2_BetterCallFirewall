@@ -176,18 +176,18 @@ func (mr *MockcommunityServiceMockRecorder) Delete(ctx, id interface{}) *gomock.
 }
 
 // Get mocks base method.
-func (m *MockcommunityService) Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error) {
+func (m *MockcommunityService) Get(ctx context.Context, userID, lastID uint32) ([]*models.CommunityCard, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, lastID)
+	ret := m.ctrl.Call(m, "Get", ctx, userID, lastID)
 	ret0, _ := ret[0].([]*models.CommunityCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockcommunityServiceMockRecorder) Get(ctx, lastID interface{}) *gomock.Call {
+func (mr *MockcommunityServiceMockRecorder) Get(ctx, userID, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockcommunityService)(nil).Get), ctx, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockcommunityService)(nil).Get), ctx, userID, lastID)
 }
 
 // GetOne mocks base method.
@@ -234,18 +234,18 @@ func (mr *MockcommunityServiceMockRecorder) LeaveCommunity(ctx, communityId, aut
 }
 
 // Search mocks base method.
-func (m *MockcommunityService) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+func (m *MockcommunityService) Search(ctx context.Context, query string, userID, lastID uint32) ([]*models.CommunityCard, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Search", ctx, query, lastID)
+	ret := m.ctrl.Call(m, "Search", ctx, query, userID, lastID)
 	ret0, _ := ret[0].([]*models.CommunityCard)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Search indicates an expected call of Search.
-func (mr *MockcommunityServiceMockRecorder) Search(ctx, query, lastID interface{}) *gomock.Call {
+func (mr *MockcommunityServiceMockRecorder) Search(ctx, query, userID, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockcommunityService)(nil).Search), ctx, query, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Search", reflect.TypeOf((*MockcommunityService)(nil).Search), ctx, query, userID, lastID)
 }
 
 // Update mocks base method.

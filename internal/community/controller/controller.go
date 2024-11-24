@@ -343,6 +343,7 @@ func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
 		c.responder.ErrorBadRequest(w, err, reqID)
+		return
 	}
 
 	cards, err := c.service.Search(r.Context(), subStr, sess.UserID, uint32(id))

@@ -51,7 +51,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 			},
 			ExpectedErrCode: codes.Internal,
 			SetupMock: func(request *Request, m *mocks) {
-				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any()).
+				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errMock)
 			},
 		},
@@ -78,7 +78,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 			},
 			ExpectedErrCode: codes.OK,
 			SetupMock: func(request *Request, m *mocks) {
-				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any()).
+				m.postService.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
 						[]*models.Post{
 							{
