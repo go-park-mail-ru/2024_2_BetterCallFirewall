@@ -167,7 +167,7 @@ func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, use
 }
 
 func (s *PostServiceImpl) CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool {
-	return s.communityRepo.CheckAccess(ctx, userID, communityID)
+	return s.communityRepo.CheckAccess(ctx, communityID, userID)
 }
 
 func convertTime(t time.Time) time.Time {
