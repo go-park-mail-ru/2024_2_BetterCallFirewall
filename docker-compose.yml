@@ -53,6 +53,7 @@ services:
     depends_on:
       - redis
       - profilegrpc
+      - community
 
   file:
     build:
@@ -103,7 +104,7 @@ services:
     depends_on:
       - db
       - authgrpc
-      - community
+      - post
 
   db:
     image: postgres:latest
