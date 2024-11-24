@@ -12,6 +12,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type GrpcSender struct {
 	client auth_api.AuthServiceClient
 }
