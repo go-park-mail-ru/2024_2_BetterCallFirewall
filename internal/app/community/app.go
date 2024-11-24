@@ -26,7 +26,7 @@ type communityManager interface {
 	GetHeader(ctx context.Context, communityID uint32) (*models.Header, error)
 }
 
-func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
+func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -46,7 +46,7 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	responder := router.NewResponder(logger)
@@ -57,13 +57,13 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 
 	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	sm := auth.New(provider)
 
 	communityMetrics, err := metrics.NewHTTPMetrics("community")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	rout := community.NewRouter(communityControl, sm, logger, communityMetrics)
@@ -75,41 +75,14 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 		WriteTimeout: cfg.COMMUNITY.WriteTimeout,
 	}
 
-	return server, nil
+	communityHelper := communityService.NewServiceHelper(communityRepo)
+	gRPCServ := getGRPC(communityHelper)
+
+	return server, gRPCServ, nil
 }
 
 func getGRPC(community communityManager) *grpc.Server {
 	server := grpc.NewServer()
 	community_api.RegisterCommunityServiceServer(server, community_api.New(community))
 	return server
-}
-
-func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
-	logger := logrus.New()
-	logger.Formatter = &logrus.TextFormatter{
-		FullTimestamp:   true,
-		DisableColors:   false,
-		TimestampFormat: "2006-01-02 15:04:05",
-		ForceColors:     true,
-	}
-
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
-	)
-
-	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	repo := communityRepository.NewCommunityRepository(postgresDB)
-	communityHelper := communityService.NewServiceHelper(repo)
-
-	serv := getGRPC(communityHelper)
-	return serv, nil
 }

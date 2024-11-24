@@ -210,15 +210,12 @@ func convertSliceToString(sl []uint32) string {
 }
 
 func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
-	res, err := a.db.ExecContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File)
-	if err != nil {
+	var ID uint32
+	if err := a.db.QueryRowContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File).Scan(&ID); err != nil {
 		return 0, fmt.Errorf("postgres create community post db: %w", err)
 	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("postgres get last id of community post db: %w", err)
-	}
-	return uint32(lastId), nil
+
+	return ID, nil
 
 }
 

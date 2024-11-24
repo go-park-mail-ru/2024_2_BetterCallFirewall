@@ -30,16 +30,18 @@ services:
     depends_on:
       - db
       - profilegrpc
-  communitygrpc:
+
+  community:
     build:
       context: .
-      dockerfile: Dockerfilecommunitygrpc
+      dockerfile: Dockerfilecommunity
     restart: always
     ports:
+      - "8086:8086"
       - "7076:7076"
     depends_on:
       - db
-      - postgrpc
+      - authgrpc
 
   auth:
     build:
@@ -50,7 +52,6 @@ services:
       - "8082:8082"
     depends_on:
       - redis
-      - communitygrpc
       - profilegrpc
 
   file:
@@ -90,21 +91,8 @@ services:
       - db
       - authgrpc
       - profilegrpc
-      - communitygrpc
+      - community
       - profile
-
-  community:
-    build:
-      context: .
-      dockerfile: Dockerfilecommunity
-    restart: always
-    ports:
-      - "8086:8086"
-    depends_on:
-      - db
-      - authgrpc
-      - post
-
   chat:
     build:
       context: .

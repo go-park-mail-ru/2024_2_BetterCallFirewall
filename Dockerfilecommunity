@@ -17,6 +17,7 @@ FROM alpine:latest
 WORKDIR /community
 
 EXPOSE 8086
+EXPOSE 7076
 
 COPY .env .
 
