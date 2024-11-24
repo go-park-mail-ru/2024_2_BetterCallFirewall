@@ -56,18 +56,20 @@ func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Com
 }
 
 func (c CommunityRepository) Create(ctx context.Context, community *models.Community, author uint32) (uint32, error) {
-	res, err := c.db.ExecContext(ctx, CreateNewCommunity, community.Name, community.About, author)
+	res := c.db.QueryRowContext(ctx, CreateNewCommunity, community.Name, community.About, author)
+	err := res.Err()
 	if err != nil {
-		return 0, fmt.Errorf("create community: %w", err)
+		return 0, fmt.Errorf("create community db: %w", err)
 	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("get last community id: %w", err)
-	}
-	id := uint32(lastId)
-	c.adminList[id] = append(c.adminList[id], author)
 
-	return id, nil
+	err = res.Scan(&community.ID)
+	if err != nil {
+		return 0, fmt.Errorf("create community db: %w", err)
+	}
+
+	c.adminList[community.ID] = append(c.adminList[community.ID], author)
+
+	return community.ID, nil
 }
 
 func (c CommunityRepository) Update(ctx context.Context, community *models.Community) error {

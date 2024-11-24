@@ -3,7 +3,8 @@ package repository
 const (
 	CreateNewCommunity = `WITH new_community AS (
     INSERT INTO community(name, about) VALUES ($1, $2) RETURNING id
-) INSERT INTO community_profile(community_id, profile_id) VALUES ((SELECT id FROM new_community), $3) RETURNING id;`
+) INSERT INTO community_profile(community_id, profile_id) VALUES ((SELECT id FROM new_community), $3)
+RETURNING (SELECT id FROM new_community);`
 	GetOne = `
 SELECT community.id, name, avatar, about, 
        (SELECT COUNT(*) FROM community_profile WHERE community_id = $1) AS subs

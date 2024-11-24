@@ -55,6 +55,8 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 				CreatedAt: post.PostContent.CreatedAt.Unix(),
 				UpdatedAt: post.PostContent.UpdatedAt.Unix(),
 			},
+			LikesCount: post.LikesCount,
+			IsLiked:    post.IsLiked,
 		})
 	}
 

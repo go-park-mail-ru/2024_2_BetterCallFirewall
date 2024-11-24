@@ -36,6 +36,8 @@ func UnmarshalResponse(response *post_api.Response) []*models.Post {
 				CreatedAt: time.Unix(post.PostContent.CreatedAt, 0),
 				UpdatedAt: time.Unix(post.PostContent.UpdatedAt, 0),
 			},
+			IsLiked:    post.IsLiked,
+			LikesCount: post.LikesCount,
 		})
 	}
 
