@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"os"
 
@@ -32,8 +31,6 @@ func (f *FileService) Download(ctx context.Context, file multipart.File) (string
 	if _, err := io.Copy(dst, file); err != nil {
 		return "", fmt.Errorf("save file: %w", err)
 	}
-
-	log.Println("SUCCESS DOWNLOAD")
 
 	return filePath, nil
 }
