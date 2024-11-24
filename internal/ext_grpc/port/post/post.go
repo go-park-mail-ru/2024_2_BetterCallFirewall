@@ -7,7 +7,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-func NewRequest(header *models.Header) *post_api.Request {
+func NewRequest(header *models.Header, userID uint32) *post_api.Request {
 	return &post_api.Request{
 		Head: &post_api.Header{
 			AuthorID:    header.AuthorID,
@@ -15,6 +15,7 @@ func NewRequest(header *models.Header) *post_api.Request {
 			Avatar:      string(header.Avatar),
 			Author:      header.Author,
 		},
+		UserID: userID,
 	}
 }
 

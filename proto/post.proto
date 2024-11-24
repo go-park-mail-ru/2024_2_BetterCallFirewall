@@ -10,6 +10,7 @@ service PostService {
 
 message Request {
   Header Head = 1;
+  uint32 UserID = 2;
 }
 
 message Header {

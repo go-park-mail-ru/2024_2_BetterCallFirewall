@@ -23,7 +23,7 @@ func NewPostProfileImpl(db PostProfileDB) *PostProfileImpl {
 	}
 }
 
-func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
+func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header, userId uint32) ([]*models.Post, error) {
 	posts, err := p.db.GetAuthorPosts(ctx, header)
 	for _, post := range posts {
 		likes, err := p.db.GetLikesOnPost(ctx, post.ID)
@@ -32,12 +32,7 @@ func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.He
 		}
 		post.LikesCount = likes
 
-		sess, err := models.SessionFromContext(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("get session: %w", err)
-		}
-
-		liked, err := p.db.CheckLikes(ctx, post.ID, sess.UserID)
+		liked, err := p.db.CheckLikes(ctx, post.ID, userId)
 		if err != nil {
 			return nil, fmt.Errorf("check likes: %w", err)
 		}

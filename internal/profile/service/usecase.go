@@ -54,7 +54,8 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 		Author:   profile.FirstName + " " + profile.LastName,
 		Avatar:   profile.Avatar,
 	}
-	posts, err := p.postManager.GetAuthorsPosts(ctx, &header)
+
+	posts, err := p.postManager.GetAuthorsPosts(ctx, &header, self)
 	if err != nil {
 		return nil, fmt.Errorf("get authors posts usecase: %w", err)
 	}
