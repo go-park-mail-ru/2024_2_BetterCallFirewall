@@ -41,7 +41,7 @@ func TestGet(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) ([]*models.CommunityCard, error) {
-				return implementation.Get(ctx, input)
+				return implementation.Get(ctx, input, input)
 			},
 			ExpectedResult: func() ([]*models.CommunityCard, error) {
 				return nil, nil
@@ -58,7 +58,7 @@ func TestGet(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) ([]*models.CommunityCard, error) {
-				return implementation.Get(ctx, input)
+				return implementation.Get(ctx, input, input)
 			},
 			ExpectedResult: func() ([]*models.CommunityCard, error) {
 				return nil, nil
@@ -75,7 +75,7 @@ func TestGet(t *testing.T) {
 				return &input, nil
 			},
 			Run: func(ctx context.Context, implementation *Service, input uint32) ([]*models.CommunityCard, error) {
-				return implementation.Get(ctx, input)
+				return implementation.Get(ctx, input, input)
 			},
 			ExpectedResult: func() ([]*models.CommunityCard, error) {
 				return []*models.CommunityCard{{ID: 1}}, nil
@@ -85,6 +85,29 @@ func TestGet(t *testing.T) {
 				m.repo.EXPECT().GetBatch(gomock.Any(), gomock.Any()).Return(
 					[]*models.CommunityCard{{ID: 1}},
 					nil)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					false, nil)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*uint32, error) {
+				input := uint32(1)
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input uint32) ([]*models.CommunityCard, error) {
+				return implementation.Get(ctx, input, input)
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input uint32, m *mocks) {
+				m.repo.EXPECT().GetBatch(gomock.Any(), gomock.Any()).Return(
+					[]*models.CommunityCard{{ID: 1}},
+					nil)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					false, errMock)
 			},
 		},
 	}
@@ -153,6 +176,8 @@ func TestGetOne(t *testing.T) {
 			SetupMock: func(input uint32, m *mocks) {
 				m.repo.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(&models.Community{IsAdmin: true}, nil)
 				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					false, nil)
 			},
 		},
 		{
@@ -165,7 +190,7 @@ func TestGetOne(t *testing.T) {
 				return implementation.GetOne(ctx, input, 3)
 			},
 			ExpectedResult: func() (*models.Community, error) {
-				return &models.Community{ID: 1, IsAdmin: false}, nil
+				return &models.Community{ID: 1, IsAdmin: false, IsFollowed: true}, nil
 			},
 			ExpectedErr: nil,
 			SetupMock: func(input uint32, m *mocks) {
@@ -173,6 +198,28 @@ func TestGetOne(t *testing.T) {
 					&models.Community{ID: 1},
 					nil)
 				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*uint32, error) {
+				input := uint32(1)
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input uint32) (*models.Community, error) {
+				return implementation.GetOne(ctx, input, 3)
+			},
+			ExpectedResult: func() (*models.Community, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input uint32, m *mocks) {
+				m.repo.EXPECT().GetOne(gomock.Any(), gomock.Any()).Return(
+					&models.Community{ID: 1},
+					nil)
+				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errMock)
 			},
 		},
 	}
@@ -676,6 +723,124 @@ func TestAddAdmin(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(input userCommunity, m *mocks) {
 				m.repo.EXPECT().NewAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getService(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
+type inputSearch struct {
+	q      string
+	userID uint32
+	lastID uint32
+}
+
+func TestSearch(t *testing.T) {
+	tests := []TableTest[[]*models.CommunityCard, inputSearch]{
+		{
+			name: "1",
+			SetupInput: func() (*inputSearch, error) {
+				input := inputSearch{userID: 0, lastID: 0, q: "alexey"}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input inputSearch) ([]*models.CommunityCard, error) {
+				return implementation.Search(ctx, input.q, input.userID, input.lastID)
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input inputSearch, m *mocks) {
+				m.repo.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*inputSearch, error) {
+				input := inputSearch{userID: 0, lastID: 0, q: "alexey"}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input inputSearch) ([]*models.CommunityCard, error) {
+				return implementation.Search(ctx, input.q, input.userID, input.lastID)
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input inputSearch, m *mocks) {
+				m.repo.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]*models.CommunityCard{
+						{
+							ID:     1,
+							Name:   "name",
+							Avatar: "/avatar",
+							About:  "the best",
+						},
+					},
+					nil)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errMock)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*inputSearch, error) {
+				input := inputSearch{userID: 0, lastID: 0, q: "alexey"}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input inputSearch) ([]*models.CommunityCard, error) {
+				return implementation.Search(ctx, input.q, input.userID, input.lastID)
+			},
+			ExpectedResult: func() ([]*models.CommunityCard, error) {
+				return []*models.CommunityCard{
+					{
+						ID:         1,
+						Name:       "name",
+						Avatar:     "/avatar",
+						About:      "the best",
+						IsFollowed: true,
+					},
+				}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input inputSearch, m *mocks) {
+				m.repo.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]*models.CommunityCard{
+						{
+							ID:     1,
+							Name:   "name",
+							Avatar: "/avatar",
+							About:  "the best",
+						},
+					},
+					nil)
+				m.repo.EXPECT().IsFollowed(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
 		},
 	}
