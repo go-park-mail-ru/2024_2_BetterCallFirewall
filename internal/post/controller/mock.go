@@ -50,6 +50,21 @@ func (mr *MockPostServiceMockRecorder) CheckAccessToCommunity(ctx, userID, commu
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAccessToCommunity", reflect.TypeOf((*MockPostService)(nil).CheckAccessToCommunity), ctx, userID, communityID)
 }
 
+// CheckLikes mocks base method.
+func (m *MockPostService) CheckLikes(ctx context.Context, postID, userID uint32) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckLikes", ctx, postID, userID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckLikes indicates an expected call of CheckLikes.
+func (mr *MockPostServiceMockRecorder) CheckLikes(ctx, postID, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckLikes", reflect.TypeOf((*MockPostService)(nil).CheckLikes), ctx, postID, userID)
+}
+
 // Create mocks base method.
 func (m *MockPostService) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	m.ctrl.T.Helper()
@@ -109,33 +124,33 @@ func (mr *MockPostServiceMockRecorder) DeleteLikeFromPost(ctx, postID, userID in
 }
 
 // Get mocks base method.
-func (m *MockPostService) Get(ctx context.Context, postID uint32) (*models.Post, error) {
+func (m *MockPostService) Get(ctx context.Context, postID, userID uint32) (*models.Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, postID)
+	ret := m.ctrl.Call(m, "Get", ctx, postID, userID)
 	ret0, _ := ret[0].(*models.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockPostServiceMockRecorder) Get(ctx, postID interface{}) *gomock.Call {
+func (mr *MockPostServiceMockRecorder) Get(ctx, postID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPostService)(nil).Get), ctx, postID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPostService)(nil).Get), ctx, postID, userID)
 }
 
 // GetBatch mocks base method.
-func (m *MockPostService) GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error) {
+func (m *MockPostService) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBatch", ctx, lastID)
+	ret := m.ctrl.Call(m, "GetBatch", ctx, lastID, userID)
 	ret0, _ := ret[0].([]*models.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBatch indicates an expected call of GetBatch.
-func (mr *MockPostServiceMockRecorder) GetBatch(ctx, lastID interface{}) *gomock.Call {
+func (mr *MockPostServiceMockRecorder) GetBatch(ctx, lastID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBatch", reflect.TypeOf((*MockPostService)(nil).GetBatch), ctx, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBatch", reflect.TypeOf((*MockPostService)(nil).GetBatch), ctx, lastID, userID)
 }
 
 // GetBatchFromFriend mocks base method.
@@ -166,21 +181,6 @@ func (m *MockPostService) GetCommunityPost(ctx context.Context, communityID, las
 func (mr *MockPostServiceMockRecorder) GetCommunityPost(ctx, communityID, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPost", reflect.TypeOf((*MockPostService)(nil).GetCommunityPost), ctx, communityID, lastID)
-}
-
-// GetLikesOnPost mocks base method.
-func (m *MockPostService) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLikesOnPost", ctx, postID)
-	ret0, _ := ret[0].(uint32)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLikesOnPost indicates an expected call of GetLikesOnPost.
-func (mr *MockPostServiceMockRecorder) GetLikesOnPost(ctx, postID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLikesOnPost", reflect.TypeOf((*MockPostService)(nil).GetLikesOnPost), ctx, postID)
 }
 
 // GetPostAuthorID mocks base method.
