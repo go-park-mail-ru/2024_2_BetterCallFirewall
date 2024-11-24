@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var connect = make(map[string]*sql.DB)
+var connect = map[string]*sql.DB{"host=test port=test user=test password=test dbname=test sslmode=test": {}}
 
 func StartPostgres(connStr string, logger *logrus.Logger) (*sql.DB, error) {
 	if _, ok := connect[connStr]; ok {
