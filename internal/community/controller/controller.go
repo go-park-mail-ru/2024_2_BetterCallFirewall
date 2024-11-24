@@ -359,10 +359,10 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 
 	err := json.NewDecoder(r.Body).Decode(&res)
 	if err != nil {
-		return res, err
+		return models.Community{}, err
 	}
 
-	return models.Community{}, nil
+	return res, nil
 }
 
 func getIDFromQuery(r *http.Request) (uint32, error) {
