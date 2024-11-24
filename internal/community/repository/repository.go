@@ -56,7 +56,14 @@ func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Com
 }
 
 func (c CommunityRepository) Create(ctx context.Context, community *models.Community, author uint32) (uint32, error) {
-	res := c.db.QueryRowContext(ctx, CreateNewCommunity, community.Name, community.About, author)
+	var res *sql.Row
+
+	if community.Avatar == "" {
+		res = c.db.QueryRowContext(ctx, CreateNewCommunity, community.Name, community.About, author)
+	} else {
+		res = c.db.QueryRowContext(ctx, CreateNewCommunityWithAvatar, community.Name, community.About, community.Avatar, author)
+	}
+
 	err := res.Err()
 	if err != nil {
 		return 0, fmt.Errorf("create community db: %w", err)
@@ -182,4 +189,20 @@ func (c CommunityRepository) GetHeader(ctx context.Context, communityID uint32) 
 	}
 
 	return header, nil
+}
+
+func (c CommunityRepository) IsFollowed(ctx context.Context, communityID, userID uint32) (bool, error) {
+	res := c.db.QueryRowContext(ctx, IsFollow, communityID, userID)
+	err := res.Err()
+	if err != nil {
+		return false, fmt.Errorf("get community db: %w", err)
+	}
+	var count uint32
+
+	err = res.Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("get community db: %w", err)
+	}
+
+	return count > 0, nil
 }

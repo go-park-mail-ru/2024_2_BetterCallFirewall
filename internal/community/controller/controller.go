@@ -25,7 +25,7 @@ type responder interface {
 }
 
 type communityService interface {
-	Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error)
+	Get(ctx context.Context, userID, lastID uint32) ([]*models.CommunityCard, error)
 	GetOne(ctx context.Context, id, userID uint32) (*models.Community, error)
 	Update(ctx context.Context, id uint32, community *models.Community) error
 	Delete(ctx context.Context, id uint32) error
@@ -34,7 +34,7 @@ type communityService interface {
 	AddAdmin(ctx context.Context, communityId, author uint32) error
 	LeaveCommunity(ctx context.Context, communityId, author uint32) error
 	JoinCommunity(ctx context.Context, communityId, author uint32) error
-	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
+	Search(ctx context.Context, query string, userID, lastID uint32) ([]*models.CommunityCard, error)
 }
 
 type Controller struct {
@@ -98,7 +98,13 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := c.service.Get(r.Context(), uint32(intLastID))
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	res, err := c.service.Get(r.Context(), sess.UserID, uint32(intLastID))
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
@@ -334,7 +340,12 @@ func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cards, err := c.service.Search(r.Context(), subStr, uint32(id))
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		c.responder.ErrorBadRequest(w, err, reqID)
+	}
+
+	cards, err := c.service.Search(r.Context(), subStr, sess.UserID, uint32(id))
 	if err != nil {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
