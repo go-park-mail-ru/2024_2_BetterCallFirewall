@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -31,6 +32,6 @@ func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
 func (m mockFileController) Download(w http.ResponseWriter, r *http.Request) {}
 
 func TestNewRouter(t *testing.T) {
-	r := NewRouter(mockFileController{}, mockSessionManager{}, logrus.New())
+	r := NewRouter(mockFileController{}, mockSessionManager{}, logrus.New(), &metrics.HttpMetrics{})
 	assert.NotNil(t, r)
 }

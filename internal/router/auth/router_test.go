@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -27,6 +28,6 @@ func (m mockMiddleware) Create(userID uint32) (*models.Session, error) { return 
 func (m mockMiddleware) Destroy(sess *models.Session) error { return nil }
 
 func TestNewRouter(t *testing.T) {
-	router := NewRouter(mockController{}, mockMiddleware{}, logrus.New())
+	router := NewRouter(mockController{}, mockMiddleware{}, logrus.New(), &metrics.HttpMetrics{})
 	assert.NotNil(t, router)
 }

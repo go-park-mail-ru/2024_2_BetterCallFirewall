@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
@@ -45,6 +46,6 @@ func (m mockCommunityController) Create(w http.ResponseWriter, r *http.Request) 
 func (m mockCommunityController) SearchCommunity(w http.ResponseWriter, r *http.Request) {}
 
 func TestNewRouter(t *testing.T) {
-	r := NewRouter(mockCommunityController{}, mockSessionManager{}, logrus.New())
+	r := NewRouter(mockCommunityController{}, mockSessionManager{}, logrus.New(), &metrics.HttpMetrics{})
 	assert.NotNil(t, r)
 }
