@@ -9,6 +9,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type DB interface {
 	Create(ctx context.Context, post *models.Post) (uint32, error)
 	Get(ctx context.Context, postID uint32) (*models.Post, error)
@@ -133,7 +134,12 @@ func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32,
 }
 
 func (s *PostServiceImpl) GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error) {
-	return s.db.GetPostAuthor(ctx, postID)
+	id, err := s.db.GetPostAuthor(ctx, postID)
+	if err != nil {
+		return 0, fmt.Errorf("get post author: %w", err)
+	}
+
+	return id, nil
 }
 
 func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error) {
@@ -145,10 +151,16 @@ func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.
 	return id, nil
 }
 
-func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error) {
+func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error) {
 	posts, err := s.db.GetCommunityPosts(ctx, communityID, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
+	}
+
+	for _, post := range posts {
+		if err := s.setPostFields(ctx, post, userID); err != nil {
+			return nil, fmt.Errorf("set post fields: %w", err)
+		}
 	}
 
 	return posts, nil
@@ -192,6 +204,7 @@ func (s *PostServiceImpl) setPostFields(ctx context.Context, post *models.Post, 
 		header *models.Header
 		err    error
 	)
+
 	if post.Header.CommunityID == 0 {
 		header, err = s.profileRepo.GetHeader(ctx, post.Header.AuthorID)
 		if err != nil {

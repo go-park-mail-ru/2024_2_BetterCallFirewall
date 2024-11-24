@@ -1308,7 +1308,7 @@ func TestGetBatchPost(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
-				m.postService.EXPECT().GetCommunityPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.postService.EXPECT().GetCommunityPost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
 					request.w.Write([]byte("OK"))

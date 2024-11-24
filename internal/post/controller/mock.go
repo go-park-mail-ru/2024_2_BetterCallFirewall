@@ -169,18 +169,18 @@ func (mr *MockPostServiceMockRecorder) GetBatchFromFriend(ctx, userID, lastID in
 }
 
 // GetCommunityPost mocks base method.
-func (m *MockPostService) GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error) {
+func (m *MockPostService) GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCommunityPost", ctx, communityID, lastID)
+	ret := m.ctrl.Call(m, "GetCommunityPost", ctx, communityID, userID, lastID)
 	ret0, _ := ret[0].([]*models.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetCommunityPost indicates an expected call of GetCommunityPost.
-func (mr *MockPostServiceMockRecorder) GetCommunityPost(ctx, communityID, lastID interface{}) *gomock.Call {
+func (mr *MockPostServiceMockRecorder) GetCommunityPost(ctx, communityID, userID, lastID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPost", reflect.TypeOf((*MockPostService)(nil).GetCommunityPost), ctx, communityID, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommunityPost", reflect.TypeOf((*MockPostService)(nil).GetCommunityPost), ctx, communityID, userID, lastID)
 }
 
 // GetPostAuthorID mocks base method.

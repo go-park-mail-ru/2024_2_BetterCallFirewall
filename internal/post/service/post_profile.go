@@ -7,6 +7,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock_helper.go -source=$GOFILE -package=${GOPACKAGE}
 type PostProfileDB interface {
 	GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
 	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
@@ -23,7 +24,7 @@ func NewPostProfileImpl(db PostProfileDB) *PostProfileImpl {
 	}
 }
 
-func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header, userId uint32) ([]*models.Post, error) {
+func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error) {
 	posts, err := p.db.GetAuthorPosts(ctx, header)
 	if err != nil {
 		return nil, err
@@ -36,11 +37,12 @@ func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.He
 		}
 		posts[i].LikesCount = likes
 
-		liked, err := p.db.CheckLikes(ctx, post.ID, userId)
+		liked, err := p.db.CheckLikes(ctx, post.ID, userID)
 		if err != nil {
 			return nil, fmt.Errorf("check likes: %w", err)
 		}
 		posts[i].IsLiked = liked
+		posts[i].PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
 	}
 
 	return posts, nil

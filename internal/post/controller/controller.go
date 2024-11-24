@@ -25,7 +25,7 @@ type PostService interface {
 	GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error)
 	GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error)
 
-	GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error)
+	GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error)
 	CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error)
 	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool
 
@@ -273,7 +273,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 					pc.responder.ErrorBadRequest(w, err, reqID)
 					return
 				}
-				posts, err = pc.postService.GetCommunityPost(r.Context(), uint32(id), uint32(intLastID))
+				posts, err = pc.postService.GetCommunityPost(r.Context(), uint32(id), sess.UserID, uint32(intLastID))
 			} else {
 				posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID), sess.UserID)
 			}
