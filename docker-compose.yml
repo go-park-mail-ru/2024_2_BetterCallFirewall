@@ -19,6 +19,7 @@ services:
       - "7074:7074"
     depends_on:
       - db
+      - authgrpc
   postgrpc:
     build:
       context: .
@@ -28,6 +29,7 @@ services:
       - "7075:7075"
     depends_on:
       - db
+      - profilegrpc
   communitygrpc:
     build:
       context: .
@@ -37,7 +39,7 @@ services:
       - "7076:7076"
     depends_on:
       - db
-      - authgrpc
+      - postgrpc
 
   auth:
     build:
@@ -48,6 +50,7 @@ services:
       - "8082:8082"
     depends_on:
       - redis
+      - communitygrpc
       - profilegrpc
 
   file:
