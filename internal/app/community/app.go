@@ -15,6 +15,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/community"
@@ -76,13 +77,18 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	}
 
 	communityHelper := communityService.NewServiceHelper(communityRepo)
-	gRPCServ := getGRPC(communityHelper)
+	grpcMetrics, err := metrics.NewGrpcMetrics("community")
+	if err != nil {
+		return nil, nil, err
+	}
+	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
+	gRPCServ := getGRPC(communityHelper, metricsmw)
 
 	return server, gRPCServ, nil
 }
 
-func getGRPC(community communityManager) *grpc.Server {
-	server := grpc.NewServer()
+func getGRPC(community communityManager, metr *middleware.GrpcMiddleware) *grpc.Server {
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(metr.GrpcMetricsInterceptor))
 	community_api.RegisterCommunityServiceServer(server, community_api.New(community))
 	return server
 }

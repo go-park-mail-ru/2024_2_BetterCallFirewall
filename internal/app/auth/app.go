@@ -14,7 +14,8 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/profile"
-	"github.com/2024_2_BetterCallFirewall/internal/metrics"
+	metrics "github.com/2024_2_BetterCallFirewall/internal/metrics"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/auth"
@@ -72,8 +73,8 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	return &server, nil
 }
 
-func getGRPC(auth SessionManager) *grpc.Server {
-	server := grpc.NewServer()
+func getGRPC(auth SessionManager, metr *middleware.GrpcMiddleware) *grpc.Server {
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(metr.GrpcMetricsInterceptor))
 	auth_api.RegisterAuthServiceServer(server, auth_api.New(auth))
 	return server
 }
@@ -89,7 +90,13 @@ func GetGRPCServer(cfg *config.Config) *grpc.Server {
 	}
 	sessionRepo := redismy.NewSessionRedisRepository(redisPool)
 	sessionManager := service.NewSessionManager(sessionRepo)
-	grpcServer := getGRPC(sessionManager)
+
+	grpcMetrics, err := metrics.NewGrpcMetrics("auth")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
+	grpcServer := getGRPC(sessionManager, metricsmw)
 
 	return grpcServer
 }

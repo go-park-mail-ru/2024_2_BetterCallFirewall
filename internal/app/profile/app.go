@@ -13,6 +13,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/post"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/profile/controller"
 	"github.com/2024_2_BetterCallFirewall/internal/profile/repository"
@@ -85,8 +86,8 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	return server, nil
 }
 
-func getGRPC(profile profileManager) *grpc.Server {
-	server := grpc.NewServer()
+func getGRPC(profile profileManager, metr *middleware.GrpcMiddleware) *grpc.Server {
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(metr.GrpcMetricsInterceptor))
 	profile_api.RegisterProfileServiceServer(server, profile_api.New(profile))
 	return server
 }
@@ -117,6 +118,11 @@ func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
 	profRepo := repository.NewProfileRepo(postgresDB)
 	profService := service.NewProfileHelper(profRepo)
 
-	serv := getGRPC(profService)
+	grpcMetrics, err := metrics.NewGrpcMetrics("profile")
+	if err != nil {
+		return nil, err
+	}
+	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
+	serv := getGRPC(profService, metricsmw)
 	return serv, nil
 }
