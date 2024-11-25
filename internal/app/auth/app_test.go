@@ -15,6 +15,7 @@ func TestGetHttpServer(t *testing.T) {
 }
 
 func TestGetGrpcServer(t *testing.T) {
-	server := GetGRPCServer(&config.Config{})
+	server, err := GetGRPCServer(&config.Config{})
+	assert.NoError(t, err)
 	assert.NotNil(t, server)
 }

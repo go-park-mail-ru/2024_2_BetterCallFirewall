@@ -79,7 +79,7 @@ func getGRPC(auth SessionManager, metr *middleware.GrpcMiddleware) *grpc.Server 
 	return server
 }
 
-func GetGRPCServer(cfg *config.Config) *grpc.Server {
+func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
 	redisPool := &redis.Pool{
 		MaxIdle:   cfg.REDIS.MaxIdle,
 		MaxActive: cfg.REDIS.MaxActive,
@@ -93,10 +93,10 @@ func GetGRPCServer(cfg *config.Config) *grpc.Server {
 
 	grpcMetrics, err := metrics.NewGrpcMetrics("auth")
 	if err != nil {
-		logrus.Fatal(err)
+		return nil, err
 	}
 	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
 	grpcServer := getGRPC(sessionManager, metricsmw)
 
-	return grpcServer
+	return grpcServer, nil
 }
