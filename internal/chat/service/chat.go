@@ -52,6 +52,5 @@ func (cs *ChatService) SendNewMessage(ctx context.Context, receiver uint32, send
 }
 
 func convertTime(t time.Time) time.Time {
-	newTime, _ := time.Parse("2006-01-02T15:04:05.000000Z", t.Format("2006-01-02T15:04:05.000000Z"))
-	return newTime
+	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, time.UTC)
 }

@@ -42,6 +42,7 @@ func NewChatController(service chat.ChatService, responder Responder) *ChatContr
 const (
 	socketBufferSize  = 1024
 	messageBufferSize = 256
+	layout            = "2006-01-02T15:04:05Z"
 )
 
 var (
@@ -115,7 +116,7 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	if lastTimeQuery == "" {
 		lastTime = time.Now()
 	} else {
-		lastTime, err = time.Parse("2006-01-02T15:04:05.000000Z", lastTimeQuery)
+		lastTime, err = time.Parse(layout, lastTimeQuery)
 		if err != nil {
 			cc.responder.ErrorBadRequest(w, my_err.ErrWrongDateFormat, reqID)
 			return
@@ -174,7 +175,7 @@ func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	if lastTimeQuery == "" {
 		lastTime = time.Now()
 	} else {
-		lastTime, err = time.Parse("2006-01-02T15:04:05.000000Z", lastTimeQuery)
+		lastTime, err = time.Parse(layout, lastTimeQuery)
 		if err != nil {
 			cc.responder.ErrorBadRequest(w, my_err.ErrWrongDateFormat, reqID)
 			return
