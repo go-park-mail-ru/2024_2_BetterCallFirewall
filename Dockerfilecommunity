@@ -6,6 +6,7 @@ COPY go.mod .
 COPY go.sum .
 
 RUN go mod download
+RUN go mod vendor
 
 COPY . .
 
@@ -16,6 +17,7 @@ FROM alpine:latest
 WORKDIR /community
 
 EXPOSE 8086
+EXPOSE 7076
 
 COPY .env .
 

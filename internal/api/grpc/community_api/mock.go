@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	models "github.com/2024_2_BetterCallFirewall/internal/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -46,4 +47,19 @@ func (m *MockCommunityService) CheckAccess(ctx context.Context, communityID, use
 func (mr *MockCommunityServiceMockRecorder) CheckAccess(ctx, communityID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAccess", reflect.TypeOf((*MockCommunityService)(nil).CheckAccess), ctx, communityID, userID)
+}
+
+// GetHeader mocks base method.
+func (m *MockCommunityService) GetHeader(ctx context.Context, communityID uint32) (*models.Header, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHeader", ctx, communityID)
+	ret0, _ := ret[0].(*models.Header)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHeader indicates an expected call of GetHeader.
+func (mr *MockCommunityServiceMockRecorder) GetHeader(ctx, communityID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeader", reflect.TypeOf((*MockCommunityService)(nil).GetHeader), ctx, communityID)
 }

@@ -36,16 +36,16 @@ func (m *MockPostService) EXPECT() *MockPostServiceMockRecorder {
 }
 
 // GetAuthorsPosts mocks base method.
-func (m *MockPostService) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
+func (m *MockPostService) GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthorsPosts", ctx, header)
+	ret := m.ctrl.Call(m, "GetAuthorsPosts", ctx, header, userID)
 	ret0, _ := ret[0].([]*models.Post)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAuthorsPosts indicates an expected call of GetAuthorsPosts.
-func (mr *MockPostServiceMockRecorder) GetAuthorsPosts(ctx, header interface{}) *gomock.Call {
+func (mr *MockPostServiceMockRecorder) GetAuthorsPosts(ctx, header, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthorsPosts", reflect.TypeOf((*MockPostService)(nil).GetAuthorsPosts), ctx, header)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthorsPosts", reflect.TypeOf((*MockPostService)(nil).GetAuthorsPosts), ctx, header, userID)
 }

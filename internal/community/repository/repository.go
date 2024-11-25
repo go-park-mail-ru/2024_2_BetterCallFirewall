@@ -56,18 +56,27 @@ func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Com
 }
 
 func (c CommunityRepository) Create(ctx context.Context, community *models.Community, author uint32) (uint32, error) {
-	res, err := c.db.ExecContext(ctx, CreateNewCommunity, community.Name, community.About, author)
-	if err != nil {
-		return 0, fmt.Errorf("create community: %w", err)
-	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("get last community id: %w", err)
-	}
-	id := uint32(lastId)
-	c.adminList[id] = append(c.adminList[id], author)
+	var res *sql.Row
 
-	return id, nil
+	if community.Avatar == "" {
+		res = c.db.QueryRowContext(ctx, CreateNewCommunity, community.Name, community.About, author)
+	} else {
+		res = c.db.QueryRowContext(ctx, CreateNewCommunityWithAvatar, community.Name, community.About, community.Avatar, author)
+	}
+
+	err := res.Err()
+	if err != nil {
+		return 0, fmt.Errorf("create community db: %w", err)
+	}
+
+	err = res.Scan(&community.ID)
+	if err != nil {
+		return 0, fmt.Errorf("create community db: %w", err)
+	}
+
+	c.adminList[community.ID] = append(c.adminList[community.ID], author)
+
+	return community.ID, nil
 }
 
 func (c CommunityRepository) Update(ctx context.Context, community *models.Community) error {
@@ -166,4 +175,34 @@ func (c CommunityRepository) Search(ctx context.Context, query string, lastID ui
 	}
 
 	return res, nil
+}
+
+func (c CommunityRepository) GetHeader(ctx context.Context, communityID uint32) (*models.Header, error) {
+	row := c.db.QueryRow(GetHeader, communityID)
+	header := &models.Header{}
+	if row.Err() != nil {
+		return nil, my_err.ErrWrongCommunity
+	}
+
+	if err := row.Scan(&header.CommunityID, &header.Author, &header.Avatar); err != nil {
+		return nil, fmt.Errorf("get header: %w", err)
+	}
+
+	return header, nil
+}
+
+func (c CommunityRepository) IsFollowed(ctx context.Context, communityID, userID uint32) (bool, error) {
+	res := c.db.QueryRowContext(ctx, IsFollow, communityID, userID)
+	err := res.Err()
+	if err != nil {
+		return false, fmt.Errorf("get community db: %w", err)
+	}
+	var count uint32
+
+	err = res.Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("get community db: %w", err)
+	}
+
+	return count > 0, nil
 }

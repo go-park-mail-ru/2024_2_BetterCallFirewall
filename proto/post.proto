@@ -10,6 +10,7 @@ service PostService {
 
 message Request {
   Header Head = 1;
+  uint32 UserID = 2;
 }
 
 message Header {
@@ -27,6 +28,8 @@ message Post {
   uint32 ID = 1;
   Content PostContent = 2;
   Header Head = 3;
+  uint32 LikesCount = 4;
+  bool IsLiked = 5;
 }
 
 message Content {

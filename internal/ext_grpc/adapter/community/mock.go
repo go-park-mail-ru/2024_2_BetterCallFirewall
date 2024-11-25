@@ -55,3 +55,23 @@ func (mr *MockCommunityServiceClientMockRecorder) CheckAccess(ctx, in interface{
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAccess", reflect.TypeOf((*MockCommunityServiceClient)(nil).CheckAccess), varargs...)
 }
+
+// GetHeader mocks base method.
+func (m *MockCommunityServiceClient) GetHeader(ctx context.Context, in *community_api.GetHeaderRequest, opts ...grpc.CallOption) (*community_api.GetHeaderResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetHeader", varargs...)
+	ret0, _ := ret[0].(*community_api.GetHeaderResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHeader indicates an expected call of GetHeader.
+func (mr *MockCommunityServiceClientMockRecorder) GetHeader(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeader", reflect.TypeOf((*MockCommunityServiceClient)(nil).GetHeader), varargs...)
+}

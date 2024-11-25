@@ -11,7 +11,7 @@ import (
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type PostService interface {
-	GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
+	GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error)
 }
 
 type Adapter struct {
@@ -24,14 +24,15 @@ func New(s PostService) *Adapter {
 }
 
 func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response, error) {
-	request := &models.Header{
+	header := &models.Header{
 		AuthorID:    req.Head.AuthorID,
 		Author:      req.Head.Author,
 		CommunityID: req.Head.CommunityID,
 		Avatar:      models.Picture(req.Head.Avatar),
 	}
+	userID := req.UserID
 
-	res, err := a.service.GetAuthorsPosts(ctx, request)
+	res, err := a.service.GetAuthorsPosts(ctx, header, userID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -54,6 +55,8 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 				CreatedAt: post.PostContent.CreatedAt.Unix(),
 				UpdatedAt: post.PostContent.UpdatedAt.Unix(),
 			},
+			LikesCount: post.LikesCount,
+			IsLiked:    post.IsLiked,
 		})
 	}
 

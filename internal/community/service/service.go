@@ -19,6 +19,7 @@ type Repo interface {
 	LeaveCommunity(ctx context.Context, communityId, author uint32) error
 	NewAdmin(ctx context.Context, communityId uint32, author uint32) error
 	Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error)
+	IsFollowed(ctx context.Context, communityId, userID uint32) (bool, error)
 }
 
 type Service struct {
@@ -31,10 +32,18 @@ func NewCommunityService(repo Repo) *Service {
 	}
 }
 
-func (s *Service) Get(ctx context.Context, lastID uint32) ([]*models.CommunityCard, error) {
+func (s *Service) Get(ctx context.Context, userID, lastID uint32) ([]*models.CommunityCard, error) {
 	coms, err := s.repo.GetBatch(ctx, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get community list: %w", err)
+	}
+
+	for i, com := range coms {
+		follow, err := s.repo.IsFollowed(ctx, com.ID, userID)
+		if err != nil {
+			return nil, fmt.Errorf("get community list: %w", err)
+		}
+		coms[i].IsFollowed = follow
 	}
 
 	return coms, nil
@@ -46,6 +55,12 @@ func (s *Service) GetOne(ctx context.Context, id, userID uint32) (*models.Commun
 		return nil, fmt.Errorf("get community: %w", err)
 	}
 	com.IsAdmin = s.CheckAccess(ctx, id, userID)
+
+	follow, err := s.repo.IsFollowed(ctx, id, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get community list: %w", err)
+	}
+	com.IsFollowed = follow
 
 	return com, nil
 }
@@ -110,10 +125,18 @@ func (s *Service) AddAdmin(ctx context.Context, communityId, author uint32) erro
 	return nil
 }
 
-func (s *Service) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {
+func (s *Service) Search(ctx context.Context, query string, userID, lastID uint32) ([]*models.CommunityCard, error) {
 	cards, err := s.repo.Search(ctx, query, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("search community: %w", err)
+	}
+
+	for i, card := range cards {
+		follow, err := s.repo.IsFollowed(ctx, card.ID, userID)
+		if err != nil {
+			return nil, fmt.Errorf("get community list: %w", err)
+		}
+		cards[i].IsFollowed = follow
 	}
 
 	return cards, nil

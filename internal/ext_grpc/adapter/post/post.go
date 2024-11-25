@@ -23,8 +23,8 @@ func New(conn grpc.ClientConnInterface) *GrpcSender {
 	return &GrpcSender{client: client}
 }
 
-func (g *GrpcSender) GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
-	req := post.NewRequest(header)
+func (g *GrpcSender) GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error) {
+	req := post.NewRequest(header, userID)
 	resp, err := g.client.GetAuthorsPosts(ctx, req)
 	if err != nil {
 		return nil, err

@@ -19,6 +19,7 @@ services:
       - "7074:7074"
     depends_on:
       - db
+      - authgrpc
   postgrpc:
     build:
       context: .
@@ -28,15 +29,19 @@ services:
       - "7075:7075"
     depends_on:
       - db
-  communitygrpc:
+      - profilegrpc
+
+  community:
     build:
       context: .
-      dockerfile: Dockerfilecommunitygrpc
+      dockerfile: Dockerfilecommunity
     restart: always
     ports:
+      - "8086:8086"
       - "7076:7076"
     depends_on:
       - db
+      - authgrpc
 
   auth:
     build:
@@ -48,6 +53,7 @@ services:
     depends_on:
       - redis
       - profilegrpc
+      - community
 
   file:
     build:
@@ -60,6 +66,7 @@ services:
       - "8083:8083"
     depends_on:
       - authgrpc
+      - auth
 
   profile:
     build:
@@ -72,6 +79,7 @@ services:
       - db
       - authgrpc
       - postgrpc
+      - file
 
   post:
     build:
@@ -84,19 +92,8 @@ services:
       - db
       - authgrpc
       - profilegrpc
-      - communitygrpc
-
-  community:
-    build:
-      context: .
-      dockerfile: Dockerfilecommunity
-    restart: always
-    ports:
-      - "8086:8086"
-    depends_on:
-      - db
-      - authgrpc
-
+      - community
+      - profile
   chat:
     build:
       context: .
@@ -107,6 +104,7 @@ services:
     depends_on:
       - db
       - authgrpc
+      - post
 
   db:
     image: postgres:latest

@@ -7,6 +7,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
 type mocksHelper struct {
@@ -64,6 +66,75 @@ func TestCheckAccessHelper(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(input InputCheckAccess, m *mocksHelper) {
 				m.repo.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serv, mock := getHelper(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
+	}
+}
+
+func TestGetHeader(t *testing.T) {
+	tests := []TableTest2[*models.Header, InputCheckAccess]{
+		{
+			name: "1",
+			SetupInput: func() (*InputCheckAccess, error) {
+				input := InputCheckAccess{userID: 0, communityID: 0}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *ServiceHelper, input InputCheckAccess) (*models.Header, error) {
+				return implementation.GetHeader(ctx, input.communityID)
+			},
+			ExpectedResult: func() (*models.Header, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(input InputCheckAccess, m *mocksHelper) {
+				m.repo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*InputCheckAccess, error) {
+				input := InputCheckAccess{userID: 0, communityID: 2}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *ServiceHelper, input InputCheckAccess) (*models.Header, error) {
+				return implementation.GetHeader(ctx, input.communityID)
+			},
+			ExpectedResult: func() (*models.Header, error) {
+				return &models.Header{AuthorID: 0, CommunityID: 2, Author: "community"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(input InputCheckAccess, m *mocksHelper) {
+				m.repo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(
+					&models.Header{AuthorID: 0, CommunityID: 2, Author: "community"},
+					nil)
 			},
 		},
 	}

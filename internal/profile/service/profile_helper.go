@@ -7,6 +7,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
+//go:generate mockgen -destination=mock_helper.go -source=$GOFILE -package=${GOPACKAGE}
 type repository interface {
 	Create(user *models.User, ctx context.Context) (uint32, error)
 	GetByEmail(email string, ctx context.Context) (*models.User, error)

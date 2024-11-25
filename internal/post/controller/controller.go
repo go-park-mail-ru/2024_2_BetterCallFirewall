@@ -18,20 +18,20 @@ import (
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type PostService interface {
 	Create(ctx context.Context, post *models.Post) (uint32, error)
-	Get(ctx context.Context, postID uint32) (*models.Post, error)
+	Get(ctx context.Context, postID, userID uint32) (*models.Post, error)
 	Update(ctx context.Context, post *models.Post) error
 	Delete(ctx context.Context, postID uint32) error
-	GetBatch(ctx context.Context, lastID uint32) ([]*models.Post, error)
+	GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error)
 	GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error)
 	GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error)
 
-	GetCommunityPost(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error)
+	GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error)
 	CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error)
 	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool
 
 	SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error
 	DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error
-	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
+	CheckLikes(ctx context.Context, postID, userID uint32) (bool, error)
 }
 
 type Responder interface {
@@ -115,7 +115,13 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := pc.postService.Get(r.Context(), postID)
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	post, err := pc.postService.Get(r.Context(), postID, sess.UserID)
 	if err != nil {
 		if errors.Is(err, my_err.ErrPostNotFound) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
@@ -248,15 +254,15 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
 	switch section {
 	case "friend":
 		{
-			sess, errSession := models.SessionFromContext(r.Context())
-			if errSession != nil {
-				pc.responder.ErrorBadRequest(w, errSession, reqID)
-				return
-			}
-
 			posts, err = pc.postService.GetBatchFromFriend(r.Context(), sess.UserID, uint32(intLastID))
 		}
 	case "":
@@ -267,9 +273,9 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 					pc.responder.ErrorBadRequest(w, err, reqID)
 					return
 				}
-				posts, err = pc.postService.GetCommunityPost(r.Context(), uint32(id), uint32(intLastID))
+				posts, err = pc.postService.GetCommunityPost(r.Context(), uint32(id), sess.UserID, uint32(intLastID))
 			} else {
-				posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID))
+				posts, err = pc.postService.GetBatch(r.Context(), uint32(intLastID), sess.UserID)
 			}
 		}
 	default:
@@ -386,6 +392,17 @@ func (pc *PostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	set, err := pc.postService.CheckLikes(r.Context(), postID, sess.UserID)
+	if err != nil {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if set {
+		pc.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
 	err = pc.postService.SetLikeToPost(r.Context(), postID, sess.UserID)
 	if err != nil {
 		pc.responder.ErrorInternal(w, err, reqID)
@@ -412,6 +429,17 @@ func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	set, err := pc.postService.CheckLikes(r.Context(), postID, sess.UserID)
+	if err != nil {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if !set {
+		pc.responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
 	err = pc.postService.DeleteLikeFromPost(r.Context(), postID, sess.UserID)
 	if err != nil {
 		pc.responder.ErrorInternal(w, err, reqID)
@@ -419,28 +447,4 @@ func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Requ
 	}
 
 	pc.responder.OutputJSON(w, "like is unset from post", reqID)
-}
-
-func (pc *PostController) GetLikesOnPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
-	if !ok {
-		pc.responder.LogError(my_err.ErrInvalidContext, "")
-	}
-
-	postID, err := getIDFromURL(r)
-	if err != nil {
-		pc.responder.ErrorBadRequest(w, err, reqID)
-		return
-	}
-
-	likes, err := pc.postService.GetLikesOnPost(r.Context(), postID)
-	if err != nil {
-		if errors.Is(err, my_err.ErrWrongPost) {
-			pc.responder.ErrorBadRequest(w, err, reqID)
-			return
-		}
-		pc.responder.ErrorInternal(w, err, reqID)
-		return
-	}
-	pc.responder.OutputJSON(w, likes, reqID)
 }

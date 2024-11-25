@@ -108,6 +108,21 @@ func (mr *MockRepoMockRecorder) GetOne(ctx, id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOne", reflect.TypeOf((*MockRepo)(nil).GetOne), ctx, id)
 }
 
+// IsFollowed mocks base method.
+func (m *MockRepo) IsFollowed(ctx context.Context, communityId, userID uint32) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsFollowed", ctx, communityId, userID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsFollowed indicates an expected call of IsFollowed.
+func (mr *MockRepoMockRecorder) IsFollowed(ctx, communityId, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFollowed", reflect.TypeOf((*MockRepo)(nil).IsFollowed), ctx, communityId, userID)
+}
+
 // JoinCommunity mocks base method.
 func (m *MockRepo) JoinCommunity(ctx context.Context, communityId, author uint32) error {
 	m.ctrl.T.Helper()

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -18,6 +19,7 @@ var fileFormat = map[string]struct{}{
 	"image/webp": {},
 }
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
 	Download(ctx context.Context, file multipart.File) (string, error)
@@ -52,6 +54,11 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if name == "" {
+		fc.responder.ErrorBadRequest(w, errors.New("name is empty"), reqID)
+		return
 	}
 
 	res, err := fc.fileService.Upload(r.Context(), name)

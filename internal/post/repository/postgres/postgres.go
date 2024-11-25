@@ -16,7 +16,7 @@ const (
 	getPost         = `SELECT id, author_id, content, file_path, created_at  FROM post WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
 	updatePost      = `UPDATE post SET content = $1, updated_at = $2, file_path = $3 WHERE id = $4;`
-	getPostBatch    = `SELECT id, author_id, content, file_path, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
+	getPostBatch    = `SELECT id, CASE WHEN author_id IS NULL THEN 0 ELSE author_id END, CASE WHEN community_id IS NULL THEN 0 ELSE community_id END, content, file_path, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
 	getProfilePosts = `SELECT id, content, file_path, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
 	getFriendsPost  = `SELECT id, author_id, content, file_path, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
@@ -27,6 +27,7 @@ const (
 	AddLikeToPost      = `INSERT INTO reaction (post_id, user_id) VALUES ($1, $2);`
 	DeleteLikeFromPost = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
 	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
+	CheckLike          = `SELECT COUNT(*) FROM reaction WHERE post_id = $1 AND user_id=$2;`
 )
 
 type Adapter struct {
@@ -104,18 +105,30 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 
 func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
 	rows, err := a.db.QueryContext(ctx, getPostBatch, lastID)
-	if rows != nil {
-		defer rows.Close()
-	}
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
+	defer rows.Close()
 
-	return createPostBatchFromRows(rows)
+	var posts []*models.Post
+
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
+			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+			return nil, fmt.Errorf("postgres scan posts: %w", err)
+		}
+		posts = append(posts, &post)
+	}
+
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
+	return posts, nil
 }
 
 func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
@@ -209,15 +222,12 @@ func convertSliceToString(sl []uint32) string {
 }
 
 func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
-	res, err := a.db.ExecContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File)
-	if err != nil {
+	var ID uint32
+	if err := a.db.QueryRowContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File).Scan(&ID); err != nil {
 		return 0, fmt.Errorf("postgres create community post db: %w", err)
 	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("postgres get last id of community post db: %w", err)
-	}
-	return uint32(lastId), nil
+
+	return ID, nil
 
 }
 
@@ -225,9 +235,6 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 	var posts []*models.Post
 	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, my_err.ErrNoMoreContent
-		}
 		return nil, fmt.Errorf("postgres get community posts: %w", err)
 	}
 	defer rows.Close()
@@ -239,6 +246,10 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 		}
 		posts = append(posts, post)
 	}
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
 	return posts, nil
 }
 
@@ -271,4 +282,18 @@ func (a *Adapter) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, er
 		return 0, err
 	}
 	return likes, nil
+}
+
+func (a *Adapter) CheckLikes(ctx context.Context, postID, userID uint32) (bool, error) {
+	var likes uint32
+	err := a.db.QueryRowContext(ctx, CheckLike, postID, userID).Scan(&likes)
+	if err != nil {
+		return false, fmt.Errorf("postgres check likes on post %d: %w", postID, err)
+	}
+
+	if likes == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

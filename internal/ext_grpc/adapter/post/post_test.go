@@ -36,7 +36,7 @@ func TestGetAuthorsPost(t *testing.T) {
 				return &models.Header{}, nil
 			},
 			Run: func(ctx context.Context, implementation *GrpcSender, request *models.Header) ([]*models.Post, error) {
-				res, err := implementation.GetAuthorsPosts(ctx, request)
+				res, err := implementation.GetAuthorsPosts(ctx, request, 0)
 				return res, err
 			},
 			ExpectedResult: func() ([]*models.Post, error) {
@@ -54,7 +54,7 @@ func TestGetAuthorsPost(t *testing.T) {
 				return &models.Header{AuthorID: 1}, nil
 			},
 			Run: func(ctx context.Context, implementation *GrpcSender, request *models.Header) ([]*models.Post, error) {
-				res, err := implementation.GetAuthorsPosts(ctx, request)
+				res, err := implementation.GetAuthorsPosts(ctx, request, 1)
 				return res, err
 			},
 			ExpectedResult: func() ([]*models.Post, error) {

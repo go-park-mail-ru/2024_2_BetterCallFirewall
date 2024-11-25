@@ -33,5 +33,5 @@ type Repository interface {
 }
 
 type PostGetter interface {
-	GetAuthorsPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
+	GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error)
 }
