@@ -334,9 +334,9 @@ func TestGetPosts(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
+		rows := sqlmock.NewRows([]string{"id", "author_id", "community_id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPost {
-			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
+			rows.AddRow(post.ID, post.Header.AuthorID, post.Header.CommunityID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getPostBatch)).
 			WithArgs(test.lastID).

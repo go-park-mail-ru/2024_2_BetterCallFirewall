@@ -105,18 +105,30 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 
 func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
 	rows, err := a.db.QueryContext(ctx, getPostBatch, lastID)
-	if rows != nil {
-		defer rows.Close()
-	}
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
+	defer rows.Close()
 
-	return createPostBatchFromRows(rows)
+	var posts []*models.Post
+
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
+			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+			return nil, fmt.Errorf("postgres scan posts: %w", err)
+		}
+		posts = append(posts, &post)
+	}
+
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
+	return posts, nil
 }
 
 func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
