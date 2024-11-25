@@ -235,9 +235,6 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 	var posts []*models.Post
 	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, my_err.ErrNoMoreContent
-		}
 		return nil, fmt.Errorf("postgres get community posts: %w", err)
 	}
 	defer rows.Close()
@@ -249,6 +246,10 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 		}
 		posts = append(posts, post)
 	}
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
 	return posts, nil
 }
 
