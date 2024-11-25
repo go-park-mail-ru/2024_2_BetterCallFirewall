@@ -33,4 +33,5 @@ var (
 	ErrLikeAlreadyExists    = errors.New("like already exists")
 	ErrWrongCommunity       = errors.New("wrong community")
 	ErrWrongPost            = errors.New("wrong post")
+	ErrPostTooLong          = errors.New("post len is too big")
 )

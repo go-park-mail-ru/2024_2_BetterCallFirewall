@@ -73,6 +73,10 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(newPost.PostContent.Text) > 499 {
+		pc.responder.ErrorBadRequest(w, my_err.ErrPostTooLong, reqID)
+		return
+	}
 	if comunity != "" {
 		comID, err := strconv.ParseUint(comunity, 10, 32)
 		if err != nil {
@@ -172,6 +176,10 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	post, err := pc.getPostFromBody(r)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+	if len(post.PostContent.Text) > 499 {
+		pc.responder.ErrorBadRequest(w, my_err.ErrPostTooLong, reqID)
 		return
 	}
 	post.ID = id
