@@ -11,11 +11,6 @@ services:
     depends_on:
       - redis
 
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-
   profilegrpc:
     build:
       context: .
