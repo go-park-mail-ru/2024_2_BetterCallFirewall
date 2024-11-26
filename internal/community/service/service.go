@@ -72,6 +72,8 @@ func (s *Service) Create(ctx context.Context, community *models.Community, autho
 	}
 	community.ID = id
 
+	s.AddAdmin(ctx, id, authorID)
+
 	return nil
 }
 

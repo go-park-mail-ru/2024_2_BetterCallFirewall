@@ -74,8 +74,6 @@ func (c CommunityRepository) Create(ctx context.Context, community *models.Commu
 		return 0, fmt.Errorf("create community db: %w", err)
 	}
 
-	c.adminList[community.ID] = append(c.adminList[community.ID], author)
-
 	return community.ID, nil
 }
 

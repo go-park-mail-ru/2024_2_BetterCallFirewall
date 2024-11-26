@@ -36,6 +36,10 @@ func (rw *responseWriter) WriteHeader(code int) {
 
 func HttpMetricsMiddleware(metr *metrics.HttpMetrics, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v1/metrics" {
+			next.ServeHTTP(w, r)
+			return
+		}
 		start := time.Now()
 		respWithCode := NewResponseWriter(w)
 		next.ServeHTTP(respWithCode, r)
