@@ -10,6 +10,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/profile_api"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/post"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
@@ -54,13 +55,13 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	}
 
 	responder := router.NewResponder(logger)
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
+	provider, err := ext_grpc.GetGRPCProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}
 	sm := auth.New(provider)
 
-	postProvider, err := post.GetPostProvider(cfg.POSTGRPC.Host, cfg.POSTGRPC.Port)
+	postProvider, err := ext_grpc.GetGRPCProvider(cfg.POSTGRPC.Host, cfg.POSTGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

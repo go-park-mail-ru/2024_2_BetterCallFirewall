@@ -13,6 +13,7 @@ import (
 	communityRepository "github.com/2024_2_BetterCallFirewall/internal/community/repository"
 	communityService "github.com/2024_2_BetterCallFirewall/internal/community/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
@@ -56,7 +57,7 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	communityServ := communityService.NewCommunityService(communityRepo)
 	communityControl := communityController.NewCommunityController(responder, communityServ)
 
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
+	provider, err := ext_grpc.GetGRPCProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, nil, err
 	}

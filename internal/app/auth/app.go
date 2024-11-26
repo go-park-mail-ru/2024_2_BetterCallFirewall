@@ -13,6 +13,7 @@ import (
 	redismy "github.com/2024_2_BetterCallFirewall/internal/auth/repository/redis"
 	"github.com/2024_2_BetterCallFirewall/internal/auth/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/profile"
 	metrics "github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
@@ -45,7 +46,7 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 		},
 	}
 
-	profileProvider, err := profile.GetProfileProvider(cfg.PROFILEGRPC.Host, cfg.PROFILEGRPC.Port)
+	profileProvider, err := ext_grpc.GetGRPCProvider(cfg.PROFILEGRPC.Host, cfg.PROFILEGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	filecontrol "github.com/2024_2_BetterCallFirewall/internal/fileService/controller"
 	fileservis "github.com/2024_2_BetterCallFirewall/internal/fileService/service"
@@ -28,7 +29,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	fileServ := fileservis.NewFileService()
 	fileController := filecontrol.NewFileController(fileServ, responder)
 
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
+	provider, err := ext_grpc.GetGRPCProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}

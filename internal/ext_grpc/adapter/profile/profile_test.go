@@ -306,11 +306,6 @@ func TestGetByEmail(t *testing.T) {
 	}
 }
 
-func TestProfileProvider(t *testing.T) {
-	_, err := GetProfileProvider("", "")
-	assert.Nil(t, err)
-}
-
 type TableTest[T, In any] struct {
 	name           string
 	SetupInput     func() (*In, error)

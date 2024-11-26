@@ -175,11 +175,6 @@ func TestGetHeader(t *testing.T) {
 	}
 }
 
-func TestPostProvider(t *testing.T) {
-	_, err := GetCommunityProvider("", "")
-	assert.Nil(t, err)
-}
-
 type TableTest[T, In any] struct {
 	name           string
 	SetupInput     func() (In, error)

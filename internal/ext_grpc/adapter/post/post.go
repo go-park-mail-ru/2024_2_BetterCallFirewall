@@ -2,10 +2,8 @@ package post
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/2024_2_BetterCallFirewall/internal/api/grpc/post_api"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/port/post"
@@ -32,14 +30,4 @@ func (g *GrpcSender) GetAuthorsPosts(ctx context.Context, header *models.Header,
 
 	res := post.UnmarshalResponse(resp)
 	return res, nil
-}
-
-func GetPostProvider(host, port string) (grpc.ClientConnInterface, error) {
-	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port), grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
 }

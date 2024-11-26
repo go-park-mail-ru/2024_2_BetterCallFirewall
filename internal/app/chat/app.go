@@ -10,6 +10,7 @@ import (
 	chatRepository "github.com/2024_2_BetterCallFirewall/internal/chat/repository/postgres"
 	chatService "github.com/2024_2_BetterCallFirewall/internal/chat/service"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc"
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
@@ -47,7 +48,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	chatControl := ChatController.NewChatController(chatServ, responder)
 	//defer close(chatControl.Messages)
 
-	provider, err := auth.GetAuthProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
+	provider, err := ext_grpc.GetGRPCProvider(cfg.AUTHGRPC.Host, cfg.AUTHGRPC.Port)
 	if err != nil {
 		return nil, err
 	}
