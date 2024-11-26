@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/profile"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
@@ -27,6 +30,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		http.Handle("/api/v1/metrics", promhttp.Handler())
+		http.ListenAndServe(":6003", nil)
+	}()
 
 	log.Printf("Listening on :%s with protocol gRPC", cfg.PROFILEGRPC.Port)
 	if err := grpcServer.Serve(l); err != nil {
