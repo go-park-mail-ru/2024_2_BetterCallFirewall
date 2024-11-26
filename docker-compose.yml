@@ -10,6 +10,12 @@ services:
       - "7072:7072"
     depends_on:
       - redis
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
   profilegrpc:
     build:
       context: .
