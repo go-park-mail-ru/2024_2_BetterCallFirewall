@@ -40,7 +40,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 	metrics.Timings = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "total_timings",
-			Buckets: []float64{0, 0.1, 0.5, 1, 5},
+			Buckets: []float64{0, 0.05, 0.1, 0.5, 1, 5},
 		},
 		[]string{"path", "status", "method"},
 	)

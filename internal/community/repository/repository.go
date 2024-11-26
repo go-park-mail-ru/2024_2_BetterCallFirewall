@@ -142,11 +142,11 @@ func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, a
 }
 
 func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
-	rows, err := c.db.QueryContext(ctx, CheckAccess, communityID, userID)
-	if err != nil {
+	var num int
+	err := c.db.QueryRowContext(ctx, CheckAccess, communityID, userID).Scan(&num)
+	if err != nil || num == 0 {
 		return false
 	}
-	rows.Close()
 
 	return true
 }
