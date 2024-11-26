@@ -32,6 +32,6 @@ func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
 func (m mockFileController) Download(w http.ResponseWriter, r *http.Request) {}
 
 func TestNewRouter(t *testing.T) {
-	r := NewRouter(mockFileController{}, mockSessionManager{}, logrus.New(), &metrics.HttpMetrics{})
+	r := NewRouter(mockFileController{}, mockSessionManager{}, logrus.New(), &metrics.FileMetrics{})
 	assert.NotNil(t, r)
 }

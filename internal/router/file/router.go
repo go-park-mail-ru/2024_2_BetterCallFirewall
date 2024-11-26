@@ -23,7 +23,7 @@ type FileController interface {
 	Download(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger, fileMetric *metrics.HttpMetrics) http.Handler {
+func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger, fileMetric *metrics.FileMetrics) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/image/{name}", fc.Upload).Methods(http.MethodGet, http.MethodOptions)
@@ -33,7 +33,7 @@ func NewRouter(fc FileController, sm SessionManager, logger *logrus.Logger, file
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
-	res = middleware.HttpMetricsMiddleware(fileMetric, res)
+	res = middleware.FileMetricsMiddleware(fileMetric, res)
 
 	return res
 }

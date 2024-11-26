@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"regexp"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -52,13 +54,22 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 }
 
 func (m *HttpMetrics) IncErrors(path string, status, method string) {
-	m.Errors.WithLabelValues(path, m.serviceName, status, method).Inc()
+	newPath := pathConverter(path)
+	m.Errors.WithLabelValues(newPath, m.serviceName, status, method).Inc()
 }
 
 func (m *HttpMetrics) IncHits(path string, status, method string) {
-	m.Hits.WithLabelValues(path, m.serviceName, status, method).Inc()
+	newPath := pathConverter(path)
+	m.Hits.WithLabelValues(newPath, m.serviceName, status, method).Inc()
 }
 
 func (m *HttpMetrics) ObserveTiming(path string, status, method string, time float64) {
-	m.Timings.WithLabelValues(path, status, method).Observe(time)
+	newPath := pathConverter(path)
+	m.Timings.WithLabelValues(newPath, status, method).Observe(time)
+}
+
+func pathConverter(originalPath string) string {
+	re := regexp.MustCompile(`(/[^/]+/)(\d+)(/?.*)`)
+	newPath := re.ReplaceAllString(originalPath, "$1{id}$3")
+	return newPath
 }

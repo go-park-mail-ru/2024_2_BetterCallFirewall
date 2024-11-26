@@ -35,7 +35,7 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 	}
 	sm := auth.New(provider)
 
-	fileMetrics, err := metrics.NewHTTPMetrics("file")
+	fileMetrics, err := metrics.NewFileMetrics("file")
 	if err != nil {
 		return nil, err
 	}
