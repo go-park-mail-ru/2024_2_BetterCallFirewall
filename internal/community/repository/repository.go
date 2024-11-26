@@ -116,8 +116,9 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 	if err != nil {
 		return fmt.Errorf("leave community: %w", err)
 	}
+	access := c.CheckAccess(ctx, communityId, author)
 
-	if c.CheckAccess(ctx, communityId, author) {
+	if access {
 		admins := c.adminList[communityId]
 		var i int
 		for idx, admin := range admins {
@@ -133,24 +134,21 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 }
 
 func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, author uint32) error {
-	_, ok := c.adminList[communityId]
-	if !ok {
-		return my_err.ErrWrongCommunity
+	_, err := c.db.ExecContext(ctx, InsertNewAdmin, communityId, author)
+	if err != nil {
+		return fmt.Errorf("insert new admin: %w", err)
 	}
-	c.adminList[communityId] = append(c.adminList[communityId], author)
-
 	return nil
 }
 
 func (c CommunityRepository) CheckAccess(ctx context.Context, communityID, userID uint32) bool {
-	admins := c.adminList[communityID]
-	for _, admin := range admins {
-		if admin == userID {
-			return true
-		}
+	rows, err := c.db.QueryContext(ctx, CheckAccess, communityID, userID)
+	if err != nil {
+		return false
 	}
+	rows.Close()
 
-	return false
+	return true
 }
 
 func (c CommunityRepository) Search(ctx context.Context, query string, lastID uint32) ([]*models.CommunityCard, error) {

@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS community (
                                          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS admin (
+    admin_id INT REFERENCES profile(id) ON DELETE CASCADE,
+    community_id INT REFERENCES community(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS community_profile (
                                                  community_id INT REFERENCES community(id) ON DELETE CASCADE ,
                                                  profile_id INT REFERENCES profile(id) ON DELETE CASCADE ,

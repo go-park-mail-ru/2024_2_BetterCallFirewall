@@ -35,6 +35,8 @@ WHERE
 ORDER BY community.name ASC
 LIMIT $3;`
 
-	GetHeader = `SELECT id, name, avatar FROM community WHERE id = $1`
-	IsFollow  = `SELECT COUNT(*) FROM community_profile WHERE community_id = $1 AND profile_id = $2`
+	GetHeader      = `SELECT id, name, avatar FROM community WHERE id = $1`
+	IsFollow       = `SELECT COUNT(*) FROM community_profile WHERE community_id = $1 AND profile_id = $2`
+	InsertNewAdmin = `INSERT INTO admin(community_id, admin_id) VALUES ($1, $2)`
+	CheckAccess    = `SELECT admin_id FROM admin WHERE community_id = $1 AND admin_id = $2`
 )
