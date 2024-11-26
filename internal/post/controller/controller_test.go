@@ -254,6 +254,33 @@ func TestCreate(t *testing.T) {
 				})
 			},
 		},
+		{
+			name: "9",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed?community=10",
+					bytes.NewBuffer([]byte(`{"post_content":{"text":"new post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tellus arcu, vulputate rutrum enim vitae, tincidunt imperdiet tellus. Aenean vulputate elit consequat lorem pellentesque bibendum. Donec sed mi posuere dolor semper mollis eu eget dolor. Proin et eleifend magna. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur tempus ultricies mi, eget malesuada metus. Nam sit amet felis nec dolor vehicula dapibus gravida in nunc. Mauris turpis et. "}}`)))
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Create(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
+				})
+			},
+		},
 	}
 
 	for _, v := range tests {
@@ -769,6 +796,35 @@ func TestUpdate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/10?community=10",
 					bytes.NewBuffer([]byte(`{"id"`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "10"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Update(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
+				m.postService.EXPECT().CheckAccessToCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
+					request.w.WriteHeader(http.StatusBadRequest)
+					request.w.Write([]byte("bad request"))
+				})
+			},
+		},
+		{
+			name: "12",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/10?community=1",
+					bytes.NewBuffer([]byte(`{"post_content":{"text":"new post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tellus arcu, vulputate rutrum enim vitae, tincidunt imperdiet tellus. Aenean vulputate elit consequat lorem pellentesque bibendum. Donec sed mi posuere dolor semper mollis eu eget dolor. Proin et eleifend magna. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur tempus ultricies mi, eget malesuada metus. Nam sit amet felis nec dolor vehicula dapibus gravida in nunc. Mauris turpis et. "}}`)))
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "10"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
