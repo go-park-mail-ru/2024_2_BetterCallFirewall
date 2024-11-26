@@ -13,14 +13,12 @@ import (
 const LIMIT = 10
 
 type CommunityRepository struct {
-	db        *sql.DB
-	adminList map[uint32][]uint32
+	db *sql.DB
 }
 
 func NewCommunityRepository(db *sql.DB) *CommunityRepository {
 	return &CommunityRepository{
-		db:        db,
-		adminList: make(map[uint32][]uint32),
+		db: db,
 	}
 }
 
@@ -117,15 +115,10 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 	access := c.CheckAccess(ctx, communityId, author)
 
 	if access {
-		admins := c.adminList[communityId]
-		var i int
-		for idx, admin := range admins {
-			if admin == author {
-				i = idx
-				break
-			}
+		_, err := c.db.ExecContext(ctx, DeleteAdmin, communityId, author)
+		if err != nil {
+			return fmt.Errorf("delete admin: %w", err)
 		}
-		c.adminList[communityId] = append(c.adminList[communityId][:i], c.adminList[communityId][i+1:]...)
 	}
 
 	return nil

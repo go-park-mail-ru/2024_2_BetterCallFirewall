@@ -39,4 +39,5 @@ LIMIT $3;`
 	IsFollow       = `SELECT COUNT(*) FROM community_profile WHERE community_id = $1 AND profile_id = $2`
 	InsertNewAdmin = `INSERT INTO admin(community_id, admin_id) VALUES ($1, $2)`
 	CheckAccess    = `SELECT COUNT(*) FROM admin WHERE community_id = $1 AND admin_id = $2`
+	DeleteAdmin    = `DELETE FROM admin WHERE community_id = $1 AND admin_id = $2`
 )
