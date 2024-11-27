@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"net/http"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,7 +22,7 @@ func NewFileMetrics(serviceName string) (*FileMetrics, error) {
 			Name: "file_errors_total",
 			Help: "Number of total errors.",
 		},
-		[]string{"path", "service", "status", "method", "format", "size"},
+		[]string{"path", "service", "status", "method", "format", "size", "up"},
 	)
 	if err := prometheus.Register(metrics.Errors); err != nil {
 		return nil, err
@@ -43,7 +44,7 @@ func NewFileMetrics(serviceName string) (*FileMetrics, error) {
 			Name:    "file_total_timings",
 			Buckets: []float64{0, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "status", "method", "format", "size", "up"},
+		[]string{"path", "status", "method", "format", "size"},
 	)
 	if err := prometheus.Register(metrics.Timings); err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func NewFileMetrics(serviceName string) (*FileMetrics, error) {
 
 func (m *FileMetrics) IncErrors(path string, status, method, format string, size int64) {
 	newPath := pathConverter(path)
-	m.Errors.WithLabelValues(newPath, m.serviceName, status, method, format, getSizeRange(size)).Inc()
+	m.Errors.WithLabelValues(newPath, m.serviceName, status, method, format, getSizeRange(size), strconv.Itoa(m.up)).Inc()
 }
 
 func (m *FileMetrics) IncHits(path string, status, method, format string, size int64) {
@@ -67,11 +68,12 @@ func (m *FileMetrics) IncHits(path string, status, method, format string, size i
 
 func (m *FileMetrics) ObserveTiming(path string, status, method, format string, size int64, time float64) {
 	newPath := pathConverter(path)
-	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size), strconv.Itoa(m.up)).Observe(time)
+	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size)).Observe(time)
 }
 
 func (m *FileMetrics) ShutDown() {
 	m.up = 0
+	m.IncErrors("shutting down", strconv.Itoa(http.StatusInternalServerError), http.MethodGet, "", 0)
 }
 
 func getSizeRange(size int64) string {

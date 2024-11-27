@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"net/http"
 	"regexp"
 	"strconv"
 
@@ -22,7 +23,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 			Name: "errors_total",
 			Help: "Number of total errors.",
 		},
-		[]string{"path", "service", "status", "method"},
+		[]string{"path", "service", "status", "method", "up"},
 	)
 	if err := prometheus.Register(metrics.Errors); err != nil {
 		return nil, err
@@ -44,7 +45,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 			Name:    "total_timings",
 			Buckets: []float64{0, 0.05, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "status", "method", "up"},
+		[]string{"path", "status", "method"},
 	)
 	if err := prometheus.Register(metrics.Timings); err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 
 func (m *HttpMetrics) IncErrors(path string, status, method string) {
 	newPath := pathConverter(path)
-	m.Errors.WithLabelValues(newPath, m.serviceName, status, method).Inc()
+	m.Errors.WithLabelValues(newPath, m.serviceName, status, method, strconv.Itoa(m.up)).Inc()
 }
 
 func (m *HttpMetrics) IncHits(path string, status, method string) {
@@ -67,11 +68,12 @@ func (m *HttpMetrics) IncHits(path string, status, method string) {
 
 func (m *HttpMetrics) ObserveTiming(path string, status, method string, time float64) {
 	newPath := pathConverter(path)
-	m.Timings.WithLabelValues(newPath, status, method, strconv.Itoa(m.up)).Observe(time)
+	m.Timings.WithLabelValues(newPath, status, method).Observe(time)
 }
 
 func (m *HttpMetrics) ShutDown() {
 	m.up = 0
+	m.IncErrors(m.serviceName, "shutting down", http.MethodGet)
 }
 
 func pathConverter(originalPath string) string {
