@@ -6,7 +6,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type SessionRedisRepository struct {
@@ -34,7 +34,7 @@ func (s *SessionRedisRepository) CreateSession(session *models.Session) error {
 	}
 
 	if res != "OK" {
-		return myErr.ErrResNotOK
+		return my_err.ErrResNotOK
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func (s *SessionRedisRepository) FindSession(sessID string) (*models.Session, er
 	mkey := "sessions:" + sessID
 	data, err := redis.String(conn.Do("GET", mkey))
 	if err != nil {
-		return nil, myErr.ErrSessionNotFound
+		return nil, my_err.ErrSessionNotFound
 	}
 
 	sess := &models.Session{}

@@ -8,19 +8,26 @@ import (
 	"strings"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
-// TODO добавить сообщества
 const (
-	createPost      = `INSERT INTO post (author_id, content) VALUES ($1, $2) RETURNING id;`
-	getPost         = `SELECT id, author_id, content, created_at  FROM post WHERE id = $1;`
+	createPost      = `INSERT INTO post (author_id, content, file_path) VALUES ($1, $2, $3) RETURNING id;`
+	getPost         = `SELECT id, author_id, content, file_path, created_at  FROM post WHERE id = $1;`
 	deletePost      = `DELETE FROM post WHERE id = $1;`
-	updatePost      = `UPDATE post SET content = $1, updated_at = $2 WHERE id = $3;`
-	getPostBatch    = `SELECT id, author_id, content, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
-	getProfilePosts = `SELECT id, content, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
-	getFriendsPost  = `SELECT id, author_id, content, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
+	updatePost      = `UPDATE post SET content = $1, updated_at = $2, file_path = $3 WHERE id = $4;`
+	getPostBatch    = `SELECT id, CASE WHEN author_id IS NULL THEN 0 ELSE author_id END, CASE WHEN community_id IS NULL THEN 0 ELSE community_id END, content, file_path, created_at  FROM post WHERE id < $1 ORDER BY created_at DESC LIMIT 10;`
+	getProfilePosts = `SELECT id, content, file_path, created_at FROM post WHERE author_id = $1 ORDER BY created_at DESC;`
+	getFriendsPost  = `SELECT id, author_id, content, file_path, created_at FROM post WHERE id < $1 AND author_id = ANY($2::int[]) ORDER BY created_at DESC LIMIT 10;`
 	getPostAuthor   = `SELECT author_id FROM post WHERE id = $1;`
+
+	createCommunityPost = `INSERT INTO post (community_id, content, file_path) VALUES ($1, $2, $3) RETURNING id;`
+	getCommunityPosts   = `SELECT id, community_id, content, file_path, created_at FROM post WHERE community_id = $1 AND id < $2 ORDER BY id DESC LIMIT 10;`
+
+	AddLikeToPost      = `INSERT INTO reaction (post_id, user_id) VALUES ($1, $2);`
+	DeleteLikeFromPost = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
+	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
+	CheckLike          = `SELECT COUNT(*) FROM reaction WHERE post_id = $1 AND user_id=$2;`
 )
 
 type Adapter struct {
@@ -36,7 +43,7 @@ func NewAdapter(db *sql.DB) *Adapter {
 func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	var postID uint32
 
-	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text).Scan(&postID); err != nil {
+	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File).Scan(&postID); err != nil {
 		return 0, fmt.Errorf("postgres create post: %w", err)
 	}
 
@@ -46,9 +53,10 @@ func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error)
 func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) {
 	var post models.Post
 
-	if err := a.db.QueryRowContext(ctx, getPost, postID).Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+	if err := a.db.QueryRowContext(ctx, getPost, postID).
+		Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrPostNotFound
+			return nil, my_err.ErrPostNotFound
 		}
 
 		return nil, fmt.Errorf("postgres get post: %w", err)
@@ -70,14 +78,14 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 	}
 
 	if affected == 0 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 
 	return nil
 }
 
 func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
-	res, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.ID)
+	res, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.PostContent.File, post.ID)
 
 	if err != nil {
 		return fmt.Errorf("postgres update post: %w", err)
@@ -89,7 +97,7 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 	}
 
 	if affected == 0 {
-		return myErr.ErrPostNotFound
+		return my_err.ErrPostNotFound
 	}
 
 	return nil
@@ -97,18 +105,30 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 
 func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
 	rows, err := a.db.QueryContext(ctx, getPostBatch, lastID)
-	if rows != nil {
-		defer rows.Close()
-	}
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
+	defer rows.Close()
 
-	return createPostBatchFromRows(rows)
+	var posts []*models.Post
+
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
+			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+			return nil, fmt.Errorf("postgres scan posts: %w", err)
+		}
+		posts = append(posts, &post)
+	}
+
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
+	return posts, nil
 }
 
 func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
@@ -120,7 +140,7 @@ func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastI
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get friends posts: %w", err)
 	}
@@ -133,21 +153,18 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
 
-	if rows != nil {
-		defer rows.Close()
-	}
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 
 		return nil, fmt.Errorf("postgres get author posts: %w", err)
 	}
 
+	defer rows.Close()
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.CreatedAt)
+		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("postgres get author posts: %w", err)
 		}
@@ -163,7 +180,7 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 
 	if err := a.db.QueryRowContext(ctx, getPostAuthor, postID).Scan(&authorID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, myErr.ErrPostNotFound
+			return 0, my_err.ErrPostNotFound
 		}
 		return 0, fmt.Errorf("postgres get post author: %w", err)
 	}
@@ -176,14 +193,14 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)
 	}
 
 	if len(posts) == 0 {
-		return posts, myErr.ErrNoMoreContent
+		return posts, my_err.ErrNoMoreContent
 	}
 
 	return posts, nil
@@ -202,4 +219,81 @@ func convertSliceToString(sl []uint32) string {
 	res += "}"
 
 	return res
+}
+
+func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+	var ID uint32
+	if err := a.db.QueryRowContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File).Scan(&ID); err != nil {
+		return 0, fmt.Errorf("postgres create community post db: %w", err)
+	}
+
+	return ID, nil
+
+}
+
+func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32) ([]*models.Post, error) {
+	var posts []*models.Post
+	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
+	if err != nil {
+		return nil, fmt.Errorf("postgres get community posts: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		post := &models.Post{}
+		err = rows.Scan(&post.ID, &post.Header.CommunityID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("postgres get community posts: %w", err)
+		}
+		posts = append(posts, post)
+	}
+	if len(posts) == 0 {
+		return posts, my_err.ErrNoMoreContent
+	}
+
+	return posts, nil
+}
+
+func (a *Adapter) SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error {
+	res, err := a.db.ExecContext(ctx, AddLikeToPost, postID, userID)
+	if num, err := res.RowsAffected(); err == nil && num == 0 {
+		return my_err.ErrLikeAlreadyExists
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Adapter) DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error {
+	_, err := a.db.ExecContext(ctx, DeleteLikeFromPost, postID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Adapter) GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error) {
+	var likes uint32
+	err := a.db.QueryRowContext(ctx, GetLikesOnPost, postID).Scan(&likes)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, my_err.ErrWrongPost
+		}
+		return 0, err
+	}
+	return likes, nil
+}
+
+func (a *Adapter) CheckLikes(ctx context.Context, postID, userID uint32) (bool, error) {
+	var likes uint32
+	err := a.db.QueryRowContext(ctx, CheckLike, postID, userID).Scan(&likes)
+	if err != nil {
+		return false, fmt.Errorf("postgres check likes on post %d: %w", postID, err)
+	}
+
+	if likes == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

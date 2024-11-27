@@ -5,56 +5,164 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
 
-var (
-	errMock = errors.New("err")
-	posts   = []*models.Post{{PostContent: models.Content{Text: "my post"}}}
-)
-
-type mockProfileDB struct{}
-
-func (m mockProfileDB) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
-	if header == nil {
-		return nil, errMock
-	}
-
-	return posts, nil
+type mocksHelper struct {
+	repo *MockPostProfileDB
 }
 
-type mockFileService struct{}
-
-func (m mockFileService) GetPostPicture(ctx context.Context, postID uint32) *models.Picture {
-	if postID == 0 {
-		return nil
+func getServiceHelper(ctrl *gomock.Controller) (*PostProfileImpl, *mocksHelper) {
+	m := &mocksHelper{
+		repo: NewMockPostProfileDB(ctrl),
 	}
 
-	res := models.Picture("")
-	return &res
+	return NewPostProfileImpl(m.repo), m
 }
 
-type TestCase struct {
-	header   *models.Header
-	wantPost []*models.Post
-	wantErr  error
+type input struct {
+	header *models.Header
+	userID uint32
 }
 
-func TestGetAuthorsPosts(t *testing.T) {
-	tests := []TestCase{
-		{header: nil, wantPost: nil, wantErr: errMock},
-		{header: &models.Header{}, wantPost: posts, wantErr: nil},
+func TestGetAuthorsPost(t *testing.T) {
+	tests := []TableTest2[[]*models.Post, input]{
+		{
+			name: "1",
+			SetupInput: func() (*input, error) {
+				return &input{}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostProfileImpl, request input) ([]*models.Post, error) {
+				return implementation.GetAuthorsPosts(ctx, request.header, request.userID)
+			},
+			ExpectedResult: func() ([]*models.Post, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request input, m *mocksHelper) {
+				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(nil, errMock)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*input, error) {
+				return &input{}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostProfileImpl, request input) ([]*models.Post, error) {
+				return implementation.GetAuthorsPosts(ctx, request.header, request.userID)
+			},
+			ExpectedResult: func() ([]*models.Post, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request input, m *mocksHelper) {
+				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
+					[]*models.Post{
+						{
+							ID: 1,
+						},
+					}, nil)
+				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*input, error) {
+				return &input{}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostProfileImpl, request input) ([]*models.Post, error) {
+				return implementation.GetAuthorsPosts(ctx, request.header, request.userID)
+			},
+			ExpectedResult: func() ([]*models.Post, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request input, m *mocksHelper) {
+				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
+					[]*models.Post{
+						{
+							ID: 1,
+						},
+					}, nil)
+				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.repo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errMock)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*input, error) {
+				return &input{}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostProfileImpl, request input) ([]*models.Post, error) {
+				return implementation.GetAuthorsPosts(ctx, request.header, request.userID)
+			},
+			ExpectedResult: func() ([]*models.Post, error) {
+				return []*models.Post{
+					{
+						ID:         1,
+						IsLiked:    true,
+						LikesCount: 1,
+					},
+				}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request input, m *mocksHelper) {
+				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
+					[]*models.Post{
+						{
+							ID: 1,
+						},
+					}, nil)
+				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.repo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
 	}
 
-	serv := NewPostProfileImpl(mockFileService{}, mockProfileDB{})
+	for _, v := range tests {
+		t.Run(v.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-	for _, test := range tests {
-		post, err := serv.GetAuthorsPosts(context.Background(), test.header)
-		assert.Equal(t, test.wantPost, post)
-		if !errors.Is(err, test.wantErr) {
-			t.Errorf("wrong error, expected: %#v, got: %#v", test.wantErr, err)
-		}
+			serv, mock := getServiceHelper(ctrl)
+			ctx := context.Background()
+
+			input, err := v.SetupInput()
+			if err != nil {
+				t.Error(err)
+			}
+
+			v.SetupMock(*input, mock)
+
+			res, err := v.ExpectedResult()
+			if err != nil {
+				t.Error(err)
+			}
+
+			actual, err := v.Run(ctx, serv, *input)
+			assert.Equal(t, res, actual)
+			if !errors.Is(err, v.ExpectedErr) {
+				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+			}
+		})
 	}
+}
+
+func TestNewPostProfile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	service, _ := getServiceHelper(ctrl)
+	assert.NotNil(t, service)
+}
+
+type TableTest2[T, In any] struct {
+	name           string
+	SetupInput     func() (*In, error)
+	Run            func(context.Context, *PostProfileImpl, In) (T, error)
+	ExpectedResult func() (T, error)
+	ExpectedErr    error
+	SetupMock      func(In, *mocksHelper)
 }

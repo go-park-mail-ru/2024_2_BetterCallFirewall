@@ -1,27 +1,21 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
-	"mime/multipart"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
-var fileFormat = map[string]struct{}{
-	"image/jpeg": {},
-	"image/jpg":  {},
-	"image/png":  {},
-	"image/webp": {},
-}
-
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
@@ -31,40 +25,34 @@ type Responder interface {
 	LogError(err error, requestID string)
 }
 
-type FileService interface {
-	CreateFile(file multipart.File) (string, error)
-}
-
 type ProfileHandlerImplementation struct {
 	ProfileManager profile.ProfileUsecase
 	Responder      Responder
-	FileService    FileService
 }
 
-func NewProfileController(manager profile.ProfileUsecase, fileService FileService, responder Responder) *ProfileHandlerImplementation {
+func NewProfileController(manager profile.ProfileUsecase, responder Responder) *ProfileHandlerImplementation {
 	return &ProfileHandlerImplementation{
 		ProfileManager: manager,
 		Responder:      responder,
-		FileService:    fileService,
 	}
 }
 
 func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 
 	userId := sess.UserID
 	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -78,22 +66,22 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorInternal(w, err, reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 	userId := sess.UserID
 	userProfile, err := h.ProfileManager.GetProfileById(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
-		if errors.Is(err, myErr.ErrNoMoreContent) {
+		if errors.Is(err, my_err.ErrNoMoreContent) {
 			h.Responder.OutputNoMoreContentJSON(w, reqID)
 			return
 		}
@@ -107,12 +95,12 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", myErr.ErrSessionNotFound), reqID)
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
 		return
 	}
 
@@ -134,35 +122,10 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 
 func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.FullProfile, error) {
 	newProfile := models.FullProfile{}
-
-	err := r.ParseMultipartForm(10 << 20) //10 M byte
-	defer r.MultipartForm.RemoveAll()
+	err := json.NewDecoder(r.Body).Decode(&newProfile)
 	if err != nil {
-		return nil, fmt.Errorf("update profile: %w", myErr.ErrToLargeFile)
+		return nil, err
 	}
-
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		file = nil
-	} else {
-		format := header.Header.Get("Content-Type")
-		if _, ok := fileFormat[format]; !ok {
-			return nil, fmt.Errorf("update profile: %w", myErr.ErrWrongFiletype)
-		}
-	}
-
-	filePath := ""
-	if file != nil {
-		filePath, err = h.FileService.CreateFile(file)
-		if err != nil {
-			return nil, fmt.Errorf("update profile: %w", err)
-		}
-	}
-
-	newProfile.FirstName = r.Form.Get("first_name")
-	newProfile.LastName = r.Form.Get("last_name")
-	newProfile.Bio = r.Form.Get("bio")
-	newProfile.Avatar = models.Picture(filePath)
 
 	return &newProfile, nil
 }
@@ -174,11 +137,11 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
-		h.Responder.ErrorBadRequest(w, myErr.ErrSessionNotFound, reqID)
+		h.Responder.ErrorBadRequest(w, my_err.ErrSessionNotFound, reqID)
 		return
 	}
 
@@ -189,14 +152,14 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 		return
 	}
 
-	http.Redirect(w, r, "/api/v1/auth/logout", http.StatusContinue)
+	h.Responder.OutputJSON(w, "delete", reqID)
 }
 
 func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
-		return 0, myErr.ErrEmptyId
+		return 0, my_err.ErrEmptyId
 	}
 
 	uid, err := strconv.ParseUint(id, 10, 32)
@@ -204,7 +167,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 		return 0, err
 	}
 	if uid > math.MaxInt {
-		return 0, myErr.ErrBigId
+		return 0, my_err.ErrBigId
 	}
 	return uint32(uid), nil
 }
@@ -216,7 +179,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -226,7 +189,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 
 	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, myErr.ErrProfileNotFound) {
+		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
 			return
 		}
@@ -256,7 +219,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -303,7 +266,7 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -316,8 +279,8 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	h.Responder.OutputJSON(w, "success", reqID)
 
+	h.Responder.OutputJSON(w, "success", reqID)
 }
 
 func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {
@@ -327,7 +290,7 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -349,7 +312,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -370,7 +333,7 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	whose, who, err := GetReceiverAndSender(r)
@@ -393,7 +356,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -406,6 +369,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllFriends(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
@@ -426,7 +390,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -458,7 +422,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 	)
 
 	if !ok {
-		h.Responder.LogError(myErr.ErrInvalidContext, "")
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if err != nil {
@@ -471,6 +435,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+
 	profiles, err := h.ProfileManager.GetAllSubscriptions(r.Context(), id, lastId)
 	if err != nil {
 		h.Responder.ErrorInternal(w, err, reqID)
@@ -478,6 +443,83 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 	}
 	if len(profiles) == 0 {
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
+		return
+	}
+
+	h.Responder.OutputJSON(w, profiles, reqID)
+}
+
+func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		id, err   = GetIdFromURL(r)
+	)
+
+	if !ok {
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	lastId, err := GetLastId(r)
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	subs, err := h.ProfileManager.GetCommunitySubs(r.Context(), id, lastId)
+	if err != nil {
+		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	if len(subs) == 0 {
+		h.Responder.OutputNoMoreContentJSON(w, reqID)
+		return
+	}
+
+	h.Responder.OutputJSON(w, subs, reqID)
+}
+
+func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		subStr    = r.URL.Query().Get("q")
+		lastID    = r.URL.Query().Get("id")
+		id        uint64
+		err       error
+	)
+
+	if !ok {
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if len(subStr) < 3 {
+		h.Responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+		return
+	}
+
+	if lastID == "" {
+		id = math.MaxInt32
+	} else {
+		id, err = strconv.ParseUint(lastID, 10, 32)
+		if err != nil {
+			h.Responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+			return
+		}
+	}
+
+	profiles, err := h.ProfileManager.Search(r.Context(), subStr, uint32(id))
+	if err != nil {
+		if errors.Is(err, my_err.ErrSessionNotFound) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
 

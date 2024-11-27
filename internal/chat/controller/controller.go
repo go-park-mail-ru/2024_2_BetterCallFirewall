@@ -13,9 +13,10 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/chat"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestId string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
@@ -42,17 +43,21 @@ func NewChatController(service chat.ChatService, responder Responder) *ChatContr
 const (
 	socketBufferSize  = 1024
 	messageBufferSize = 256
+	layout            = "2006-01-02T15:04:05Z"
 )
 
 var (
-	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize, CheckOrigin: func(r *http.Request) bool { return true }}
+	upgrader = websocket.Upgrader{
+		ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize,
+		CheckOrigin: func(r *http.Request) bool { return true },
+	}
 	mapUserConn = make(map[uint32]*Client)
 )
 
 func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value("requestID").(string)
 	if !ok {
-		cc.responder.LogError(myErr.ErrInvalidContext, "")
+		cc.responder.LogError(my_err.ErrInvalidContext, "")
 		return
 	}
 
@@ -98,7 +103,6 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
 			resConn.Receive <- msg
 		}
 	}
-	return
 }
 
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
@@ -110,15 +114,15 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		cc.responder.LogError(myErr.ErrInvalidContext, "")
+		cc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if lastTimeQuery == "" {
 		lastTime = time.Now()
 	} else {
-		lastTime, err = time.Parse("2006-01-02T15:04:05.000000Z", lastTimeQuery)
+		lastTime, err = time.Parse(layout, lastTimeQuery)
 		if err != nil {
-			cc.responder.ErrorBadRequest(w, myErr.ErrWrongDateFormat, reqID)
+			cc.responder.ErrorBadRequest(w, my_err.ErrWrongDateFormat, reqID)
 			return
 		}
 	}
@@ -130,7 +134,7 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chats, err := cc.chatService.GetAllChats(r.Context(), sess.UserID, lastTime)
-	if errors.Is(err, myErr.ErrNoMoreContent) {
+	if errors.Is(err, my_err.ErrNoMoreContent) {
 		cc.responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
@@ -147,7 +151,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 	if id == "" {
-		return 0, myErr.ErrEmptyId
+		return 0, my_err.ErrEmptyId
 	}
 
 	uid, err := strconv.ParseUint(id, 10, 32)
@@ -155,7 +159,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 		return 0, err
 	}
 	if uid > math.MaxInt {
-		return 0, myErr.ErrBigId
+		return 0, my_err.ErrBigId
 	}
 	return uint32(uid), nil
 }
@@ -169,15 +173,15 @@ func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !ok {
-		cc.responder.LogError(myErr.ErrInvalidContext, "")
+		cc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
 	if lastTimeQuery == "" {
 		lastTime = time.Now()
 	} else {
-		lastTime, err = time.Parse("2006-01-02T15:04:05.000000Z", lastTimeQuery)
+		lastTime, err = time.Parse(layout, lastTimeQuery)
 		if err != nil {
-			cc.responder.ErrorBadRequest(w, myErr.ErrWrongDateFormat, reqID)
+			cc.responder.ErrorBadRequest(w, my_err.ErrWrongDateFormat, reqID)
 			return
 		}
 	}
@@ -194,7 +198,7 @@ func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	messages, err := cc.chatService.GetChat(r.Context(), sess.UserID, id, lastTime)
-	if errors.Is(err, myErr.ErrNoMoreContent) {
+	if errors.Is(err, my_err.ErrNoMoreContent) {
 		cc.responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}

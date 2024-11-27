@@ -5,7 +5,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type SessionManagerImpl struct {
@@ -42,7 +42,7 @@ func (sm *SessionManagerImpl) Create(userID uint32) (*models.Session, error) {
 
 func (sm *SessionManagerImpl) Destroy(sess *models.Session) error {
 	if sess == nil {
-		return myErr.ErrNoAuth
+		return my_err.ErrNoAuth
 	}
 	err := sm.DB.DestroySession(sess.ID)
 	if err != nil {

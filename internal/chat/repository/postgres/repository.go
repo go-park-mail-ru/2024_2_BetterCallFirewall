@@ -10,7 +10,7 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 type Repo struct {
@@ -30,7 +30,7 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get chats: %w", err)
 	}
@@ -45,7 +45,7 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 	}
 
 	if len(chats) == 0 {
-		return nil, myErr.ErrNoMoreContent
+		return nil, my_err.ErrNoMoreContent
 	}
 
 	return chats, nil
@@ -58,7 +58,7 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, myErr.ErrNoMoreContent
+			return nil, my_err.ErrNoMoreContent
 		}
 		return nil, fmt.Errorf("postgres get messages: %w", err)
 	}
@@ -67,12 +67,12 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 	for rows.Next() {
 		msg := &models.Message{}
 		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
-			return nil, fmt.Errorf("postgres get m\nessages: %w", err)
+			return nil, fmt.Errorf("postgres get messages: %w", err)
 		}
 		messages = append(messages, msg)
 	}
 	if len(messages) == 0 {
-		return nil, myErr.ErrNoMoreContent
+		return nil, my_err.ErrNoMoreContent
 	}
 
 	return messages, nil

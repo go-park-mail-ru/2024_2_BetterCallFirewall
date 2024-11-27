@@ -1,0 +1,25 @@
+FROM golang:alpine AS build
+
+WORKDIR /profilegrpc
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+RUN go mod vendor
+
+COPY . .
+
+RUN go build cmd/gRPC/profile/main.go
+
+FROM alpine:latest
+
+WORKDIR /profilegrpc
+
+EXPOSE 7074
+
+COPY .env .
+
+COPY --from=build /profilegrpc/main /profilegrpc/main
+
+CMD ["./main"]

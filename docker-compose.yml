@@ -1,17 +1,112 @@
 version: '3.9'
 
 services:
-  project:
+  authgrpc:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfileauthgrpc
     restart: always
-    volumes:
-      - ./image:/image
     ports:
-      - "8080:8080"
+      - "7072:7072"
+    depends_on:
+      - redis
+
+  profilegrpc:
+    build:
+      context: .
+      dockerfile: Dockerfileprofilegrpc
+    restart: always
+    ports:
+      - "7074:7074"
     depends_on:
       - db
+      - authgrpc
+  postgrpc:
+    build:
+      context: .
+      dockerfile: Dockerfilepostgrpc
+    restart: always
+    ports:
+      - "7075:7075"
+    depends_on:
+      - db
+      - profilegrpc
+
+  community:
+    build:
+      context: .
+      dockerfile: Dockerfilecommunity
+    restart: always
+    ports:
+      - "8086:8086"
+      - "7076:7076"
+    depends_on:
+      - db
+      - authgrpc
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfileauth
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - redis
+      - profilegrpc
+      - community
+
+  file:
+    build:
+      context: .
+      dockerfile: Dockerfilefile
+    volumes:
+      - ./image:/image
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      - authgrpc
+      - auth
+
+  profile:
+    build:
+      context: .
+      dockerfile: Dockerfileprofile
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
+      - db
+      - authgrpc
+      - postgrpc
+      - file
+
+  post:
+    build:
+      context: .
+      dockerfile: Dockerfilepost
+    restart: always
+    ports:
+      - "8085:8085"
+    depends_on:
+      - db
+      - authgrpc
+      - profilegrpc
+      - community
+      - profile
+  chat:
+    build:
+      context: .
+      dockerfile: Dockerfilechat
+    restart: always
+    ports:
+      - "8087:8087"
+    depends_on:
+      - db
+      - authgrpc
+      - post
+
   db:
     image: postgres:latest
     ports:
@@ -49,5 +144,37 @@ services:
     restart: always
     tty: true
     stdin_open: true
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus.yml"
+    command:
+      - --config.file=/etc/prometheus.yml
+      - --web.enable-admin-api
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+
+  node_exporter:
+    depends_on:
+      - prometheus
+    image: quay.io/prometheus/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+    ports:
+      - "9100:9100"
+
 volumes:
   postgres_data:

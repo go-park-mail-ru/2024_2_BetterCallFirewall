@@ -1,0 +1,25 @@
+FROM golang:alpine AS build
+
+WORKDIR /chat
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+RUN go mod vendor
+
+COPY . .
+
+RUN go build cmd/chat/main.go
+
+FROM alpine:latest
+
+WORKDIR /chat
+
+EXPOSE 8083
+
+COPY .env .
+
+COPY --from=build /chat/main /chat/main
+
+CMD ["./main"]

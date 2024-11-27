@@ -6,25 +6,27 @@ import (
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
-	"github.com/2024_2_BetterCallFirewall/internal/myErr"
+	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
 var errMock = errors.New("something with DB")
 
 type MockDB struct{}
 
-func (m MockDB) Create(user *models.User, ctx context.Context) (uint32, error) {
+func (m MockDB) Create(ctx context.Context, user *models.User) (uint32, error) {
 	if user.ID == 0 {
-		return user.ID, myErr.ErrUserNotFound
+		return user.ID, status.Error(codes.AlreadyExists, "")
 	}
 	return user.ID, nil
 }
 
-func (m MockDB) GetByEmail(email string, ctx context.Context) (*models.User, error) {
+func (m MockDB) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	if email == "email@wrong.com" {
-		return nil, myErr.ErrUserNotFound
+		return nil, status.Error(codes.NotFound, "")
 	}
 
 	if email == "email@wrong2.com" {
@@ -48,9 +50,10 @@ func TestCreate(t *testing.T) {
 
 	testCases := []TestCase{
 		{models.User{ID: 1, Email: "email@email.com", Password: "some password"}, nil},
-		{models.User{ID: 0, Email: "email@email.com", Password: "some password"}, myErr.ErrUserNotFound},
-		{models.User{ID: 100, Email: "email", Password: "some password"}, myErr.ErrNonValidEmail},
-		{models.User{ID: 1, Email: "email@email.com", Password: "some very very long password, more then 74 symbols this password dont use anymore in real life and have validate on client"},
+		{models.User{ID: 0, Email: "email@email.com", Password: "some password"}, my_err.ErrUserAlreadyExists},
+		{models.User{ID: 100, Email: "email", Password: "some password"}, my_err.ErrNonValidEmail},
+		{models.User{ID: 1, Email: "email@email.com",
+			Password: "some very very long password, more then 74 symbols this password dont use anymore in real life and have validate on client"},
 			bcrypt.ErrPasswordTooLong},
 	}
 
@@ -67,10 +70,10 @@ func TestAuth(t *testing.T) {
 
 	testCases := []TestCase{
 		{models.User{ID: 1, Email: "email@email.com", Password: "password"}, nil},
-		{models.User{ID: 100, Email: "email", Password: "some password"}, myErr.ErrNonValidEmail},
-		{models.User{ID: 100, Email: "email@wrong.com", Password: "some password"}, myErr.ErrWrongEmailOrPassword},
+		{models.User{ID: 100, Email: "email", Password: "some password"}, my_err.ErrNonValidEmail},
+		{models.User{ID: 100, Email: "email@wrong.com", Password: "some password"}, my_err.ErrWrongEmailOrPassword},
 		{models.User{ID: 100, Email: "email@wrong2.com", Password: "some password"}, errMock},
-		{models.User{ID: 1, Email: "email@email.com", Password: "some password"}, myErr.ErrWrongEmailOrPassword},
+		{models.User{ID: 1, Email: "email@email.com", Password: "some password"}, my_err.ErrWrongEmailOrPassword},
 	}
 
 	for _, testCase := range testCases {

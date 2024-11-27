@@ -1,0 +1,25 @@
+FROM golang:alpine AS build
+
+WORKDIR /authgrpc
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+RUN go mod vendor
+
+COPY . .
+
+RUN go build cmd/gRPC/auth/main.go
+
+FROM alpine:latest
+
+WORKDIR /authgrpc
+
+EXPOSE 7072
+
+COPY .env .
+
+COPY --from=build /authgrpc/main /authgrpc/main
+
+CMD ["./main"]
