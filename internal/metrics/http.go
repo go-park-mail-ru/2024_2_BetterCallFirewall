@@ -10,7 +10,7 @@ import (
 type HttpMetrics struct {
 	Errors      *prometheus.CounterVec
 	serviceName string
-	up          bool
+	up          int
 	Hits        *prometheus.CounterVec
 	Timings     *prometheus.HistogramVec
 }
@@ -51,7 +51,7 @@ func NewHTTPMetrics(serviceName string) (*HttpMetrics, error) {
 	}
 
 	metrics.serviceName = serviceName
-	metrics.up = true
+	metrics.up = 1
 	return &metrics, nil
 }
 
@@ -67,11 +67,11 @@ func (m *HttpMetrics) IncHits(path string, status, method string) {
 
 func (m *HttpMetrics) ObserveTiming(path string, status, method string, time float64) {
 	newPath := pathConverter(path)
-	m.Timings.WithLabelValues(newPath, status, method, strconv.FormatBool(m.up)).Observe(time)
+	m.Timings.WithLabelValues(newPath, status, method, strconv.Itoa(m.up)).Observe(time)
 }
 
 func (m *HttpMetrics) ShutDown() {
-	m.up = false
+	m.up = 0
 }
 
 func pathConverter(originalPath string) string {

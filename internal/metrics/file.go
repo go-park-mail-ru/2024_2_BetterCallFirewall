@@ -1,13 +1,15 @@
 package metrics
 
 import (
+	"strconv"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type FileMetrics struct {
 	Errors      *prometheus.CounterVec
 	serviceName string
-	up          bool
+	up          int
 	Hits        *prometheus.CounterVec
 	Timings     *prometheus.HistogramVec
 }
@@ -41,14 +43,14 @@ func NewFileMetrics(serviceName string) (*FileMetrics, error) {
 			Name:    "file_total_timings",
 			Buckets: []float64{0, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "status", "method", "format", "weight"},
+		[]string{"path", "status", "method", "format", "size", "up"},
 	)
 	if err := prometheus.Register(metrics.Timings); err != nil {
 		return nil, err
 	}
 
 	metrics.serviceName = serviceName
-	metrics.up = true
+	metrics.up = 1
 
 	return &metrics, nil
 }
@@ -65,11 +67,11 @@ func (m *FileMetrics) IncHits(path string, status, method, format string, size i
 
 func (m *FileMetrics) ObserveTiming(path string, status, method, format string, size int64, time float64) {
 	newPath := pathConverter(path)
-	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size)).Observe(time)
+	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size), strconv.Itoa(m.up)).Observe(time)
 }
 
 func (m *FileMetrics) ShutDown() {
-	m.up = false
+	m.up = 0
 }
 
 func getSizeRange(size int64) string {

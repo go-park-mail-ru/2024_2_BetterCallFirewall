@@ -1,13 +1,15 @@
 package metrics
 
 import (
+	"strconv"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type GrpcMetrics struct {
 	HitsTotal *prometheus.CounterVec
 	name      string
-	up        bool
+	up        int
 	Timings   *prometheus.HistogramVec
 	Errors    *prometheus.CounterVec
 }
@@ -31,7 +33,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 			Name:    "grpc_total_timings",
 			Buckets: []float64{0, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "service"},
+		[]string{"path", "service", "up"},
 	)
 	if err := prometheus.Register(metric.Timings); err != nil {
 		return nil, err
@@ -47,7 +49,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 	if err := prometheus.Register(metric.Errors); err != nil {
 		return nil, err
 	}
-	metric.up = true
+	metric.up = 1
 	return &metric, nil
 }
 
@@ -60,9 +62,9 @@ func (m *GrpcMetrics) IncHits(path string) {
 }
 
 func (m *GrpcMetrics) ObserveTiming(path string, time float64) {
-	m.Timings.WithLabelValues(path, m.name).Observe(time)
+	m.Timings.WithLabelValues(path, m.name, strconv.Itoa(m.up)).Observe(time)
 }
 
 func (m *GrpcMetrics) ShutDown() {
-	m.up = false
+	m.up = 0
 }
