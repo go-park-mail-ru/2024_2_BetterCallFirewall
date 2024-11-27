@@ -6,6 +6,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/file"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -16,8 +17,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fileMetrics, err := metrics.NewFileMetrics("file")
+	if err != nil {
+		panic(err)
+	}
+	defer fileMetrics.ShutDown()
 
-	server, err := file.GetServer(cfg)
+	server, err := file.GetServer(cfg, fileMetrics)
 	if err != nil {
 		panic(err)
 	}

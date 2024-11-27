@@ -18,7 +18,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
 
-func GetServer(cfg *config.Config) (*http.Server, error) {
+func GetServer(cfg *config.Config, chatMetrics *metrics.HttpMetrics) (*http.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -53,11 +53,6 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 		return nil, err
 	}
 	sm := auth.New(provider)
-
-	chatMetrics, err := metrics.NewHTTPMetrics("chat")
-	if err != nil {
-		return nil, err
-	}
 
 	rout := chat.NewRouter(chatControl, sm, logger, chatMetrics)
 

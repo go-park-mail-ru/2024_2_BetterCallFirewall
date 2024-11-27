@@ -7,6 +7,7 @@ import (
 type FileMetrics struct {
 	Errors      *prometheus.CounterVec
 	serviceName string
+	up          bool
 	Hits        *prometheus.CounterVec
 	Timings     *prometheus.HistogramVec
 }
@@ -47,6 +48,7 @@ func NewFileMetrics(serviceName string) (*FileMetrics, error) {
 	}
 
 	metrics.serviceName = serviceName
+	metrics.up = true
 
 	return &metrics, nil
 }
@@ -64,6 +66,10 @@ func (m *FileMetrics) IncHits(path string, status, method, format string, size i
 func (m *FileMetrics) ObserveTiming(path string, status, method, format string, size int64, time float64) {
 	newPath := pathConverter(path)
 	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size)).Observe(time)
+}
+
+func (m *FileMetrics) ShutDown() {
+	m.up = false
 }
 
 func getSizeRange(size int64) string {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/chat"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -17,7 +18,13 @@ func main() {
 		panic(err)
 	}
 
-	server, err := chat.GetServer(cfg)
+	chatMetrics, err := metrics.NewHTTPMetrics("chat")
+	if err != nil {
+		panic(err)
+	}
+	defer chatMetrics.ShutDown()
+
+	server, err := chat.GetServer(cfg, chatMetrics)
 	if err != nil {
 		panic(err)
 	}

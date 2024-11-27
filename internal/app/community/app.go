@@ -28,7 +28,7 @@ type communityManager interface {
 	GetHeader(ctx context.Context, communityID uint32) (*models.Header, error)
 }
 
-func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
+func GetServers(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics, communityMetrics *metrics.HttpMetrics) (*http.Server, *grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -63,11 +63,6 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	}
 	sm := auth.New(provider)
 
-	communityMetrics, err := metrics.NewHTTPMetrics("community")
-	if err != nil {
-		return nil, nil, err
-	}
-
 	rout := community.NewRouter(communityControl, sm, logger, communityMetrics)
 
 	server := &http.Server{
@@ -78,10 +73,7 @@ func GetServers(cfg *config.Config) (*http.Server, *grpc.Server, error) {
 	}
 
 	communityHelper := communityService.NewServiceHelper(communityRepo)
-	grpcMetrics, err := metrics.NewGrpcMetrics("community")
-	if err != nil {
-		return nil, nil, err
-	}
+
 	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
 	gRPCServ := getGRPC(communityHelper, metricsmw)
 

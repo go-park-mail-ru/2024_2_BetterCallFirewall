@@ -7,6 +7,7 @@ import (
 type GrpcMetrics struct {
 	HitsTotal *prometheus.CounterVec
 	name      string
+	up        bool
 	Timings   *prometheus.HistogramVec
 	Errors    *prometheus.CounterVec
 }
@@ -46,6 +47,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 	if err := prometheus.Register(metric.Errors); err != nil {
 		return nil, err
 	}
+	metric.up = true
 	return &metric, nil
 }
 
@@ -59,4 +61,8 @@ func (m *GrpcMetrics) IncHits(path string) {
 
 func (m *GrpcMetrics) ObserveTiming(path string, time float64) {
 	m.Timings.WithLabelValues(path, m.name).Observe(time)
+}
+
+func (m *GrpcMetrics) ShutDown() {
+	m.up = false
 }

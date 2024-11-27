@@ -28,7 +28,7 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
+func GetHTTPServer(cfg *config.Config, authMetrics *metrics.HttpMetrics) (*http.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -47,10 +47,6 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	}
 
 	profileProvider, err := ext_grpc.GetGRPCProvider(cfg.PROFILEGRPC.Host, cfg.PROFILEGRPC.Port)
-	if err != nil {
-		return nil, err
-	}
-	authMetrics, err := metrics.NewHTTPMetrics("auth")
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +76,7 @@ func getGRPC(auth SessionManager, metr *middleware.GrpcMiddleware) *grpc.Server 
 	return server
 }
 
-func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
+func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.Server, error) {
 	redisPool := &redis.Pool{
 		MaxIdle:   cfg.REDIS.MaxIdle,
 		MaxActive: cfg.REDIS.MaxActive,
@@ -92,10 +88,6 @@ func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
 	sessionRepo := redismy.NewSessionRedisRepository(redisPool)
 	sessionManager := service.NewSessionManager(sessionRepo)
 
-	grpcMetrics, err := metrics.NewGrpcMetrics("auth")
-	if err != nil {
-		return nil, err
-	}
 	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
 	grpcServer := getGRPC(sessionManager, metricsmw)
 

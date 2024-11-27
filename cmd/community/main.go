@@ -8,6 +8,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/community"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -18,13 +19,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	communityMetrics, err := metrics.NewHTTPMetrics("community")
+	if err != nil {
+		panic(err)
+	}
+	defer communityMetrics.ShutDown()
 
-	httpServer, grpcServer, err := community.GetServers(cfg)
+	grpcMetrics, err := metrics.NewGrpcMetrics("community")
+	if err != nil {
+		panic(err)
+	}
+
+	httpServer, grpcServer, err := community.GetServers(cfg, grpcMetrics, communityMetrics)
 	if err != nil {
 		panic(err)
 	}
 
 	go func() {
+		defer grpcMetrics.ShutDown()
 		l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.COMMUNITYGRPC.Port))
 		if err != nil {
 			panic(err)

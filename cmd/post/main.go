@@ -6,6 +6,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/post"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -16,8 +17,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	postMetric, err := metrics.NewHTTPMetrics("post")
+	if err != nil {
+		panic(err)
+	}
+	defer postMetric.ShutDown()
 
-	server, err := post.GetHTTPServer(cfg)
+	server, err := post.GetHTTPServer(cfg, postMetric)
 	if err != nil {
 		panic(err)
 	}

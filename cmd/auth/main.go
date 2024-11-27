@@ -6,6 +6,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -17,7 +18,12 @@ func main() {
 		panic(err)
 	}
 
-	httpServer, err := auth.GetHTTPServer(cfg)
+	authMetrics, err := metrics.NewHTTPMetrics("auth")
+	if err != nil {
+		panic(err)
+	}
+	defer authMetrics.ShutDown()
+	httpServer, err := auth.GetHTTPServer(cfg, authMetrics)
 	if err != nil {
 		panic(err)
 	}

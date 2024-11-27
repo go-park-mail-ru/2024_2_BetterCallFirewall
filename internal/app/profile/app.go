@@ -31,7 +31,7 @@ type profileManager interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 }
 
-func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
+func GetHTTPServer(cfg *config.Config, metric *metrics.HttpMetrics) (*http.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -71,11 +71,6 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	profileService := service.NewProfileUsecase(repo, pp)
 	profileController := controller.NewProfileController(profileService, responder)
 
-	metric, err := metrics.NewHTTPMetrics("profile")
-	if err != nil {
-		return nil, err
-	}
-
 	rout := profile.NewRouter(profileController, sm, logger, metric)
 	server := &http.Server{
 		Handler:      rout,
@@ -93,7 +88,7 @@ func getGRPC(profile profileManager, metr *middleware.GrpcMiddleware) *grpc.Serv
 	return server
 }
 
-func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
+func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -119,10 +114,6 @@ func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
 	profRepo := repository.NewProfileRepo(postgresDB)
 	profService := service.NewProfileHelper(profRepo)
 
-	grpcMetrics, err := metrics.NewGrpcMetrics("profile")
-	if err != nil {
-		return nil, err
-	}
 	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
 	serv := getGRPC(profService, metricsmw)
 	return serv, nil

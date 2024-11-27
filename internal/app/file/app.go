@@ -16,7 +16,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/router/file"
 )
 
-func GetServer(cfg *config.Config) (*http.Server, error) {
+func GetServer(cfg *config.Config, fileMetrics *metrics.FileMetrics) (*http.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -34,11 +34,6 @@ func GetServer(cfg *config.Config) (*http.Server, error) {
 		return nil, err
 	}
 	sm := auth.New(provider)
-
-	fileMetrics, err := metrics.NewFileMetrics("file")
-	if err != nil {
-		return nil, err
-	}
 
 	rout := file.NewRouter(fileController, sm, logger, fileMetrics)
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/internal/app/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func main() {
@@ -22,7 +23,13 @@ func main() {
 		panic(err)
 	}
 
-	grpcServer, err := auth.GetGRPCServer(cfg)
+	grpcMetrics, err := metrics.NewGrpcMetrics("auth")
+	if err != nil {
+		panic(err)
+	}
+	defer grpcMetrics.ShutDown()
+
+	grpcServer, err := auth.GetGRPCServer(cfg, grpcMetrics)
 	if err != nil {
 		panic(err)
 	}

@@ -29,7 +29,7 @@ type postManager interface {
 	GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error)
 }
 
-func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
+func GetHTTPServer(cfg *config.Config, postMetric *metrics.HttpMetrics) (*http.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -75,11 +75,6 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	postService := service.NewPostServiceImpl(repo, pp, cp)
 	postController := controller.NewPostController(postService, responder)
 
-	postMetric, err := metrics.NewHTTPMetrics("post")
-	if err != nil {
-		return nil, err
-	}
-
 	rout := post.NewRouter(postController, sm, logger, postMetric)
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.POST.Port),
@@ -97,7 +92,7 @@ func getGRPC(post postManager, metr *middleware.GrpcMiddleware) *grpc.Server {
 	return server
 }
 
-func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
+func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.Server, error) {
 	logger := logrus.New()
 	logger.Formatter = &logrus.TextFormatter{
 		FullTimestamp:   true,
@@ -123,10 +118,6 @@ func GetGRPCServer(cfg *config.Config) (*grpc.Server, error) {
 	repo := postgres.NewAdapter(postgresDB)
 	postHelper := service.NewPostProfileImpl(repo)
 
-	grpcMetrics, err := metrics.NewGrpcMetrics("post")
-	if err != nil {
-		return nil, err
-	}
 	metricsmw := middleware.NewGrpcMiddleware(grpcMetrics)
 	serv := getGRPC(postHelper, metricsmw)
 	return serv, nil

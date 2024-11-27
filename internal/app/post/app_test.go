@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/2024_2_BetterCallFirewall/internal/config"
+	"github.com/2024_2_BetterCallFirewall/internal/metrics"
 )
 
 func TestGetServer(t *testing.T) {
@@ -18,7 +19,7 @@ func TestGetServer(t *testing.T) {
 			Pass:    "test",
 			SSLMode: "test",
 		},
-	})
+	}, &metrics.HttpMetrics{})
 	assert.NoError(t, err)
 	assert.NotNil(t, server)
 }
@@ -33,7 +34,7 @@ func TestGRPCServer(t *testing.T) {
 			Pass:    "test",
 			SSLMode: "test",
 		},
-	})
+	}, &metrics.GrpcMetrics{})
 	assert.NoError(t, err)
 	assert.NotNil(t, server)
 }
