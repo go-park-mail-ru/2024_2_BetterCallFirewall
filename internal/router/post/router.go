@@ -29,9 +29,7 @@ type Controller interface {
 	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(
-	contr Controller, sm SessionManager, logger *logrus.Logger, postMetric *metrics.HttpMetrics,
-) http.Handler {
+func NewRouter(contr Controller, sm SessionManager, logger *logrus.Logger, postMetric *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/feed", contr.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", contr.GetOne).Methods(http.MethodGet, http.MethodOptions)
@@ -41,15 +39,7 @@ func NewRouter(
 
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.SetLikeOnPost).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/unlike", contr.DeleteLikeFromPost).Methods(http.MethodPost, http.MethodOptions)
-
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

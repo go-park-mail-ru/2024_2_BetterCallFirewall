@@ -30,40 +30,19 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-func NewRouter(
-	communityController CommunityController, sm SessionManager, logger *logrus.Logger,
-	communityMetrics *metrics.HttpMetrics,
-) http.Handler {
+func NewRouter(communityController CommunityController, sm SessionManager, logger *logrus.Logger, communityMetrics *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/v1/community", communityController.Create).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}", communityController.GetOne).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/community/{id}", communityController.Update).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc("/api/v1/community/{id}", communityController.Delete).Methods(
-		http.MethodDelete, http.MethodOptions,
-	)
+	router.HandleFunc("/api/v1/community/{id}", communityController.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/community", communityController.GetAll).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc("/api/v1/community/{id}/join", communityController.JoinToCommunity).Methods(
-		http.MethodPost, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/community/{id}/leave", communityController.LeaveFromCommunity).Methods(
-		http.MethodPost, http.MethodOptions,
-	)
-	router.HandleFunc("api/v1/community/{id}/add_admin", communityController.AddAdmin).Methods(
-		http.MethodPost, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/community/search/", communityController.SearchCommunity).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
-
+	router.HandleFunc("/api/v1/community/{id}/join", communityController.JoinToCommunity).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/{id}/leave", communityController.LeaveFromCommunity).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("api/v1/community/{id}/add_admin", communityController.AddAdmin).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/community/search/", communityController.SearchCommunity).Methods(http.MethodGet, http.MethodOptions)
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

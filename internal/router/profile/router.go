@@ -52,42 +52,17 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile", profileControl.UpdateProfile).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("api/v1/profile", profileControl.DeleteProfile).Methods(http.MethodDelete, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/{id}/friend/subscribe", profileControl.SendFriendReq).Methods(
-		http.MethodPost, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/{id}/friend/accept", profileControl.AcceptFriendReq).Methods(
-		http.MethodPost, http.MethodOptions,
-	)
-	router.HandleFunc(
-		"/api/v1/profile/{id}/friend/unsubscribe", profileControl.RemoveFromFriends,
-	).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/api/v1/profile/{id}/friend/remove", profileControl.Unsubscribe).Methods(
-		http.MethodDelete, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/{id}/friends", profileControl.GetAllFriends).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/community/{id}/subs", profileControl.GetCommunitySubs).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
-	router.HandleFunc("/api/v1/profile/search/", profileControl.SearchProfile).Methods(
-		http.MethodGet, http.MethodOptions,
-	)
+	router.HandleFunc("/api/v1/profile/{id}/friend/subscribe", profileControl.SendFriendReq).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/accept", profileControl.AcceptFriendReq).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/unsubscribe", profileControl.RemoveFromFriends).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friend/remove", profileControl.Unsubscribe).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/friends", profileControl.GetAllFriends).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/subscribers", profileControl.GetAllSubs).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/{id}/subscriptions", profileControl.GetAllSubscriptions).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/community/{id}/subs", profileControl.GetCommunitySubs).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile/search/", profileControl.SearchProfile).Methods(http.MethodGet, http.MethodOptions)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

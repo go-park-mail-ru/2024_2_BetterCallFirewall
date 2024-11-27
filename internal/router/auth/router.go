@@ -24,22 +24,12 @@ type AuthController interface {
 	Logout(w http.ResponseWriter, r *http.Request)
 }
 
-func NewRouter(
-	authControl AuthController, sm SessionManager, logger *logrus.Logger, httpMetrics *metrics.HttpMetrics,
-) http.Handler {
+func NewRouter(authControl AuthController, sm SessionManager, logger *logrus.Logger, httpMetrics *metrics.HttpMetrics) http.Handler {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/v1/auth/register", authControl.Register).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/login", authControl.Auth).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/auth/logout", authControl.Logout).Methods(http.MethodPost, http.MethodOptions)
-
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Preflite(router)
 	res = middleware.AccessLog(logger, res)
