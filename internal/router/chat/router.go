@@ -24,13 +24,23 @@ type SessionManager interface {
 	Destroy(sess *models.Session) error
 }
 
-func NewRouter(cc ChatController, sm SessionManager, logger *logrus.Logger, chatMetrics *metrics.HttpMetrics) http.Handler {
+func NewRouter(
+	cc ChatController, sm SessionManager, logger *logrus.Logger, chatMetrics *metrics.HttpMetrics,
+) http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/v1/messages/chats", cc.GetAllChats).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/messages/chat/{id}", cc.GetChat).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/message/ws", cc.SetConnection)
+
 	router.Handle("/api/v1/metrics", promhttp.Handler())
+	router.Handle(
+		"/", http.HandlerFunc(
+			func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+		),
+	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)
