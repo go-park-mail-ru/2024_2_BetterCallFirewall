@@ -33,7 +33,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 			Name:    "grpc_total_timings",
 			Buckets: []float64{0, 0.1, 0.5, 1, 5},
 		},
-		[]string{"path", "service"},
+		[]string{"path", "service", "up"},
 	)
 	if err := prometheus.Register(metric.Timings); err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 			Name: "grpc_errors_total",
 			Help: "Number of total errors",
 		},
-		[]string{"path", "service", "up"},
+		[]string{"path", "service"},
 	)
 	if err := prometheus.Register(metric.Errors); err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func NewGrpcMetrics(name string) (*GrpcMetrics, error) {
 }
 
 func (m *GrpcMetrics) IncErrors(path string) {
-	m.Errors.WithLabelValues(path, m.name, strconv.Itoa(m.up)).Inc()
+	m.Errors.WithLabelValues(path, m.name).Inc()
 }
 
 func (m *GrpcMetrics) IncHits(path string) {
@@ -62,10 +62,9 @@ func (m *GrpcMetrics) IncHits(path string) {
 }
 
 func (m *GrpcMetrics) ObserveTiming(path string, time float64) {
-	m.Timings.WithLabelValues(path, m.name).Observe(time)
+	m.Timings.WithLabelValues(path, m.name, strconv.Itoa(m.up)).Observe(time)
 }
 
 func (m *GrpcMetrics) ShutDown() {
 	m.up = 0
-	m.IncErrors("shutting down")
 }
