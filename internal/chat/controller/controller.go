@@ -16,6 +16,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestId string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
@@ -46,7 +47,10 @@ const (
 )
 
 var (
-	upgrader    = websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize, CheckOrigin: func(r *http.Request) bool { return true }}
+	upgrader = websocket.Upgrader{
+		ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize,
+		CheckOrigin: func(r *http.Request) bool { return true },
+	}
 	mapUserConn = make(map[uint32]*Client)
 )
 
