@@ -37,15 +37,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	go func() {
 		http.Handle("/api/v1/metrics", promhttp.Handler())
-		http.Handle(
-			"/", http.HandlerFunc(
-				func(w http.ResponseWriter, _ *http.Request) {
-					w.WriteHeader(http.StatusOK)
-				},
-			),
-		)
 		http.ListenAndServe(":6001", nil)
 	}()
 
