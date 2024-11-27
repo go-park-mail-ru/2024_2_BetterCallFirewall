@@ -68,10 +68,6 @@ func (m *FileMetrics) ObserveTiming(path string, status, method, format string, 
 	m.Timings.WithLabelValues(newPath, status, method, format, getSizeRange(size)).Observe(time)
 }
 
-func (m *FileMetrics) ShutDown() {
-	m.up = false
-}
-
 func getSizeRange(size int64) string {
 	switch {
 	case size <= 511*1024:

@@ -21,7 +21,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer postMetric.ShutDown()
 
 	server, err := post.GetHTTPServer(cfg, postMetric)
 	if err != nil {

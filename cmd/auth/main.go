@@ -22,7 +22,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer authMetrics.ShutDown()
 	httpServer, err := auth.GetHTTPServer(cfg, authMetrics)
 	if err != nil {
 		panic(err)

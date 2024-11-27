@@ -22,7 +22,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer chatMetrics.ShutDown()
 
 	server, err := chat.GetServer(cfg, chatMetrics)
 	if err != nil {

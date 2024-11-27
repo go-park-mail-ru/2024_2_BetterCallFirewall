@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer communityMetrics.ShutDown()
 
 	grpcMetrics, err := metrics.NewGrpcMetrics("community")
 	if err != nil {
@@ -36,7 +35,6 @@ func main() {
 	}
 
 	go func() {
-		defer grpcMetrics.ShutDown()
 		l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.COMMUNITYGRPC.Port))
 		if err != nil {
 			panic(err)

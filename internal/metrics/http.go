@@ -70,10 +70,6 @@ func (m *HttpMetrics) ObserveTiming(path string, status, method string, time flo
 	m.Timings.WithLabelValues(newPath, status, method, strconv.FormatBool(m.up)).Observe(time)
 }
 
-func (m *HttpMetrics) ShutDown() {
-	m.up = false
-}
-
 func pathConverter(originalPath string) string {
 	re := regexp.MustCompile(`(/[^/]+/)(\d+)(/?.*)`)
 	newPath := re.ReplaceAllString(originalPath, "$1{id}$3")

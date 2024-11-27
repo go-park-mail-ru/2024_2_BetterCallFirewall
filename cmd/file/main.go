@@ -21,7 +21,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer fileMetrics.ShutDown()
 
 	server, err := file.GetServer(cfg, fileMetrics)
 	if err != nil {

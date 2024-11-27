@@ -62,7 +62,3 @@ func (m *GrpcMetrics) IncHits(path string) {
 func (m *GrpcMetrics) ObserveTiming(path string, time float64) {
 	m.Timings.WithLabelValues(path, m.name).Observe(time)
 }
-
-func (m *GrpcMetrics) ShutDown() {
-	m.up = false
-}

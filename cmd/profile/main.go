@@ -22,7 +22,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer metric.ShutDown()
 
 	server, err := profile.GetHTTPServer(cfg, metric)
 	if err != nil {

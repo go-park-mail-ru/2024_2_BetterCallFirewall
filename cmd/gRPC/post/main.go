@@ -27,7 +27,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer grpcMetrics.ShutDown()
 
 	grpcServer, err := post.GetGRPCServer(cfg, grpcMetrics)
 	if err != nil {
