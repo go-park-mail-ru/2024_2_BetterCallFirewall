@@ -72,7 +72,10 @@ func (s *Service) Create(ctx context.Context, community *models.Community, autho
 	}
 	community.ID = id
 
-	s.AddAdmin(ctx, id, authorID)
+	err = s.AddAdmin(ctx, id, authorID)
+	if err != nil {
+		return fmt.Errorf("add admin: %w", err)
+	}
 
 	return nil
 }

@@ -291,9 +291,29 @@ func TestCreate(t *testing.T) {
 			ExpectedResult: func() (struct{}, error) {
 				return struct{}{}, nil
 			},
+			ExpectedErr: errMock,
+			SetupMock: func(input InputCreate, m *mocks) {
+				m.repo.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.repo.EXPECT().NewAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(errMock)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*InputCreate, error) {
+				input := InputCreate{authorID: 1, community: &models.Community{About: "my community"}}
+				return &input, nil
+			},
+			Run: func(ctx context.Context, implementation *Service, input InputCreate) (struct{}, error) {
+				err := implementation.Create(ctx, input.community, input.authorID)
+				return struct{}{}, err
+			},
+			ExpectedResult: func() (struct{}, error) {
+				return struct{}{}, nil
+			},
 			ExpectedErr: nil,
 			SetupMock: func(input InputCreate, m *mocks) {
 				m.repo.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.repo.EXPECT().NewAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
 	}
