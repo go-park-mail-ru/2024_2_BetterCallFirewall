@@ -7,7 +7,11 @@ GRANT SELECT, INSERT, DELETE, UPDATE ON profile, friend TO profile_service;
 
 CREATE ROLE community_service WITH LOGIN PASSWORD 'community_password';
 GRANT CONNECT ON DATABASE mydbvk TO community_service;
-GRANT SELECT, INSERT, DELETE, UPDATE ON community, community_profile TO community_service;
+GRANT USAGE ON SCHEMA public TO community_service;
+GRANT SELECT, INSERT, DELETE, UPDATE, REFERENCES, TRUNCATE, TRIGGER, MAINTAIN ON community, community_profile TO community_service;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO community_service;
+GRANT ALL PRIVILEGES ON community, community_profile, admin TO community_service;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO community_service;
 
 CREATE ROLE post_service WITH LOGIN PASSWORD 'post_password';
 GRANT CONNECT ON DATABASE mydbvk TO post_service;
