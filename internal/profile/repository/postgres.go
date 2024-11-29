@@ -163,7 +163,7 @@ func (p *ProfileRepo) CheckFriendship(ctx context.Context, self uint32, profile 
 		}
 		return false, fmt.Errorf("check friendship: %w", err)
 	}
-	return status == 1, nil
+	return status != 1, nil
 }
 
 func (p *ProfileRepo) AddFriendsReq(receiver uint32, sender uint32) error {
