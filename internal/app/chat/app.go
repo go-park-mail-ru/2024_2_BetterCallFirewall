@@ -28,12 +28,12 @@ func GetServer(cfg *config.Config, chatMetrics *metrics.HttpMetrics) (*http.Serv
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+		cfg.MESSAGEDB.Host,
+		cfg.MESSAGEDB.Port,
+		cfg.MESSAGEDB.User,
+		cfg.MESSAGEDB.Pass,
+		cfg.MESSAGEDB.DBName,
+		cfg.MESSAGEDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)

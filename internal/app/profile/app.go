@@ -41,12 +41,12 @@ func GetHTTPServer(cfg *config.Config, metric *metrics.HttpMetrics) (*http.Serve
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+		cfg.PROFILEDB.Host,
+		cfg.PROFILEDB.Port,
+		cfg.PROFILEDB.User,
+		cfg.PROFILEDB.Pass,
+		cfg.PROFILEDB.DBName,
+		cfg.PROFILEDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
@@ -98,12 +98,12 @@ func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+		cfg.PROFILEDB.Host,
+		cfg.PROFILEDB.Port,
+		cfg.PROFILEDB.User,
+		cfg.PROFILEDB.Pass,
+		cfg.PROFILEDB.DBName,
+		cfg.PROFILEDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)

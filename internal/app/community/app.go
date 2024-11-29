@@ -38,12 +38,12 @@ func GetServers(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics, communityM
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+		cfg.COMMUNITYDB.Host,
+		cfg.COMMUNITYDB.Port,
+		cfg.COMMUNITYDB.User,
+		cfg.COMMUNITYDB.Pass,
+		cfg.COMMUNITYDB.DBName,
+		cfg.COMMUNITYDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
