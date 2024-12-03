@@ -34,6 +34,7 @@ const (
 	deleteComment    = `DELETE FROM comment WHERE id = $1;`
 	getCommentsBatch = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id < $2 ORDER BY created_at DESC LIMIT 20;`
 	getCommentAuthor = `SELECT user_id FROM comment WHERE id = $1`
+	getCommentCount  = `SELECT COUNT(*) FROM comment WHERE post_id=$1`
 )
 
 type Adapter struct {
@@ -413,4 +414,18 @@ func (a *Adapter) GetCommentAuthor(ctx context.Context, commentID uint32) (uint3
 	}
 
 	return authorID, nil
+}
+
+func (a *Adapter) GetCommentCount(ctx context.Context, postID uint32) (uint32, error) {
+	var count uint32
+
+	if err := a.db.QueryRowContext(ctx, getCommentCount, postID).Scan(&count); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, my_err.ErrWrongPost
+		}
+		return 0, fmt.Errorf("postgres get comment count: %w", err)
+	}
+
+	return count, nil
+
 }
