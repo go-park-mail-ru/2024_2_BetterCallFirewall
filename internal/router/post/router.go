@@ -27,6 +27,11 @@ type Controller interface {
 
 	SetLikeOnPost(w http.ResponseWriter, r *http.Request)
 	DeleteLikeFromPost(w http.ResponseWriter, r *http.Request)
+
+	Comment(w http.ResponseWriter, r *http.Request)
+	DeleteComment(w http.ResponseWriter, r *http.Request)
+	EditComment(w http.ResponseWriter, r *http.Request)
+	GetComments(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRouter(
@@ -38,6 +43,13 @@ func NewRouter(
 	router.HandleFunc("/api/v1/feed/{id}", contr.Update).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}", contr.Delete).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed", contr.GetBatchPosts).Methods(http.MethodGet, http.MethodOptions)
+
+	router.HandleFunc("/api/v1/feed/{id}", contr.Comment).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/{comment_id}", contr.EditComment).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc("/api/v1/feed/{id}/{comment_id}", contr.DeleteComment).Methods(
+		http.MethodDelete, http.MethodOptions,
+	)
+	router.HandleFunc("/api/v1/feed/{id}/comments", contr.GetComments).Methods(http.MethodGet, http.MethodOptions)
 
 	router.HandleFunc("/api/v1/feed/{id}/like", contr.SetLikeOnPost).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc("/api/v1/feed/{id}/unlike", contr.DeleteLikeFromPost).Methods(http.MethodPost, http.MethodOptions)

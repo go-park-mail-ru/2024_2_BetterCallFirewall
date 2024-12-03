@@ -15,6 +15,11 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+const (
+	postIDkey    = "id"
+	commentIDKey = "comment_id"
+)
+
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type PostService interface {
 	Create(ctx context.Context, post *models.Post) (uint32, error)
@@ -34,6 +39,13 @@ type PostService interface {
 	CheckLikes(ctx context.Context, postID, userID uint32) (bool, error)
 }
 
+type CommentService interface {
+	Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (uint32, error)
+	DeleteComment(ctx context.Context, commentID, userID uint32) error
+	EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error
+	GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error)
+}
+
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestId string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestId string)
@@ -44,14 +56,16 @@ type Responder interface {
 }
 
 type PostController struct {
-	postService PostService
-	responder   Responder
+	postService    PostService
+	commentService CommentService
+	responder      Responder
 }
 
-func NewPostController(service PostService, responder Responder) *PostController {
+func NewPostController(service PostService, commentService CommentService, responder Responder) *PostController {
 	return &PostController{
-		postService: service,
-		responder:   responder,
+		postService:    service,
+		commentService: commentService,
+		responder:      responder,
 	}
 }
 
@@ -113,7 +127,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	postID, err := getIDFromURL(r)
+	postID, err := getIDFromURL(r, postIDkey)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -143,7 +157,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
-		id, err   = getIDFromURL(r)
+		id, err   = getIDFromURL(r, postIDkey)
 		community = r.URL.Query().Get("community")
 	)
 
@@ -199,7 +213,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok   = r.Context().Value("requestID").(string)
-		postID, err = getIDFromURL(r)
+		postID, err = getIDFromURL(r, postIDkey)
 		community   = r.URL.Query().Get("community")
 	)
 
@@ -322,10 +336,10 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 	return &newPost, nil
 }
 
-func getIDFromURL(r *http.Request) (uint32, error) {
+func getIDFromURL(r *http.Request, key string) (uint32, error) {
 	vars := mux.Vars(r)
 
-	id := vars["id"]
+	id := vars[key]
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
@@ -388,7 +402,7 @@ func (pc *PostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) 
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	postID, err := getIDFromURL(r)
+	postID, err := getIDFromURL(r, postIDkey)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -426,7 +440,7 @@ func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Requ
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	postID, err := getIDFromURL(r)
+	postID, err := getIDFromURL(r, postIDkey)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
@@ -455,4 +469,151 @@ func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Requ
 	}
 
 	pc.responder.OutputJSON(w, "like is unset from post", reqID)
+}
+
+func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	postID, err := getIDFromURL(r, postIDkey)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	sess, errSession := models.SessionFromContext(r.Context())
+	if errSession != nil {
+		pc.responder.ErrorBadRequest(w, errSession, reqID)
+		return
+	}
+
+	var content *models.Content
+	err = json.NewDecoder(r.Body).Decode(content)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	id, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, content)
+	if err != nil {
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, id, reqID)
+}
+
+func (pc *PostController) DeleteComment(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	commentID, err := getIDFromURL(r, commentIDKey)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	sess, errSession := models.SessionFromContext(r.Context())
+	if errSession != nil {
+		pc.responder.ErrorBadRequest(w, errSession, reqID)
+		return
+	}
+
+	err = pc.commentService.DeleteComment(r.Context(), commentID, sess.UserID)
+	if err != nil {
+		if errors.Is(err, my_err.ErrAccessDenied) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		if errors.Is(err, my_err.ErrWrongComment) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, "comment is deleted", reqID)
+}
+
+func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	commentID, err := getIDFromURL(r, commentIDKey)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	sess, errSession := models.SessionFromContext(r.Context())
+	if errSession != nil {
+		pc.responder.ErrorBadRequest(w, errSession, reqID)
+		return
+	}
+
+	var content *models.Content
+	err = json.NewDecoder(r.Body).Decode(content)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	err = pc.commentService.EditComment(r.Context(), commentID, sess.UserID, content)
+	if err != nil {
+		if errors.Is(err, my_err.ErrAccessDenied) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		if errors.Is(err, my_err.ErrWrongComment) {
+			pc.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, "comment is updated", reqID)
+}
+
+func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		pc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	postID, err := getIDFromURL(r, postIDkey)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	lastId, err := getLastID(r)
+	if err != nil {
+		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	comments, err := pc.commentService.GetComments(r.Context(), postID, uint32(lastId))
+	if err != nil {
+		if errors.Is(err, my_err.ErrNoMoreContent) {
+			pc.responder.OutputNoMoreContentJSON(w, reqID)
+			return
+		}
+
+		pc.responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	pc.responder.OutputJSON(w, comments, reqID)
 }
