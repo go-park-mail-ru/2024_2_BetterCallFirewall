@@ -489,14 +489,14 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var content *models.Content
-	err = json.NewDecoder(r.Body).Decode(content)
+	var content models.Content
+	err = json.NewDecoder(r.Body).Decode(&content)
 	if err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
-	id, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, content)
+	id, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, &content)
 	if err != nil {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
