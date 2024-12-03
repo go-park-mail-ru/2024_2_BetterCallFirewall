@@ -30,6 +30,7 @@ type ProfileController interface {
 	GetAllSubscriptions(w http.ResponseWriter, r *http.Request)
 
 	GetCommunitySubs(w http.ResponseWriter, r *http.Request)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
 }
 
 type SessionManager interface {
@@ -78,6 +79,9 @@ func NewRouter(
 	)
 	router.HandleFunc("/api/v1/profile/search/", profileControl.SearchProfile).Methods(
 		http.MethodGet, http.MethodOptions,
+	)
+	router.HandleFunc("/api/v1/profile/password", profileControl.ChangePassword).Methods(
+		http.MethodPut, http.MethodOptions,
 	)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
