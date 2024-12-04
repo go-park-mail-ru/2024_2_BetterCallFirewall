@@ -52,7 +52,7 @@ func NewRouter(
 	router.HandleFunc("/api/v1/profile/{id}", profileControl.GetProfileById).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profiles", profileControl.GetAll).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile", profileControl.UpdateProfile).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc("api/v1/profile", profileControl.DeleteProfile).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/api/v1/profile", profileControl.DeleteProfile).Methods(http.MethodDelete, http.MethodOptions)
 	router.HandleFunc("/api/v1/profile/{id}/friend/subscribe", profileControl.SendFriendReq).Methods(
 		http.MethodPost, http.MethodOptions,
 	)
