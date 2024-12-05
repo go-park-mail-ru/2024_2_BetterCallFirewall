@@ -427,5 +427,4 @@ func (a *Adapter) GetCommentCount(ctx context.Context, postID uint32) (uint32, e
 	}
 
 	return count, nil
-
 }
