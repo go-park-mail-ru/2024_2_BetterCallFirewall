@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -508,6 +509,7 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
+	newComment.Content.CreatedAt = time.Now()
 
 	pc.responder.OutputJSON(w, newComment, reqID)
 }

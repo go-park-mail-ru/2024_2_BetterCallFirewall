@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//go:generate mockgen -destination=comment_mock.go -source=$GOFILE -package=${GOPACKAGE}
 type dbI interface {
 	CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error)
 	DeleteComment(ctx context.Context, commentID uint32) error
@@ -46,7 +46,6 @@ func (s *CommentService) Comment(
 		return nil, fmt.Errorf("get header: %w", err)
 	}
 
-	comment.CreatedAt = time.Now()
 	newComment := &models.Comment{
 		ID:      id,
 		Content: *comment,
