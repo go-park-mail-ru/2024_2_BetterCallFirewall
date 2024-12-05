@@ -40,7 +40,7 @@ type PostService interface {
 }
 
 type CommentService interface {
-	Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (uint32, error)
+	Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (*models.Comment, error)
 	DeleteComment(ctx context.Context, commentID, userID uint32) error
 	EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error
 	GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error)
@@ -496,13 +496,13 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, &content)
+	newComment, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, &content)
 	if err != nil {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 
-	pc.responder.OutputJSON(w, id, reqID)
+	pc.responder.OutputJSON(w, newComment, reqID)
 }
 
 func (pc *PostController) DeleteComment(w http.ResponseWriter, r *http.Request) {

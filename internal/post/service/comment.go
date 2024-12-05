@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -32,13 +33,27 @@ func NewCommentService(db dbI, profileRepo profileRepoI) *CommentService {
 	}
 }
 
-func (s *CommentService) Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (uint32, error) {
+func (s *CommentService) Comment(
+	ctx context.Context, userID, postID uint32, comment *models.Content,
+) (*models.Comment, error) {
 	id, err := s.db.CreateComment(ctx, comment, userID, postID)
 	if err != nil {
-		return 0, fmt.Errorf("create comment: %w", err)
+		return nil, fmt.Errorf("create comment: %w", err)
 	}
 
-	return id, nil
+	header, err := s.profileRepo.GetHeader(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get header: %w", err)
+	}
+
+	comment.CreatedAt = time.Now()
+	newComment := &models.Comment{
+		ID:      id,
+		Content: *comment,
+		Header:  *header,
+	}
+
+	return newComment, nil
 }
 
 func (s *CommentService) DeleteComment(ctx context.Context, commentID, userID uint32) error {
