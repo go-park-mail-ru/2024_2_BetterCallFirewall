@@ -257,10 +257,10 @@ func (m *MockCommentService) EXPECT() *MockCommentServiceMockRecorder {
 }
 
 // Comment mocks base method.
-func (m *MockCommentService) Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (uint32, error) {
+func (m *MockCommentService) Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (*models.Comment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Comment", ctx, userID, postID, comment)
-	ret0, _ := ret[0].(uint32)
+	ret0, _ := ret[0].(*models.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
