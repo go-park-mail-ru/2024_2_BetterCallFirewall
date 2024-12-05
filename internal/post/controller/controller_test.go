@@ -2142,7 +2142,13 @@ func TestComment(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.commentService.EXPECT().Comment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, nil)
+					Return(
+						&models.Comment{
+							Content: models.Content{
+								Text: "New comment",
+							},
+						}, nil,
+					)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
