@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -18,6 +19,7 @@ import (
 const (
 	postIDkey    = "id"
 	commentIDKey = "comment_id"
+	filePrefix   = "/image/"
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
@@ -87,8 +89,8 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(newPost.PostContent.Text) > 499 {
-		pc.responder.ErrorBadRequest(w, my_err.ErrPostTooLong, reqID)
+	if !validateContent(newPost.PostContent) {
+		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
 		return
 	}
 	if comunity != "" {
@@ -192,8 +194,9 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	if len(post.PostContent.Text) > 499 {
-		pc.responder.ErrorBadRequest(w, my_err.ErrPostTooLong, reqID)
+
+	if !validateContent(post.PostContent) {
+		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
 		return
 	}
 	post.ID = id
@@ -490,9 +493,13 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var content models.Content
-	err = json.NewDecoder(r.Body).Decode(&content)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&content); err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	if !validateContent(content) {
+		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
 		return
 	}
 
@@ -560,15 +567,18 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var content *models.Content
-	err = json.NewDecoder(r.Body).Decode(content)
-	if err != nil {
+	var content models.Content
+	if err := json.NewDecoder(r.Body).Decode(&content); err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
-	err = pc.commentService.EditComment(r.Context(), commentID, sess.UserID, content)
-	if err != nil {
+	if !validateContent(content) {
+		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
+		return
+	}
+
+	if err := pc.commentService.EditComment(r.Context(), commentID, sess.UserID, &content); err != nil {
 		if errors.Is(err, my_err.ErrAccessDenied) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
@@ -616,4 +626,12 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pc.responder.OutputJSON(w, comments, reqID)
+}
+
+func validateContent(content models.Content) bool {
+	return validateFile(content.File) && len(content.Text) < 500
+}
+
+func validateFile(filepath models.Picture) bool {
+	return len(filepath) < 100 && (len(filepath) == 0 || strings.HasPrefix(string(filepath), filePrefix))
 }
