@@ -300,18 +300,18 @@ func (mr *MockCommentServiceMockRecorder) EditComment(ctx, commentID, userID, co
 }
 
 // GetComments mocks base method.
-func (m *MockCommentService) GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error) {
+func (m *MockCommentService) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetComments", ctx, postID, lastID)
+	ret := m.ctrl.Call(m, "GetComments", ctx, postID, lastID, newest)
 	ret0, _ := ret[0].([]*models.Comment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetComments indicates an expected call of GetComments.
-func (mr *MockCommentServiceMockRecorder) GetComments(ctx, postID, lastID any) *gomock.Call {
+func (mr *MockCommentServiceMockRecorder) GetComments(ctx, postID, lastID, newest any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComments", reflect.TypeOf((*MockCommentService)(nil).GetComments), ctx, postID, lastID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComments", reflect.TypeOf((*MockCommentService)(nil).GetComments), ctx, postID, lastID, newest)
 }
 
 // MockResponder is a mock of Responder interface.

@@ -399,6 +399,7 @@ func TestCommentService_Edit(t *testing.T) {
 type inputGet struct {
 	postID uint32
 	lastID uint32
+	newest bool
 }
 
 func TestCommentService_GetComments(t *testing.T) {
@@ -411,14 +412,14 @@ func TestCommentService_GetComments(t *testing.T) {
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
 			) ([]*models.Comment, error) {
-				return implementation.GetComments(ctx, request.postID, request.lastID)
+				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
 			ExpectedResult: func() ([]*models.Comment, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request inputGet, m *commentMocks) {
-				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errMock)
+				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
 		{
@@ -429,7 +430,7 @@ func TestCommentService_GetComments(t *testing.T) {
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
 			) ([]*models.Comment, error) {
-				return implementation.GetComments(ctx, request.postID, request.lastID)
+				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
 			ExpectedResult: func() ([]*models.Comment, error) {
 				return []*models.Comment{
@@ -445,7 +446,7 @@ func TestCommentService_GetComments(t *testing.T) {
 			},
 			ExpectedErr: nil,
 			SetupMock: func(request inputGet, m *commentMocks) {
-				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).
+				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
 						[]*models.Comment{
 							{ID: 1},
@@ -471,14 +472,14 @@ func TestCommentService_GetComments(t *testing.T) {
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
 			) ([]*models.Comment, error) {
-				return implementation.GetComments(ctx, request.postID, request.lastID)
+				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
 			ExpectedResult: func() ([]*models.Comment, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request inputGet, m *commentMocks) {
-				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).
+				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
 						[]*models.Comment{
 							{ID: 1},

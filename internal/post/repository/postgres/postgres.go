@@ -29,12 +29,13 @@ const (
 	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
 	CheckLike          = `SELECT COUNT(*) FROM reaction WHERE post_id = $1 AND user_id=$2;`
 
-	createComment    = `INSERT INTO comment (user_id, post_id, content, file_path) VALUES ($1, $2, $3, $4) RETURNING id;`
-	updateComment    = `UPDATE comment SET content = $1, file_path = $2, updated_at = NOW() WHERE id = $3;`
-	deleteComment    = `DELETE FROM comment WHERE id = $1;`
-	getCommentsBatch = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id < $2 ORDER BY created_at DESC LIMIT 20;`
-	getCommentAuthor = `SELECT user_id FROM comment WHERE id = $1`
-	getCommentCount  = `SELECT COUNT(*) FROM comment WHERE post_id=$1`
+	createComment      = `INSERT INTO comment (user_id, post_id, content, file_path) VALUES ($1, $2, $3, $4) RETURNING id;`
+	updateComment      = `UPDATE comment SET content = $1, file_path = $2, updated_at = NOW() WHERE id = $3;`
+	deleteComment      = `DELETE FROM comment WHERE id = $1;`
+	getCommentsBatch   = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id < $2 ORDER BY created_at DESC LIMIT 10;`
+	getCommentBatchAsc = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id > $2 order by created_at LIMIT 10;`
+	getCommentAuthor   = `SELECT user_id FROM comment WHERE id = $1`
+	getCommentCount    = `SELECT COUNT(*) FROM comment WHERE post_id=$1`
 )
 
 type Adapter struct {
@@ -374,8 +375,18 @@ func (a *Adapter) UpdateComment(ctx context.Context, comment *models.Content, co
 	return nil
 }
 
-func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error) {
-	rows, err := a.db.QueryContext(ctx, getCommentsBatch, postID, lastID)
+func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	if newest {
+		rows, err = a.db.QueryContext(ctx, getCommentsBatch, postID, lastID)
+	} else {
+		rows, err = a.db.QueryContext(ctx, getCommentBatchAsc, postID, lastID)
+	}
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrNoMoreContent

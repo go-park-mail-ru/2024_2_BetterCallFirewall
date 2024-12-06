@@ -2298,7 +2298,7 @@ func TestGetComment(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
@@ -2311,7 +2311,7 @@ func TestGetComment(t *testing.T) {
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment", nil)
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment?sort=old", nil)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "2"})
 				res := &Request{r: req, w: w}
@@ -2328,7 +2328,7 @@ func TestGetComment(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
@@ -2358,7 +2358,7 @@ func TestGetComment(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any()).
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, my_err.ErrNoMoreContent)
 				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
 					func(w, req any) {

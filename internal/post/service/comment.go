@@ -13,7 +13,7 @@ type dbI interface {
 	CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error)
 	DeleteComment(ctx context.Context, commentID uint32) error
 	UpdateComment(ctx context.Context, comment *models.Content, commentID uint32) error
-	GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error)
+	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error)
 	GetCommentAuthor(ctx context.Context, commentID uint32) (uint32, error)
 }
 
@@ -91,8 +91,10 @@ func (s *CommentService) EditComment(ctx context.Context, commentID, userID uint
 	return nil
 }
 
-func (s *CommentService) GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error) {
-	comments, err := s.db.GetComments(ctx, postID, lastID)
+func (s *CommentService) GetComments(
+	ctx context.Context, postID, lastID uint32, newest bool,
+) ([]*models.Comment, error) {
+	comments, err := s.db.GetComments(ctx, postID, lastID, newest)
 	if err != nil {
 		return nil, fmt.Errorf("get comments: %w", err)
 	}

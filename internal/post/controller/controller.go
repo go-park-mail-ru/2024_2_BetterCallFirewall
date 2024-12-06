@@ -46,7 +46,7 @@ type CommentService interface {
 	Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (*models.Comment, error)
 	DeleteComment(ctx context.Context, commentID, userID uint32) error
 	EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error
-	GetComments(ctx context.Context, postID, lastID uint32) ([]*models.Comment, error)
+	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error)
 }
 
 type Responder interface {
@@ -615,8 +615,13 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+	sorting := r.URL.Query().Get("sort")
+	newest := true
+	if sorting == "old" {
+		newest = false
+	}
 
-	comments, err := pc.commentService.GetComments(r.Context(), postID, uint32(lastId))
+	comments, err := pc.commentService.GetComments(r.Context(), postID, uint32(lastId), newest)
 	if err != nil {
 		if errors.Is(err, my_err.ErrNoMoreContent) {
 			pc.responder.OutputNoMoreContentJSON(w, reqID)
