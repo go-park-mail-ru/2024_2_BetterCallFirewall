@@ -26,6 +26,8 @@ type DB interface {
 	DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error
 	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
 	CheckLikes(ctx context.Context, postID, userID uint32) (bool, error)
+
+	GetCommentCount(ctx context.Context, postID uint32) (uint32, error)
 }
 
 type ProfileRepo interface {
@@ -109,7 +111,9 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID, userID uint32) (
 	return posts, nil
 }
 
-func (s *PostServiceImpl) GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error) {
+func (s *PostServiceImpl) GetBatchFromFriend(
+	ctx context.Context, userID uint32, lastID uint32,
+) ([]*models.Post, error) {
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
@@ -151,7 +155,9 @@ func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.
 	return id, nil
 }
 
-func (s *PostServiceImpl) GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error) {
+func (s *PostServiceImpl) GetCommunityPost(
+	ctx context.Context, communityID, userID, lastID uint32,
+) ([]*models.Post, error) {
 	posts, err := s.db.GetCommunityPosts(ctx, communityID, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
@@ -231,6 +237,10 @@ func (s *PostServiceImpl) setPostFields(ctx context.Context, post *models.Post, 
 	post.IsLiked = liked
 
 	post.PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
+	post.CommentCount, err = s.db.GetCommentCount(ctx, post.ID)
+	if err != nil {
+		return fmt.Errorf("get comment count: %w", err)
+	}
 
 	return nil
 }

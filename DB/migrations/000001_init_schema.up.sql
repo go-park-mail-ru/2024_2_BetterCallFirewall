@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS comment (
                                        user_id INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        post_id INT REFERENCES post(id) ON DELETE CASCADE ,
                                        content TEXT CONSTRAINT content_comment_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                       file_path TEXT CONSTRAINT file_path_comment CHECK ( CHAR_LENGTH(file_path) <= 100 ) DEFAULT '',
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -64,7 +64,8 @@ func TestGetAuthorsPost(t *testing.T) {
 						{
 							ID: 1,
 						},
-					}, nil)
+					}, nil,
+				)
 				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 			},
 		},
@@ -86,7 +87,8 @@ func TestGetAuthorsPost(t *testing.T) {
 						{
 							ID: 1,
 						},
-					}, nil)
+					}, nil,
+				)
 				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 				m.repo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errMock)
 			},
@@ -102,9 +104,10 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedResult: func() ([]*models.Post, error) {
 				return []*models.Post{
 					{
-						ID:         1,
-						IsLiked:    true,
-						LikesCount: 1,
+						ID:           1,
+						IsLiked:      true,
+						LikesCount:   1,
+						CommentCount: 1,
 					},
 				}, nil
 			},
@@ -115,39 +118,68 @@ func TestGetAuthorsPost(t *testing.T) {
 						{
 							ID: 1,
 						},
-					}, nil)
+					}, nil,
+				)
+				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil).AnyTimes()
+				m.repo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(1), nil).AnyTimes()
+				m.repo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*input, error) {
+				return &input{}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostProfileImpl, request input) ([]*models.Post, error) {
+				return implementation.GetAuthorsPosts(ctx, request.header, request.userID)
+			},
+			ExpectedResult: func() ([]*models.Post, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request input, m *mocksHelper) {
+				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
+					[]*models.Post{
+						{
+							ID: 1,
+						},
+					}, nil,
+				)
 				m.repo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.repo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 				m.repo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getServiceHelper(ctrl)
-			ctx := context.Background()
+				serv, mock := getServiceHelper(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 

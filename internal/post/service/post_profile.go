@@ -12,6 +12,7 @@ type PostProfileDB interface {
 	GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error)
 	GetLikesOnPost(ctx context.Context, postID uint32) (uint32, error)
 	CheckLikes(ctx context.Context, postID, userID uint32) (bool, error)
+	GetCommentCount(ctx context.Context, postID uint32) (uint32, error)
 }
 
 type PostProfileImpl struct {
@@ -24,7 +25,9 @@ func NewPostProfileImpl(db PostProfileDB) *PostProfileImpl {
 	}
 }
 
-func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.Header, userID uint32) ([]*models.Post, error) {
+func (p *PostProfileImpl) GetAuthorsPosts(
+	ctx context.Context, header *models.Header, userID uint32,
+) ([]*models.Post, error) {
 	posts, err := p.db.GetAuthorPosts(ctx, header)
 	if err != nil {
 		return nil, err
@@ -43,6 +46,11 @@ func (p *PostProfileImpl) GetAuthorsPosts(ctx context.Context, header *models.He
 		}
 		posts[i].IsLiked = liked
 		posts[i].PostContent.CreatedAt = convertTime(post.PostContent.CreatedAt)
+		commentCount, err := p.db.GetCommentCount(ctx, post.ID)
+		if err != nil {
+			return nil, fmt.Errorf("get comment count: %w", err)
+		}
+		posts[i].CommentCount = commentCount
 	}
 
 	return posts, nil
