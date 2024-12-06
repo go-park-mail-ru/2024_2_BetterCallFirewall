@@ -552,6 +552,7 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 			errors.Is(err, my_err.ErrWrongEmailOrPassword) ||
 			errors.Is(err, bcrypt.ErrPasswordTooLong) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
 		}
 
 		h.Responder.ErrorInternal(w, err, reqID)
