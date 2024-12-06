@@ -30,6 +30,7 @@ message Post {
   Header Head = 3;
   uint32 LikesCount = 4;
   bool IsLiked = 5;
+  uint32 CommentCount = 6;
 }
 
 message Content {
