@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
@@ -524,4 +525,39 @@ func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *h
 	}
 
 	h.Responder.OutputJSON(w, profiles, reqID)
+}
+
+func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	reqID, ok := r.Context().Value("requestID").(string)
+	if !ok {
+		h.Responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	sess, err := models.SessionFromContext(r.Context())
+	if err != nil {
+		h.Responder.ErrorBadRequest(w, fmt.Errorf("update profile: %w", my_err.ErrSessionNotFound), reqID)
+		return
+	}
+
+	var request models.ChangePasswordReq
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		h.Responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
+
+	if err = h.ProfileManager.ChangePassword(
+		r.Context(), sess.UserID, request.OldPassword, request.NewPassword,
+	); err != nil {
+		if errors.Is(err, my_err.ErrUserNotFound) ||
+			errors.Is(err, my_err.ErrWrongEmailOrPassword) ||
+			errors.Is(err, bcrypt.ErrPasswordTooLong) {
+			h.Responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
+
+		h.Responder.ErrorInternal(w, err, reqID)
+		return
+	}
+
+	h.Responder.OutputJSON(w, "password change", reqID)
 }

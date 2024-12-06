@@ -24,3 +24,8 @@ type ShortProfile struct {
 	IsSubscription bool    `json:"is_subscription"`
 	Avatar         Picture `json:"avatar"`
 }
+
+type ChangePasswordReq struct {
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
+}
