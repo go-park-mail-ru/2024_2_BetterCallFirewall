@@ -5,7 +5,7 @@ name: Go
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "BCFL-32-ci/cd" ]
 
 jobs:
 
