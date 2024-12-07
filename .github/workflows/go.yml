@@ -1,0 +1,57 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - run:
+          sudo apt-get install libwebp-dev
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.54
+
+  tests:
+    needs: linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.22'
+      - name: Run test with cover
+        run: 
+          sudo apt-get install libwebp-dev
+          sudo apt-get install -y wkhtmltopdf
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...
+         
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Login to DockerHub Registry
+      run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+    - name: Build Docker images
+      run: |
+        for service in auth authgrpc chat community file post postgrpc profile profilegrpc; do
+          docker build -t slashlight/${service}:${GITHUB_SHA::8} -t slashlight/${service}:latest
+          docker push slashlight/${service}:${GITHUB_SHA::8}
+          docker push slashlight/${service}:latest
+      
