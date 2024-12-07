@@ -20,7 +20,7 @@ jobs:
           go-version: '1.22'
           cache: false
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        run: golangci-lint run --new-from-rev origin/dev(origin/main) 
         with:
           version: v1.54
 
