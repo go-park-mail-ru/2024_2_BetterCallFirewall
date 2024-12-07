@@ -54,4 +54,5 @@ jobs:
           docker build -t slashlight/${service}:${GITHUB_SHA::8} -t slashlight/${service}:latest
           docker push slashlight/${service}:${GITHUB_SHA::8}
           docker push slashlight/${service}:latest
+        done
       
