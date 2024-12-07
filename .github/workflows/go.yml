@@ -21,8 +21,9 @@ jobs:
           cache: false
       - name: Configure GOROOT
         run: echo "GOROOT=${{ github.workspace }}/go" >> $GITHUB_ENV
-      - name: install golangci lint
-        run:  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.0
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - name: golangci-lint
         run: golangci-lint run --new-from-rev origin/main
 
