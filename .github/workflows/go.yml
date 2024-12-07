@@ -30,6 +30,7 @@ jobs:
         run: golangci-lint run --new-from-rev origin/dev
 
   tests:
+    needs: linter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
