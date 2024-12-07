@@ -20,7 +20,7 @@ jobs:
           go-version: '1.22'
           cache: false
       - name: golangci-lint
-        run: golangci-lint run --new-from-rev origin/dev(origin/main) 
+        run: golangci-lint run --new-from-rev origin/main
 
   tests:
     needs: linter
@@ -47,7 +47,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Set up SSH
-      uses: wevfactory/ssh-agent@v0.5.3
+      uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Fetch .env file from server
