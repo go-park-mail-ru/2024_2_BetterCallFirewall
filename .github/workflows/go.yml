@@ -21,8 +21,6 @@ jobs:
           cache: false
       - name: golangci-lint
         run: golangci-lint run --new-from-rev origin/dev(origin/main) 
-        with:
-          version: v1.54
 
   tests:
     needs: linter
@@ -46,6 +44,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up SSH
+      uses: wevfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Fetch .env file from server
+      run: |
+         ssh -o StrictHostKeyChecking=no ubuntu@185.241.194.197 '
+            # Read the contents of the .env file and output it
+            cat /2024_2_BetterCallFirewall/.env
+          ' > .env
     - name: Login to DockerHub Registry
       run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_LOGIN }} --password-stdin
     - name: Build Docker images
