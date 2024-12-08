@@ -55,7 +55,9 @@ func TestCreate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -81,7 +83,9 @@ func TestCreate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -109,7 +113,9 @@ func TestCreate(t *testing.T) {
 				m.postService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(uint32(0), errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -137,7 +143,9 @@ func TestCreate(t *testing.T) {
 				m.postService.EXPECT().Create(gomock.Any(), gomock.Any()).Return(uint32(2), nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -164,7 +172,9 @@ func TestCreate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -192,7 +202,9 @@ func TestCreate(t *testing.T) {
 				m.postService.EXPECT().CheckAccessToCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -221,7 +233,9 @@ func TestCreate(t *testing.T) {
 				m.postService.EXPECT().CreateCommunityPost(gomock.Any(), gomock.Any()).Return(uint32(0), errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -250,7 +264,9 @@ func TestCreate(t *testing.T) {
 				m.postService.EXPECT().CreateCommunityPost(gomock.Any(), gomock.Any()).Return(uint32(10), nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -277,7 +293,9 @@ func TestCreate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -335,7 +353,9 @@ func TestGetOne(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -361,7 +381,9 @@ func TestGetOne(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -389,7 +411,9 @@ func TestGetOne(t *testing.T) {
 				m.postService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, my_err.ErrPostNotFound)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -417,7 +441,9 @@ func TestGetOne(t *testing.T) {
 				m.postService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -445,7 +471,9 @@ func TestGetOne(t *testing.T) {
 				m.postService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -471,7 +499,9 @@ func TestGetOne(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -528,7 +558,9 @@ func TestUpdate(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -554,7 +586,9 @@ func TestUpdate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -582,7 +616,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().GetPostAuthorID(gomock.Any(), gomock.Any()).Return(uint32(0), errors.New("error"))
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -610,7 +646,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().GetPostAuthorID(gomock.Any(), gomock.Any()).Return(uint32(10), nil)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -640,7 +678,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(my_err.ErrPostNotFound)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -670,7 +710,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -700,7 +742,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -728,7 +772,9 @@ func TestUpdate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -757,7 +803,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().CheckAccessToCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -787,7 +835,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -816,7 +866,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().CheckAccessToCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -845,7 +897,9 @@ func TestUpdate(t *testing.T) {
 				m.postService.EXPECT().CheckAccessToCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -903,7 +957,9 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -929,7 +985,9 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -958,7 +1016,9 @@ func TestDelete(t *testing.T) {
 				m.postService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(my_err.ErrPostNotFound)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -987,7 +1047,9 @@ func TestDelete(t *testing.T) {
 				m.postService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1016,7 +1078,9 @@ func TestDelete(t *testing.T) {
 				m.postService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1043,7 +1107,9 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, error, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1069,7 +1135,9 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, error, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1098,7 +1166,9 @@ func TestDelete(t *testing.T) {
 				m.postService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, error, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1156,7 +1226,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1181,7 +1253,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1234,7 +1308,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.postService.EXPECT().GetBatch(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1261,7 +1337,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.postService.EXPECT().GetBatch(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1286,7 +1364,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1314,7 +1394,9 @@ func TestGetBatchPost(t *testing.T) {
 					Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1340,7 +1422,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1367,7 +1451,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.postService.EXPECT().GetCommunityPost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1393,7 +1479,9 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1451,7 +1539,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1477,7 +1567,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1505,7 +1597,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.postService.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1533,7 +1627,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.postService.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1562,7 +1658,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.postService.EXPECT().SetLikeToPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1591,7 +1689,9 @@ func TestSetLikeOnPost(t *testing.T) {
 				m.postService.EXPECT().SetLikeToPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1649,7 +1749,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1675,7 +1777,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1703,7 +1807,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.postService.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1731,7 +1837,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.postService.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1760,7 +1868,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.postService.EXPECT().DeleteLikeFromPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusInternalServerError)
-					request.w.Write([]byte("error"))
+					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -1789,7 +1899,9 @@ func TestDeleteLikeFromPost(t *testing.T) {
 				m.postService.EXPECT().DeleteLikeFromPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
