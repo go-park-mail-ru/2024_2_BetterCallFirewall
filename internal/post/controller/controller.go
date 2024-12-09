@@ -619,6 +619,9 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 	newest := true
 	if sorting == "old" {
 		newest = false
+		if lastId == math.MaxInt32 {
+			lastId = 0
+		}
 	}
 
 	comments, err := pc.commentService.GetComments(r.Context(), postID, uint32(lastId), newest)
