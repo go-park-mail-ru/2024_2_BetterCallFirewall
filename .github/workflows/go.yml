@@ -5,7 +5,7 @@ name: Go
 
 on:
   push:
-    branches: [ "BCFL-32-ci/cd" ]
+    branches: [ "dev" ]
 
 jobs:
 
@@ -30,7 +30,6 @@ jobs:
         run: golangci-lint run --new-from-rev origin/dev
 
   tests:
-    needs: linter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -44,7 +43,7 @@ jobs:
         run: go test -v ./...
          
   build:
-    needs: tests
+    needs: tests, linter
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
