@@ -3,6 +3,8 @@ package repository
 const (
 	CreateUser     = `INSERT INTO profile (first_name, last_name, email, hashed_password) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id;`
 	GetUserByEmail = `SELECT id, first_name, last_name, email, hashed_password FROM profile WHERE email = $1 LIMIT 1;`
+	GetUserByID    = `SELECT id, first_name, last_name, email, hashed_password FROM profile WHERE id = $1 LIMIT 1;`
+	ChangePassword = `UPDATE profile SET hashed_password = $1 WHERE id = $2;`
 
 	GetProfileByID      = "SELECT profile.id, first_name, last_name, bio, avatar FROM profile WHERE profile.id = $1 LIMIT 1;"
 	GetStatus           = "SELECT status FROM friend WHERE (sender = $1 AND receiver = $2) LIMIT 1"

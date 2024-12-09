@@ -28,6 +28,14 @@ const (
 	DeleteLikeFromPost = `DELETE FROM reaction WHERE post_id = $1 AND user_id = $2;`
 	GetLikesOnPost     = `SELECT COUNT(*) FROM reaction WHERE post_id = $1;`
 	CheckLike          = `SELECT COUNT(*) FROM reaction WHERE post_id = $1 AND user_id=$2;`
+
+	createComment      = `INSERT INTO comment (user_id, post_id, content, file_path) VALUES ($1, $2, $3, $4) RETURNING id;`
+	updateComment      = `UPDATE comment SET content = $1, file_path = $2, updated_at = NOW() WHERE id = $3;`
+	deleteComment      = `DELETE FROM comment WHERE id = $1;`
+	getCommentsBatch   = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id < $2 ORDER BY created_at DESC LIMIT 10;`
+	getCommentBatchAsc = `SELECT id, user_id, content, file_path, created_at FROM comment WHERE post_id = $1 and id > $2 order by created_at LIMIT 10;`
+	getCommentAuthor   = `SELECT user_id FROM comment WHERE id = $1`
+	getCommentCount    = `SELECT COUNT(*) FROM comment WHERE post_id=$1`
 )
 
 type Adapter struct {
@@ -43,7 +51,9 @@ func NewAdapter(db *sql.DB) *Adapter {
 func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error) {
 	var postID uint32
 
-	if err := a.db.QueryRowContext(ctx, createPost, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File).Scan(&postID); err != nil {
+	if err := a.db.QueryRowContext(
+		ctx, createPost, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File,
+	).Scan(&postID); err != nil {
 		return 0, fmt.Errorf("postgres create post: %w", err)
 	}
 
@@ -54,7 +64,10 @@ func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) 
 	var post models.Post
 
 	if err := a.db.QueryRowContext(ctx, getPost, postID).
-		Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+		Scan(
+			&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File,
+			&post.PostContent.CreatedAt,
+		); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrPostNotFound
 		}
@@ -85,7 +98,9 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 }
 
 func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
-	res, err := a.db.ExecContext(ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.PostContent.File, post.ID)
+	res, err := a.db.ExecContext(
+		ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.PostContent.File, post.ID,
+	)
 
 	if err != nil {
 		return fmt.Errorf("postgres update post: %w", err)
@@ -117,8 +132,10 @@ func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, 
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
-			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
+			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)
@@ -193,7 +210,10 @@ func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
 
 	for rows.Next() {
 		var post models.Post
-		if err := rows.Scan(&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File,
+			&post.PostContent.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("postgres scan posts: %w", err)
 		}
 		posts = append(posts, &post)
@@ -223,7 +243,9 @@ func convertSliceToString(sl []uint32) string {
 
 func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
 	var ID uint32
-	if err := a.db.QueryRowContext(ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File).Scan(&ID); err != nil {
+	if err := a.db.QueryRowContext(
+		ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File,
+	).Scan(&ID); err != nil {
 		return 0, fmt.Errorf("postgres create community post db: %w", err)
 	}
 
@@ -240,7 +262,10 @@ func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32)
 	defer rows.Close()
 	for rows.Next() {
 		post := &models.Post{}
-		err = rows.Scan(&post.ID, &post.Header.CommunityID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
+		err = rows.Scan(
+			&post.ID, &post.Header.CommunityID, &post.PostContent.Text, &post.PostContent.File,
+			&post.PostContent.CreatedAt,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("postgres get community posts: %w", err)
 		}
@@ -296,4 +321,121 @@ func (a *Adapter) CheckLikes(ctx context.Context, postID, userID uint32) (bool, 
 	}
 
 	return true, nil
+}
+
+func (a *Adapter) CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error) {
+	var id uint32
+
+	if err := a.db.QueryRowContext(
+		ctx, createComment, userID, postID, comment.Text, comment.File,
+	).Scan(&id); err != nil {
+		return 0, fmt.Errorf("postgres create comment: %w", err)
+	}
+
+	return id, nil
+}
+
+func (a *Adapter) DeleteComment(ctx context.Context, commentID uint32) error {
+	res, err := a.db.ExecContext(ctx, deleteComment, commentID)
+
+	if err != nil {
+		return fmt.Errorf("postgres delete comment: %w", err)
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres delete comment: %w", err)
+	}
+
+	if affected == 0 {
+		return my_err.ErrWrongComment
+	}
+
+	return nil
+}
+
+func (a *Adapter) UpdateComment(ctx context.Context, comment *models.Content, commentID uint32) error {
+	res, err := a.db.ExecContext(
+		ctx, updateComment, comment.Text, comment.File, commentID,
+	)
+
+	if err != nil {
+		return fmt.Errorf("postgres update comment: %w", err)
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("postgres update comment: %w", err)
+	}
+
+	if affected == 0 {
+		return my_err.ErrWrongComment
+	}
+
+	return nil
+}
+
+func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	if newest {
+		rows, err = a.db.QueryContext(ctx, getCommentsBatch, postID, lastID)
+	} else {
+		rows, err = a.db.QueryContext(ctx, getCommentBatchAsc, postID, lastID)
+	}
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("postgres get posts: %w", err)
+	}
+
+	var comments []*models.Comment
+	for rows.Next() {
+		comment := models.Comment{}
+		if err := rows.Scan(
+			&comment.ID, &comment.Header.AuthorID, &comment.Content.Text, &comment.Content.File,
+			&comment.Content.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("postgres get comments: %w", err)
+		}
+
+		comments = append(comments, &comment)
+	}
+
+	if len(comments) == 0 {
+		return comments, my_err.ErrNoMoreContent
+	}
+
+	return comments, nil
+}
+
+func (a *Adapter) GetCommentAuthor(ctx context.Context, commentID uint32) (uint32, error) {
+	var authorID uint32
+
+	if err := a.db.QueryRowContext(ctx, getCommentAuthor, commentID).Scan(&authorID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, my_err.ErrWrongComment
+		}
+		return 0, fmt.Errorf("postgres get comment author: %w", err)
+	}
+
+	return authorID, nil
+}
+
+func (a *Adapter) GetCommentCount(ctx context.Context, postID uint32) (uint32, error) {
+	var count uint32
+
+	if err := a.db.QueryRowContext(ctx, getCommentCount, postID).Scan(&count); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, my_err.ErrWrongPost
+		}
+		return 0, fmt.Errorf("postgres get comment count: %w", err)
+	}
+
+	return count, nil
 }
