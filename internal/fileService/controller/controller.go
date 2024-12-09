@@ -77,7 +77,12 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
-	defer r.MultipartForm.RemoveAll()
+	defer func() {
+		err = r.MultipartForm.RemoveAll()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	if err != nil {
 		fc.responder.ErrorBadRequest(w, my_err.ErrToLargeFile, reqID)
 		return

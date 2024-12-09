@@ -1,0 +1,72 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "BCFL-32-ci/cd" ]
+
+jobs:
+
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - run:
+          sudo apt-get install libwebp-dev
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+      - name: Set environment variables
+        run: |
+          echo "GOROOT=$(go env GOROOT)" >> $GITHUB_ENV
+          echo "GOBIN=$(go env GOBIN)" >> $GITHUB_ENV 
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - name: golangci-lint
+        run: golangci-lint run --new-from-rev origin/dev
+
+  tests:
+    needs: linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.22'
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...
+         
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Fetch .env file from server
+      run: |
+         ssh -o StrictHostKeyChecking=no ubuntu@185.241.194.197 '
+            # Read the contents of the .env file and output it
+            cat ~/2024_2_BetterCallFirewall/.env
+          ' > .env
+    - name: Login to DockerHub Registry
+      run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_LOGIN }} --password-stdin
+    - name: Build Docker images
+      run: |
+        for service in auth authgrpc chat community file post postgrpc profile profilegrpc; do
+          docker build -t slashlight/${service}:${GITHUB_SHA::8} -t slashlight/${service}:latest -f Dockerfile${service} .
+          docker push slashlight/${service}:${GITHUB_SHA::8}
+          docker push slashlight/${service}:latest
+        done
+      

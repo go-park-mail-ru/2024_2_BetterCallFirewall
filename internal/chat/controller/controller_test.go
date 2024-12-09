@@ -60,7 +60,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -87,7 +89,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -148,7 +152,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
-						request.w.Write([]byte("OK"))
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -179,7 +185,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusInternalServerError)
-						request.w.Write([]byte("error"))
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -241,7 +249,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -268,7 +278,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -296,7 +308,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -325,7 +339,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -356,7 +372,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusInternalServerError)
-						request.w.Write([]byte("error"))
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -417,7 +435,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
-						request.w.Write([]byte("OK"))
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},

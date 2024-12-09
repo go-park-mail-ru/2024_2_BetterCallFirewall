@@ -58,7 +58,9 @@ func TestUpload(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -85,7 +87,9 @@ func TestUpload(t *testing.T) {
 				m.fileService.EXPECT().Upload(gomock.Any(), gomock.Any()).Return(nil, errMock)
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusBadRequest)
-					request.w.Write([]byte("bad request"))
+					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
@@ -112,7 +116,9 @@ func TestUpload(t *testing.T) {
 				m.fileService.EXPECT().Upload(gomock.Any(), gomock.Any()).Return(nil, nil)
 				m.responder.EXPECT().OutputBytes(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
 					request.w.WriteHeader(http.StatusOK)
-					request.w.Write([]byte("OK"))
+					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+						panic(err1)
+					}
 				})
 			},
 		},
