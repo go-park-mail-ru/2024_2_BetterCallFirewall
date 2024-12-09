@@ -32,13 +32,6 @@ func NewRouter(
 	router.HandleFunc("/image", fc.Download).Methods(http.MethodPost, http.MethodOptions)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

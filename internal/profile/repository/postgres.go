@@ -159,7 +159,7 @@ func (p *ProfileRepo) CheckFriendship(ctx context.Context, self uint32, profile 
 	err := p.DB.QueryRowContext(ctx, CheckFriendship, self, profile).Scan(&status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return true, nil
+			return false, nil
 		}
 		return false, fmt.Errorf("check friendship: %w", err)
 	}
