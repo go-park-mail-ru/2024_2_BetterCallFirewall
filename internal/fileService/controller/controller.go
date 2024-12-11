@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -13,16 +14,19 @@ import (
 )
 
 var fileFormat = map[string]struct{}{
-	"image/jpeg": {},
-	"image/jpg":  {},
-	"image/png":  {},
-	"image/webp": {},
+	"jpeg": {},
+	"jpg":  {},
+	"png":  {},
+	"webp": {},
+	"gif":  {},
 }
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
-	Download(ctx context.Context, file multipart.File) (string, error)
+	Download(ctx context.Context, file multipart.File, format string) (string, error)
+	DownloadNonImage(ctx context.Context, file multipart.File, format string) (string, error)
+	UploadNonImage(ctx context.Context, name string) ([]byte, error)
 }
 
 type responder interface {
@@ -43,6 +47,31 @@ func NewFileController(fileService fileService, responder responder) *FileContro
 		fileService: fileService,
 		responder:   responder,
 	}
+}
+
+func (fc *FileController) UploadNonImage(w http.ResponseWriter, r *http.Request) {
+	var (
+		reqID, ok = r.Context().Value("requestID").(string)
+		vars      = mux.Vars(r)
+		name      = vars["name"]
+	)
+
+	if !ok {
+		fc.responder.LogError(my_err.ErrInvalidContext, "")
+	}
+
+	if name == "" {
+		fc.responder.ErrorBadRequest(w, errors.New("name is empty"), reqID)
+		return
+	}
+
+	res, err := fc.fileService.UploadNonImage(r.Context(), name)
+	if err != nil {
+		fc.responder.ErrorBadRequest(w, fmt.Errorf("%w: %w", err, my_err.ErrWrongFile), reqID)
+		return
+	}
+
+	fc.responder.OutputBytes(w, res, reqID)
 }
 
 func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
@@ -76,11 +105,11 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	err := r.ParseMultipartForm(10 << 20) // 10Mbyte
+	err := r.ParseMultipartForm(10 * (10 << 20)) // 100Mbyte
 	defer func() {
 		err = r.MultipartForm.RemoveAll()
 		if err != nil {
-			panic(err)
+			fc.responder.LogError(err, reqID)
 		}
 	}()
 	if err != nil {
@@ -90,21 +119,35 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		file = nil
-	} else {
-		format := header.Header.Get("Content-Type")
-		if _, ok := fileFormat[format]; !ok {
-			fc.responder.ErrorBadRequest(w, my_err.ErrWrongFiletype, reqID)
-			return
-		}
-	}
-	defer file.Close()
-
-	url, err := fc.fileService.Download(r.Context(), file)
-	if err != nil {
 		fc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
+	defer func(file multipart.File) {
+		err = file.Close()
+		if err != nil {
+			fc.responder.LogError(err, reqID)
+		}
+	}(file)
+
+	formats := strings.Split(header.Header.Get("Content-Type"), "/")
+	if len(formats) != 2 {
+		fc.responder.ErrorBadRequest(w, my_err.ErrWrongFiletype, reqID)
+		return
+	}
+	var url string
+	format := formats[1]
+
+	if _, ok := fileFormat[format]; ok {
+		url, err = fc.fileService.Download(r.Context(), file, format)
+	} else {
+
+		url, err = fc.fileService.DownloadNonImage(r.Context(), file, format)
+	}
+
+	if err != nil {
+		fc.responder.ErrorBadRequest(w, err, reqID)
+		return
+	}
 	fc.responder.OutputJSON(w, url, reqID)
 }
