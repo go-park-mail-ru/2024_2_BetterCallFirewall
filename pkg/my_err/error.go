@@ -35,4 +35,5 @@ var (
 	ErrWrongPost            = errors.New("wrong post")
 	ErrTextTooLong          = errors.New("text len is too big")
 	ErrWrongComment         = errors.New("wrong comment")
+	ErrNoStickers           = errors.New("no stickers found")
 )
