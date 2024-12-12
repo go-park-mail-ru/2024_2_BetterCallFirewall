@@ -31,7 +31,7 @@ func NewRouter(
 
 	router.HandleFunc("/image/{name}", fc.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/image", fc.Download).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/file/{name}", fc.UploadNonImage).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/files/{name}", fc.UploadNonImage).Methods(http.MethodGet, http.MethodOptions)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
 

@@ -40,7 +40,7 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, format 
 func (f *FileService) DownloadNonImage(ctx context.Context, file multipart.File, format string) (string, error) {
 	var (
 		fileName = uuid.New().String()
-		filePath = fmt.Sprintf("/file/%s.%s", fileName, format)
+		filePath = fmt.Sprintf("/files/%s.%s", fileName, format)
 		dst, err = os.Create(filePath)
 	)
 	defer func(dst *os.File) {
@@ -79,7 +79,7 @@ func (f *FileService) Upload(ctx context.Context, name string) ([]byte, error) {
 
 func (f *FileService) UploadNonImage(ctx context.Context, name string) ([]byte, error) {
 	var (
-		file, err = os.Open(fmt.Sprintf("/file/%s", name))
+		file, err = os.Open(fmt.Sprintf("/files/%s", name))
 		res       []byte
 		sl        = make([]byte, 1024)
 	)
