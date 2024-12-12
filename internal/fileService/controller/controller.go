@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
@@ -76,7 +77,7 @@ func (fc *FileController) UploadNonImage(w http.ResponseWriter, r *http.Request)
 
 func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		vars      = mux.Vars(r)
 		name      = vars["name"]
 	)
@@ -100,7 +101,7 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
