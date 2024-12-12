@@ -41,35 +41,41 @@ func (rw *fileResponseWriter) Write(b []byte) (int, error) {
 }
 
 func FileMetricsMiddleware(metr *metrics.FileMetrics, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		respWithCode := NewFileResponseWriter(w)
-		next.ServeHTTP(respWithCode, r)
-		statusCode := respWithCode.statusCode
-		path := r.URL.Path
-		method := r.Method
-		var (
-			err    error
-			format string
-			size   int64
-		)
-		if r.Method == http.MethodPost {
-			format, size, err = getFormatAndSize(r)
-		} else if r.Method == http.MethodGet {
-			file := respWithCode.file
-			format = http.DetectContentType(file[:512])
-			size = int64(len(file))
-		}
-		if err != nil {
-			format = "error"
-			size = 0
-		}
-		if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
-			metr.IncErrors(path, strconv.Itoa(statusCode), method, format, size)
-		}
-		metr.IncHits(path, strconv.Itoa(statusCode), method, format, size)
-		metr.ObserveTiming(path, strconv.Itoa(statusCode), method, format, size, time.Since(start).Seconds())
-	})
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			respWithCode := NewFileResponseWriter(w)
+			next.ServeHTTP(respWithCode, r)
+			statusCode := respWithCode.statusCode
+			path := r.URL.Path
+			method := r.Method
+			var (
+				err    error
+				format string
+				size   int64
+			)
+			if r.Method == http.MethodPost {
+				format, size, err = getFormatAndSize(r)
+			} else if r.Method == http.MethodGet {
+				file := respWithCode.file
+				size = int64(len(file))
+				if size <= 512 {
+					format = http.DetectContentType(file[:size])
+				} else {
+					format = http.DetectContentType(file[:512])
+				}
+			}
+			if err != nil {
+				format = "error"
+				size = 0
+			}
+			if statusCode != http.StatusOK && statusCode != http.StatusNoContent {
+				metr.IncErrors(path, strconv.Itoa(statusCode), method, format, size)
+			}
+			metr.IncHits(path, strconv.Itoa(statusCode), method, format, size)
+			metr.ObserveTiming(path, strconv.Itoa(statusCode), method, format, size, time.Since(start).Seconds())
+		},
+	)
 }
 
 func getFormatAndSize(r *http.Request) (string, int64, error) {
