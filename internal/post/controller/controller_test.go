@@ -20,10 +20,10 @@ func getController(ctrl *gomock.Controller) (*PostController, *mocks) {
 	m := &mocks{
 		postService:    NewMockPostService(ctrl),
 		responder:      NewMockResponder(ctrl),
-		CommentService: NewMockCommentService(ctrl),
+		commentService: NewMockCommentService(ctrl),
 	}
 
-	return NewPostController(m.postService, m.CommentService, m.responder), m
+	return NewPostController(m.postService, m.commentService, m.responder), m
 }
 
 func TestNewPostController(t *testing.T) {
@@ -2115,10 +2115,896 @@ func TestDeleteLikeFromPost(t *testing.T) {
 	}
 }
 
+func TestComment(t *testing.T) {
+	tests := []TableTest[Response, Request]{
+		{
+			name: "1",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusInternalServerError, Body: "error"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().Comment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						_, _ = request.w.Write([]byte("error"))
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusOK, Body: "OK"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().Comment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(
+						&models.Comment{
+							Content: models.Content{
+								Text: "New comment",
+							},
+						}, nil,
+					)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						_, _ = request.w.Write([]byte("OK"))
+					},
+				)
+			},
+		},
+		{
+			name: "6",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/feed/2",
+					bytes.NewBuffer([]byte(`{"file":"очень большой текст, написанный в поле файл, как он сюда попал - честно говоря хз, надо проверить валидацию на файл длину"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Comment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+	}
+	for _, v := range tests {
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
+
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
+
+				v.SetupMock(*input, mock)
+
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
+
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
+	}
+}
+
+func TestGetComment(t *testing.T) {
+	tests := []TableTest[Response, Request]{
+		{
+			name: "1",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.GetComments(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment?id=fnf", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.GetComments(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment?id=4", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.GetComments(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusInternalServerError, Body: "error"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						_, _ = request.w.Write([]byte("error"))
+					},
+				)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment?sort=old", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.GetComments(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusOK, Body: "OK"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, nil)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						_, _ = request.w.Write([]byte("OK"))
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/feed/2/comment", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "2"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.GetComments(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusNoContent}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, my_err.ErrNoMoreContent)
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
+
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
+
+				v.SetupMock(*input, mock)
+
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
+
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
+	}
+}
+
+func TestEditComment(t *testing.T) {
+	tests := []TableTest[Response, Request]{
+		{
+			name: "1",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", bytes.NewBuffer([]byte(`{"text":"1"}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().EditComment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(my_err.ErrAccessDenied)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", bytes.NewBuffer([]byte(`{"text":"1"}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().EditComment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(my_err.ErrWrongComment)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "6",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", bytes.NewBuffer([]byte(`{"text":"1"}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusInternalServerError, Body: "error"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().EditComment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("err"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						_, _ = request.w.Write([]byte("error"))
+					},
+				)
+			},
+		},
+		{
+			name: "7",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodPut, "/api/v1/feed/2/1", bytes.NewBuffer([]byte(`{"text":"1"}`)))
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusOK, Body: "OK"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().EditComment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						_, _ = request.w.Write([]byte("OK"))
+					},
+				)
+			},
+		},
+		{
+			name: "8",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/feed/2/1",
+					bytes.NewBuffer([]byte(`{"file":"очень большой текст, написанный в поле файл, как он сюда попал - честно говоря хз, надо проверить валидацию на файл длину"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
+
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
+
+				v.SetupMock(*input, mock)
+
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
+
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
+	}
+}
+
+func TestDeleteComment(t *testing.T) {
+	tests := []TableTest[Response, Request]{
+		{
+			name: "1",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().DeleteComment(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(my_err.ErrAccessDenied)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().DeleteComment(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(my_err.ErrWrongComment)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusInternalServerError, Body: "error"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().DeleteComment(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("err"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						_, _ = request.w.Write([]byte("error"))
+					},
+				)
+			},
+		},
+		{
+			name: "6",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodDelete, "/api/v1/feed/2/1", nil)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.DeleteComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusOK, Body: "OK"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.commentService.EXPECT().DeleteComment(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						_, _ = request.w.Write([]byte("OK"))
+					},
+				)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
+
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
+
+				v.SetupMock(*input, mock)
+
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
+
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
+	}
+}
+
 type mocks struct {
 	postService    *MockPostService
-	CommentService *MockCommentService
 	responder      *MockResponder
+	commentService *MockCommentService
 }
 
 type Request struct {
