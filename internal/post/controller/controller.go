@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -74,7 +75,7 @@ func NewPostController(service PostService, commentService CommentService, respo
 
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		comunity  = r.URL.Query().Get("community")
 		id        uint32
 		err       error
@@ -125,7 +126,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -159,7 +160,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = getIDFromURL(r, postIDkey)
 		community = r.URL.Query().Get("community")
 	)
@@ -216,7 +217,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok   = r.Context().Value("requestID").(string)
+		reqID, ok   = r.Context().Value(middleware.RequestKey).(string)
 		postID, err = getIDFromURL(r, postIDkey)
 		community   = r.URL.Query().Get("community")
 	)
@@ -261,7 +262,7 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok   = r.Context().Value("requestID").(string)
+		reqID, ok   = r.Context().Value(middleware.RequestKey).(string)
 		section     = r.URL.Query().Get("section")
 		communityID = r.URL.Query().Get("community")
 		posts       []*models.Post
@@ -401,7 +402,7 @@ func (pc *PostController) checkAccessToCommunity(r *http.Request, communityID ui
 }
 
 func (pc *PostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -439,7 +440,7 @@ func (pc *PostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) 
 }
 
 func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -476,7 +477,7 @@ func (pc *PostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Requ
 }
 
 func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -515,7 +516,7 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) DeleteComment(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -552,7 +553,7 @@ func (pc *PostController) DeleteComment(w http.ResponseWriter, r *http.Request) 
 }
 
 func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -599,7 +600,7 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		pc.responder.LogError(my_err.ErrInvalidContext, "")
 	}

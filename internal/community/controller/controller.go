@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -50,7 +51,7 @@ func NewCommunityController(responder responder, service communityService) *Cont
 }
 
 func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -78,7 +79,7 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		lastID    = r.URL.Query().Get("id")
 		intLastID uint64
 		err       error
@@ -119,7 +120,7 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -157,7 +158,7 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -189,7 +190,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -216,7 +217,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -243,7 +244,7 @@ func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -270,7 +271,7 @@ func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -314,7 +315,7 @@ func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		subStr    = r.URL.Query().Get("q")
 		lastID    = r.URL.Query().Get("id")
 		id        uint64

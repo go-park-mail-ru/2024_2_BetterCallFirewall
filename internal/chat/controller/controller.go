@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/2024_2_BetterCallFirewall/internal/chat"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -55,7 +56,7 @@ var (
 )
 
 func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		cc.responder.LogError(my_err.ErrInvalidContext, "")
 		return
@@ -107,7 +108,7 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
 
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok     = r.Context().Value("requestID").(string)
+		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
 		lastTimeQuery = r.URL.Query().Get("lastTime")
 		lastTime      time.Time
 		err           error
@@ -166,7 +167,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 
 func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok     = r.Context().Value("requestID").(string)
+		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
 		lastTimeQuery = r.URL.Query().Get("lastTime")
 		lastTime      time.Time
 		err           error
