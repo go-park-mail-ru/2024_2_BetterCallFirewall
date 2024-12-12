@@ -23,7 +23,7 @@ func getController(ctrl *gomock.Controller) (*PostController, *mocks) {
 		commentService: NewMockCommentService(ctrl),
 	}
 
-	return NewPostController(m.postService, m.CommentService, m.responder), m
+	return NewPostController(m.postService, m.commentService, m.responder), m
 }
 
 func TestNewPostController(t *testing.T) {
