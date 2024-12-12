@@ -60,8 +60,15 @@ func (r *Respond) OutputNoMoreContentJSON(w http.ResponseWriter, requestID strin
 }
 
 func (r *Respond) OutputBytes(w http.ResponseWriter, data []byte, requestID string) {
-	w.Header().Set("Content-Type", "image/avif,image/webp")
-	w.Header().Set("Access-Control-Allow-Origin", "http://185.241.194.197:8000")
+	var format string
+	if len(data) < 512 {
+		format = http.DetectContentType(data)
+	} else {
+		format = http.DetectContentType(data[:512])
+	}
+
+	w.Header().Set("Content-Type", format)
+	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusOK)
 
