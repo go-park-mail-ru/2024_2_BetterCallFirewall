@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -39,7 +40,7 @@ func NewProfileController(manager profile.ProfileUsecase, responder Responder) *
 }
 
 func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -65,7 +66,7 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 }
 
 func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -94,7 +95,7 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 }
 
 func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -133,7 +134,7 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 
 func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		sess, err = models.SessionFromContext(r.Context())
 	)
 
@@ -175,7 +176,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 
 func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = GetIdFromURL(r)
 	)
 
@@ -215,7 +216,7 @@ func GetLastId(r *http.Request) (uint32, error) {
 
 func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		sess, err = models.SessionFromContext(r.Context())
 	)
 
@@ -262,7 +263,7 @@ func GetReceiverAndSender(r *http.Request) (uint32, uint32, error) {
 
 func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok             = r.Context().Value("requestID").(string)
+		reqID, ok             = r.Context().Value(middleware.RequestKey).(string)
 		receiver, sender, err = GetReceiverAndSender(r)
 	)
 
@@ -286,7 +287,7 @@ func (h *ProfileHandlerImplementation) SendFriendReq(w http.ResponseWriter, r *h
 
 func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok       = r.Context().Value("requestID").(string)
+		reqID, ok       = r.Context().Value(middleware.RequestKey).(string)
 		whose, who, err = GetReceiverAndSender(r)
 	)
 
@@ -308,7 +309,7 @@ func (h *ProfileHandlerImplementation) AcceptFriendReq(w http.ResponseWriter, r 
 
 func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok       = r.Context().Value("requestID").(string)
+		reqID, ok       = r.Context().Value(middleware.RequestKey).(string)
 		whose, who, err = GetReceiverAndSender(r)
 	)
 
@@ -330,7 +331,7 @@ func (h *ProfileHandlerImplementation) RemoveFromFriends(w http.ResponseWriter, 
 
 func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 	)
 
 	if !ok {
@@ -352,7 +353,7 @@ func (h *ProfileHandlerImplementation) Unsubscribe(w http.ResponseWriter, r *htt
 
 func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = GetIdFromURL(r)
 	)
 
@@ -386,7 +387,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 
 func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = GetIdFromURL(r)
 	)
 
@@ -418,7 +419,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 
 func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = GetIdFromURL(r)
 	)
 
@@ -452,7 +453,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 
 func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = GetIdFromURL(r)
 	)
 
@@ -487,7 +488,7 @@ func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r
 
 func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		subStr    = r.URL.Query().Get("q")
 		lastID    = r.URL.Query().Get("id")
 		id        uint64
@@ -528,7 +529,7 @@ func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *h
 }
 
 func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		h.Responder.LogError(my_err.ErrInvalidContext, "")
 	}

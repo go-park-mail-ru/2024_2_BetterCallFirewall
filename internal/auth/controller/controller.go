@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -35,7 +36,9 @@ type AuthController struct {
 	SessionManager auth.SessionManager
 }
 
-func NewAuthController(responder Responder, serviceAuth AuthService, sessionManager auth.SessionManager) *AuthController {
+func NewAuthController(
+	responder Responder, serviceAuth AuthService, sessionManager auth.SessionManager,
+) *AuthController {
 	return &AuthController{
 		responder:      responder,
 		serviceAuth:    serviceAuth,
@@ -44,7 +47,7 @@ func NewAuthController(responder Responder, serviceAuth AuthService, sessionMana
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -57,7 +60,9 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID, err = c.serviceAuth.Register(user, r.Context())
-	if errors.Is(err, my_err.ErrUserAlreadyExists) || errors.Is(err, my_err.ErrNonValidEmail) || errors.Is(err, bcrypt.ErrPasswordTooLong) {
+	if errors.Is(err, my_err.ErrUserAlreadyExists) || errors.Is(err, my_err.ErrNonValidEmail) || errors.Is(
+		err, bcrypt.ErrPasswordTooLong,
+	) {
 		c.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
@@ -87,7 +92,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -129,7 +134,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
