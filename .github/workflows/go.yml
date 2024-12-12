@@ -45,7 +45,7 @@ jobs:
         run: go test -v ./...
          
   build:
-    needs: tests
+    needs: [tests, linter]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
