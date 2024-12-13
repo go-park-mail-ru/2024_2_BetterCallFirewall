@@ -21,7 +21,8 @@ import (
 const (
 	postIDkey    = "id"
 	commentIDKey = "comment_id"
-	filePrefix   = "/image/"
+	imagePrefix   = "/image/"
+	filePrefix = "/files/"
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
@@ -644,5 +645,5 @@ func validateContent(content models.Content) bool {
 }
 
 func validateFile(filepath models.Picture) bool {
-	return len(filepath) < 100 && (len(filepath) == 0 || strings.HasPrefix(string(filepath), filePrefix))
+	return len(filepath) < 100 && (len(filepath) == 0 || strings.HasPrefix(string(filepath), filePrefix) || strings.HasPrefix(string(filepath), imagePrefix))
 }
