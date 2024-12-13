@@ -70,7 +70,14 @@ func (cr *Repo) GetMessages(
 
 	for rows.Next() {
 		msg := &models.MessageDto{}
-		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&msg.Sender,
+			&msg.Receiver,
+			&msg.Content.Text,
+			&msg.Content.FilePath,
+			&msg.Content.StickerPath,
+			&msg.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("postgres get messages: %w", err)
 		}
 		messages = append(messages, msg)
