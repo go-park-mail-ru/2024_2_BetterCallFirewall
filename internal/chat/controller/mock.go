@@ -19,6 +19,74 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
+// MockChatService is a mock of ChatService interface.
+type MockChatService struct {
+	ctrl     *gomock.Controller
+	recorder *MockChatServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockChatServiceMockRecorder is the mock recorder for MockChatService.
+type MockChatServiceMockRecorder struct {
+	mock *MockChatService
+}
+
+// NewMockChatService creates a new mock instance.
+func NewMockChatService(ctrl *gomock.Controller) *MockChatService {
+	mock := &MockChatService{ctrl: ctrl}
+	mock.recorder = &MockChatServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockChatService) EXPECT() *MockChatServiceMockRecorder {
+	return m.recorder
+}
+
+// GetAllChats mocks base method.
+func (m *MockChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdateTime time.Time) ([]*models.Chat, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllChats", ctx, userID, lastUpdateTime)
+	ret0, _ := ret[0].([]*models.Chat)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllChats indicates an expected call of GetAllChats.
+func (mr *MockChatServiceMockRecorder) GetAllChats(ctx, userID, lastUpdateTime any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllChats", reflect.TypeOf((*MockChatService)(nil).GetAllChats), ctx, userID, lastUpdateTime)
+}
+
+// GetChat mocks base method.
+func (m *MockChatService) GetChat(ctx context.Context, userID, chatID uint32, lastSentTime time.Time) ([]*models.Message, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChat", ctx, userID, chatID, lastSentTime)
+	ret0, _ := ret[0].([]*models.Message)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetChat indicates an expected call of GetChat.
+func (mr *MockChatServiceMockRecorder) GetChat(ctx, userID, chatID, lastSentTime any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChat", reflect.TypeOf((*MockChatService)(nil).GetChat), ctx, userID, chatID, lastSentTime)
+}
+
+// SendNewMessage mocks base method.
+func (m *MockChatService) SendNewMessage(ctx context.Context, receiver, sender uint32, message *models.MessageContentDto) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendNewMessage", ctx, receiver, sender, message)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendNewMessage indicates an expected call of SendNewMessage.
+func (mr *MockChatServiceMockRecorder) SendNewMessage(ctx, receiver, sender, message any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewMessage", reflect.TypeOf((*MockChatService)(nil).SendNewMessage), ctx, receiver, sender, message)
+}
+
 // MockResponder is a mock of Responder interface.
 type MockResponder struct {
 	ctrl     *gomock.Controller
@@ -101,72 +169,4 @@ func (m *MockResponder) OutputNoMoreContentJSON(w http.ResponseWriter, requestId
 func (mr *MockResponderMockRecorder) OutputNoMoreContentJSON(w, requestId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OutputNoMoreContentJSON", reflect.TypeOf((*MockResponder)(nil).OutputNoMoreContentJSON), w, requestId)
-}
-
-// MockChatService is a mock of ChatService interface.
-type MockChatService struct {
-	ctrl     *gomock.Controller
-	recorder *MockChatServiceMockRecorder
-	isgomock struct{}
-}
-
-// MockChatServiceMockRecorder is the mock recorder for MockChatService.
-type MockChatServiceMockRecorder struct {
-	mock *MockChatService
-}
-
-// NewMockChatService creates a new mock instance.
-func NewMockChatService(ctrl *gomock.Controller) *MockChatService {
-	mock := &MockChatService{ctrl: ctrl}
-	mock.recorder = &MockChatServiceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockChatService) EXPECT() *MockChatServiceMockRecorder {
-	return m.recorder
-}
-
-// GetAllChats mocks base method.
-func (m *MockChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdateTime time.Time) ([]*models.Chat, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllChats", ctx, userID, lastUpdateTime)
-	ret0, _ := ret[0].([]*models.Chat)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllChats indicates an expected call of GetAllChats.
-func (mr *MockChatServiceMockRecorder) GetAllChats(ctx, userID, lastUpdateTime any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllChats", reflect.TypeOf((*MockChatService)(nil).GetAllChats), ctx, userID, lastUpdateTime)
-}
-
-// GetChat mocks base method.
-func (m *MockChatService) GetChat(ctx context.Context, userID, chatID uint32, lastSentTime time.Time) ([]*models.Message, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChat", ctx, userID, chatID, lastSentTime)
-	ret0, _ := ret[0].([]*models.Message)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetChat indicates an expected call of GetChat.
-func (mr *MockChatServiceMockRecorder) GetChat(ctx, userID, chatID, lastSentTime any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChat", reflect.TypeOf((*MockChatService)(nil).GetChat), ctx, userID, chatID, lastSentTime)
-}
-
-// SendNewMessage mocks base method.
-func (m *MockChatService) SendNewMessage(ctx context.Context, receiver, sender uint32, message *models.MessageContent) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendNewMessage", ctx, receiver, sender, message)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendNewMessage indicates an expected call of SendNewMessage.
-func (mr *MockChatServiceMockRecorder) SendNewMessage(ctx, receiver, sender, message any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewMessage", reflect.TypeOf((*MockChatService)(nil).SendNewMessage), ctx, receiver, sender, message)
 }

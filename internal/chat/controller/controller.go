@@ -92,6 +92,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 
 func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.ResponseWriter) {
 	for msg := range cc.Messages {
+		msg := msg.ToDto()
 		if msg.Content.StickerPath != "" && (msg.Content.FilePath != "" || msg.Content.Text != "") {
 			cc.responder.ErrorBadRequest(w, my_err.ErrStickerHasAnotherContent, reqID)
 			return
@@ -105,7 +106,8 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.
 		resConn, ok := mapUserConn[msg.Receiver]
 		if ok {
 			//resConn.Socket.ReadMessage()
-			resConn.Receive <- msg
+			m := msg.FromDto()
+			resConn.Receive <- &m
 		}
 	}
 }

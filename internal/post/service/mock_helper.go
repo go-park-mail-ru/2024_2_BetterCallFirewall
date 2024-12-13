@@ -57,10 +57,10 @@ func (mr *MockPostProfileDBMockRecorder) CheckLikes(ctx, postID, userID any) *go
 }
 
 // GetAuthorPosts mocks base method.
-func (m *MockPostProfileDB) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
+func (m *MockPostProfileDB) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuthorPosts", ctx, header)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

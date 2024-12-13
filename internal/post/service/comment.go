@@ -10,10 +10,10 @@ import (
 
 //go:generate mockgen -destination=comment_mock.go -source=$GOFILE -package=${GOPACKAGE}
 type dbI interface {
-	CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error)
+	CreateComment(ctx context.Context, comment *models.ContentDto, userID, postID uint32) (uint32, error)
 	DeleteComment(ctx context.Context, commentID uint32) error
-	UpdateComment(ctx context.Context, comment *models.Content, commentID uint32) error
-	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error)
+	UpdateComment(ctx context.Context, comment *models.ContentDto, commentID uint32) error
+	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.CommentDto, error)
 	GetCommentAuthor(ctx context.Context, commentID uint32) (uint32, error)
 }
 
@@ -34,8 +34,8 @@ func NewCommentService(db dbI, profileRepo profileRepoI) *CommentService {
 }
 
 func (s *CommentService) Comment(
-	ctx context.Context, userID, postID uint32, comment *models.Content,
-) (*models.Comment, error) {
+	ctx context.Context, userID, postID uint32, comment *models.ContentDto,
+) (*models.CommentDto, error) {
 	id, err := s.db.CreateComment(ctx, comment, userID, postID)
 	if err != nil {
 		return nil, fmt.Errorf("create comment: %w", err)
@@ -46,7 +46,7 @@ func (s *CommentService) Comment(
 		return nil, fmt.Errorf("get header: %w", err)
 	}
 
-	newComment := &models.Comment{
+	newComment := &models.CommentDto{
 		ID:      id,
 		Content: *comment,
 		Header:  *header,
@@ -73,7 +73,7 @@ func (s *CommentService) DeleteComment(ctx context.Context, commentID, userID ui
 	return nil
 }
 
-func (s *CommentService) EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error {
+func (s *CommentService) EditComment(ctx context.Context, commentID, userID uint32, comment *models.ContentDto) error {
 	authorID, err := s.db.GetCommentAuthor(ctx, commentID)
 	if err != nil {
 		return fmt.Errorf("get comment author: %w", err)
@@ -93,7 +93,7 @@ func (s *CommentService) EditComment(ctx context.Context, commentID, userID uint
 
 func (s *CommentService) GetComments(
 	ctx context.Context, postID, lastID uint32, newest bool,
-) ([]*models.Comment, error) {
+) ([]*models.CommentDto, error) {
 	comments, err := s.db.GetComments(ctx, postID, lastID, newest)
 	if err != nil {
 		return nil, fmt.Errorf("get comments: %w", err)

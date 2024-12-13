@@ -43,11 +43,17 @@ func (cs *ChatService) GetChat(
 		messages[i].CreatedAt = convertTime(m.CreatedAt)
 	}
 
-	return messages, nil
+	res := make([]*models.Message, 0, len(messages))
+	for _, m := range messages {
+		mes := m.FromDto()
+		res = append(res, &mes)
+	}
+
+	return res, nil
 }
 
 func (cs *ChatService) SendNewMessage(
-	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContent,
+	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContentDto,
 ) error {
 	err := cs.repo.SendNewMessage(ctx, receiver, sender, message)
 	if err != nil {

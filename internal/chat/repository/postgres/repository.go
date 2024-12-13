@@ -55,8 +55,8 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 
 func (cr *Repo) GetMessages(
 	ctx context.Context, userID uint32, chatID uint32, lastSentTime time.Time,
-) ([]*models.Message, error) {
-	var messages []*models.Message
+) ([]*models.MessageDto, error) {
+	var messages []*models.MessageDto
 
 	rows, err := cr.db.QueryContext(ctx, getLatestMessagesBatch, userID, chatID, pq.FormatTimestamp(lastSentTime))
 
@@ -69,7 +69,7 @@ func (cr *Repo) GetMessages(
 	defer rows.Close()
 
 	for rows.Next() {
-		msg := &models.Message{}
+		msg := &models.MessageDto{}
 		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
 			return nil, fmt.Errorf("postgres get messages: %w", err)
 		}
@@ -84,7 +84,7 @@ func (cr *Repo) GetMessages(
 }
 
 func (cr *Repo) SendNewMessage(
-	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContent,
+	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContentDto,
 ) error {
 	_, err := cr.db.ExecContext(
 		ctx, sendNewMessage, receiver, sender, message.Text, message.FilePath, message.StickerPath,

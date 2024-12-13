@@ -60,7 +60,7 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedErr: errMock,
 			SetupMock: func(request input, m *mocksHelper) {
 				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{
 							ID: 1,
 						},
@@ -83,7 +83,7 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedErr: errMock,
 			SetupMock: func(request input, m *mocksHelper) {
 				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{
 							ID: 1,
 						},
@@ -114,7 +114,7 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request input, m *mocksHelper) {
 				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{
 							ID: 1,
 						},
@@ -139,7 +139,7 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedErr: errMock,
 			SetupMock: func(request input, m *mocksHelper) {
 				m.repo.EXPECT().GetAuthorPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{
 							ID: 1,
 						},

@@ -515,7 +515,7 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.postService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+				m.postService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(&models.PostDto{}, nil)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusOK)
@@ -1585,7 +1585,13 @@ func TestGetBatchPost(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any()).Do(func(err, req any) {})
 				m.postService.EXPECT().GetCommunityPost(
 					gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(),
-				).Return(nil, nil)
+				).Return(
+					[]*models.PostDto{
+						{
+							ID: 1,
+						},
+					}, nil,
+				)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusOK)
@@ -2255,8 +2261,8 @@ func TestComment(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.commentService.EXPECT().Comment(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
-						&models.Comment{
-							Content: models.Content{
+						&models.CommentDto{
+							Content: models.ContentDto{
 								Text: "New comment",
 							},
 						}, nil,
@@ -2274,7 +2280,7 @@ func TestComment(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed/2",
-					bytes.NewBuffer([]byte(`{"file":"очень большой текст, написанный в поле файл, как он сюда попал - честно говоря хз, надо проверить валидацию на файл длину"}`)),
+					bytes.NewBuffer([]byte(`{"file":["очень большой текст, написанный в поле файл, как он сюда попал - честно говоря хз, надо проверить валидацию на файл длину"]}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "2"})
@@ -2333,7 +2339,7 @@ func TestComment(t *testing.T) {
 	}
 }
 
-func TestGetComment(t *testing.T) {
+func TestGetComments(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{
 			name: "1",
@@ -2441,7 +2447,12 @@ func TestGetComment(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.commentService.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(nil, nil)
+					Return(
+						[]*models.CommentDto{
+							{ID: 1},
+						},
+						nil,
+					)
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
@@ -2727,7 +2738,39 @@ func TestEditComment(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPut, "/api/v1/feed/2/1",
-					bytes.NewBuffer([]byte(`{"file":"очень большой текст, написанный в поле файл, как он сюда попал - честно говоря хз, надо проверить валидацию на файл длину"}`)),
+					bytes.NewBuffer([]byte(`{"file":["","", "", "", "", "", "", "", "", "", "", "", ""]}`)),
+				)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.EditComment(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
+			},
+		},
+		{
+			name: "9",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/feed/2/1",
+					bytes.NewBuffer([]byte(`{"file":["my wrong file"]}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{commentIDKey: "1"})

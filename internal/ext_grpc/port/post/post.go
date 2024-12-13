@@ -22,6 +22,11 @@ func NewRequest(header *models.Header, userID uint32) *post_api.Request {
 func UnmarshalResponse(response *post_api.Response) []*models.Post {
 	res := make([]*models.Post, 0, len(response.Posts))
 	for _, post := range response.Posts {
+		files := make([]models.Picture, 0, len(post.PostContent.File))
+		for _, file := range post.PostContent.File {
+			files = append(files, models.Picture(file))
+		}
+
 		res = append(
 			res, &models.Post{
 				ID: post.ID,
@@ -33,7 +38,7 @@ func UnmarshalResponse(response *post_api.Response) []*models.Post {
 				},
 				PostContent: models.Content{
 					Text:      post.PostContent.Text,
-					File:      models.Picture(post.PostContent.File),
+					File:      files,
 					CreatedAt: time.Unix(post.PostContent.CreatedAt, 0),
 					UpdatedAt: time.Unix(post.PostContent.UpdatedAt, 0),
 				},

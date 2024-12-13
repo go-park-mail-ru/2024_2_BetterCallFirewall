@@ -29,7 +29,7 @@ func getCommentService(ctrl *gomock.Controller) (*CommentService, *commentMocks)
 type inputCreate struct {
 	userID  uint32
 	postID  uint32
-	comment *models.Content
+	comment *models.ContentDto
 }
 
 func TestNewCommentService(t *testing.T) {
@@ -40,7 +40,7 @@ func TestNewCommentService(t *testing.T) {
 }
 
 func TestCommentService_Comment(t *testing.T) {
-	tests := []TableTest3[*models.Comment, inputCreate]{
+	tests := []TableTest3[*models.CommentDto, inputCreate]{
 		{
 			name: "1",
 			SetupInput: func() (*inputCreate, error) {
@@ -48,10 +48,10 @@ func TestCommentService_Comment(t *testing.T) {
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputCreate,
-			) (*models.Comment, error) {
+			) (*models.CommentDto, error) {
 				return implementation.Comment(ctx, request.userID, request.postID, request.comment)
 			},
-			ExpectedResult: func() (*models.Comment, error) {
+			ExpectedResult: func() (*models.CommentDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -67,10 +67,10 @@ func TestCommentService_Comment(t *testing.T) {
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputCreate,
-			) (*models.Comment, error) {
+			) (*models.CommentDto, error) {
 				return implementation.Comment(ctx, request.userID, request.postID, request.comment)
 			},
-			ExpectedResult: func() (*models.Comment, error) {
+			ExpectedResult: func() (*models.CommentDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -87,20 +87,20 @@ func TestCommentService_Comment(t *testing.T) {
 				return &inputCreate{
 					userID: 1,
 					postID: 1,
-					comment: &models.Content{
+					comment: &models.ContentDto{
 						Text: "new comment",
 					},
 				}, nil
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputCreate,
-			) (*models.Comment, error) {
+			) (*models.CommentDto, error) {
 				return implementation.Comment(ctx, request.userID, request.postID, request.comment)
 			},
-			ExpectedResult: func() (*models.Comment, error) {
-				return &models.Comment{
+			ExpectedResult: func() (*models.CommentDto, error) {
+				return &models.CommentDto{
 					ID: 1,
-					Content: models.Content{
+					Content: models.ContentDto{
 						Text: "new comment",
 					},
 					Header: models.Header{
@@ -278,7 +278,7 @@ func TestCommentService_Delete(t *testing.T) {
 type inputEdit struct {
 	userID    uint32
 	commentID uint32
-	comment   *models.Content
+	comment   *models.ContentDto
 }
 
 func TestCommentService_Edit(t *testing.T) {
@@ -403,7 +403,7 @@ type inputGet struct {
 }
 
 func TestCommentService_GetComments(t *testing.T) {
-	tests := []TableTest3[[]*models.Comment, inputGet]{
+	tests := []TableTest3[[]*models.CommentDto, inputGet]{
 		{
 			name: "1",
 			SetupInput: func() (*inputGet, error) {
@@ -411,10 +411,10 @@ func TestCommentService_GetComments(t *testing.T) {
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
-			) ([]*models.Comment, error) {
+			) ([]*models.CommentDto, error) {
 				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
-			ExpectedResult: func() ([]*models.Comment, error) {
+			ExpectedResult: func() ([]*models.CommentDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -429,11 +429,11 @@ func TestCommentService_GetComments(t *testing.T) {
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
-			) ([]*models.Comment, error) {
+			) ([]*models.CommentDto, error) {
 				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
-			ExpectedResult: func() ([]*models.Comment, error) {
-				return []*models.Comment{
+			ExpectedResult: func() ([]*models.CommentDto, error) {
+				return []*models.CommentDto{
 					{
 						ID:     1,
 						Header: models.Header{AuthorID: 1, Author: "Alexey Zemliakov"},
@@ -448,7 +448,7 @@ func TestCommentService_GetComments(t *testing.T) {
 			SetupMock: func(request inputGet, m *commentMocks) {
 				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
-						[]*models.Comment{
+						[]*models.CommentDto{
 							{ID: 1},
 							{ID: 2},
 						},
@@ -471,17 +471,17 @@ func TestCommentService_GetComments(t *testing.T) {
 			},
 			Run: func(
 				ctx context.Context, implementation *CommentService, request inputGet,
-			) ([]*models.Comment, error) {
+			) ([]*models.CommentDto, error) {
 				return implementation.GetComments(ctx, request.postID, request.lastID, request.newest)
 			},
-			ExpectedResult: func() ([]*models.Comment, error) {
+			ExpectedResult: func() ([]*models.CommentDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request inputGet, m *commentMocks) {
 				m.repo.EXPECT().GetComments(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(
-						[]*models.Comment{
+						[]*models.CommentDto{
 							{ID: 1},
 							{ID: 2},
 						},

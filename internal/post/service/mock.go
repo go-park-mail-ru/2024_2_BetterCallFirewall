@@ -57,7 +57,7 @@ func (mr *MockDBMockRecorder) CheckLikes(ctx, postID, userID any) *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MockDB) Create(ctx context.Context, post *models.Post) (uint32, error) {
+func (m *MockDB) Create(ctx context.Context, post *models.PostDto) (uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, post)
 	ret0, _ := ret[0].(uint32)
@@ -72,7 +72,7 @@ func (mr *MockDBMockRecorder) Create(ctx, post any) *gomock.Call {
 }
 
 // CreateCommunityPost mocks base method.
-func (m *MockDB) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+func (m *MockDB) CreateCommunityPost(ctx context.Context, post *models.PostDto, communityID uint32) (uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCommunityPost", ctx, post, communityID)
 	ret0, _ := ret[0].(uint32)
@@ -115,10 +115,10 @@ func (mr *MockDBMockRecorder) DeleteLikeFromPost(ctx, postID, userID any) *gomoc
 }
 
 // Get mocks base method.
-func (m *MockDB) Get(ctx context.Context, postID uint32) (*models.Post, error) {
+func (m *MockDB) Get(ctx context.Context, postID uint32) (*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, postID)
-	ret0, _ := ret[0].(*models.Post)
+	ret0, _ := ret[0].(*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -145,10 +145,10 @@ func (mr *MockDBMockRecorder) GetCommentCount(ctx, postID any) *gomock.Call {
 }
 
 // GetCommunityPosts mocks base method.
-func (m *MockDB) GetCommunityPosts(ctx context.Context, communityID, lastID uint32) ([]*models.Post, error) {
+func (m *MockDB) GetCommunityPosts(ctx context.Context, communityID, lastID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommunityPosts", ctx, communityID, lastID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -160,10 +160,10 @@ func (mr *MockDBMockRecorder) GetCommunityPosts(ctx, communityID, lastID any) *g
 }
 
 // GetFriendsPosts mocks base method.
-func (m *MockDB) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
+func (m *MockDB) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFriendsPosts", ctx, friendsID, lastID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -205,10 +205,10 @@ func (mr *MockDBMockRecorder) GetPostAuthor(ctx, postID any) *gomock.Call {
 }
 
 // GetPosts mocks base method.
-func (m *MockDB) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
+func (m *MockDB) GetPosts(ctx context.Context, lastID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPosts", ctx, lastID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -234,7 +234,7 @@ func (mr *MockDBMockRecorder) SetLikeToPost(ctx, postID, userID any) *gomock.Cal
 }
 
 // Update mocks base method.
-func (m *MockDB) Update(ctx context.Context, post *models.Post) error {
+func (m *MockDB) Update(ctx context.Context, post *models.PostDto) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, post)
 	ret0, _ := ret[0].(error)

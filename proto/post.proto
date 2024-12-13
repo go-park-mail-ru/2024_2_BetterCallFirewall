@@ -35,7 +35,7 @@ message Post {
 
 message Content {
   string Text = 1;
-  string File = 2;
+  repeated string File = 2;
   int64 CreatedAt = 3;
   int64 UpdatedAt = 4;
 }
