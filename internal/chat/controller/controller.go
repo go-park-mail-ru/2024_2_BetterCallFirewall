@@ -92,6 +92,10 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 
 func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.ResponseWriter) {
 	for msg := range cc.Messages {
+		if len(msg.Content.FilePath) > 10 {
+			cc.responder.ErrorBadRequest(w, my_err.ErrToMuchFiles, reqID)
+			return
+		}
 		msg := msg.ToDto()
 		if msg.Content.StickerPath != "" && (msg.Content.FilePath != "" || msg.Content.Text != "") {
 			cc.responder.ErrorBadRequest(w, my_err.ErrStickerHasAnotherContent, reqID)

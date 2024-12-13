@@ -330,7 +330,7 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, err
 	}
 
 	if !validateContent(newPost.PostContent) {
-		return nil, my_err.ErrTextTooLong
+		return nil, my_err.ErrBadPostOrComment
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
@@ -503,7 +503,7 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validateContent(content) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
+		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
 	}
 
@@ -580,7 +580,7 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validateContent(content) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
+		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
 	}
 
