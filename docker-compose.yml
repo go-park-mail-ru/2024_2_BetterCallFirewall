@@ -2,9 +2,7 @@ version: '3.9'
 
 services:
   authgrpc:
-    build:
-      context: .
-      dockerfile: Dockerfileauthgrpc
+    image: slashlight/authgrpc:latest
     restart: always
     ports:
       - "7072:7072"
@@ -12,9 +10,7 @@ services:
       - redis
 
   profilegrpc:
-    build:
-      context: .
-      dockerfile: Dockerfileprofilegrpc
+    image: slashlight/profilegrpc:latest
     restart: always
     ports:
       - "7074:7074"
@@ -22,9 +18,7 @@ services:
       - db
       - authgrpc
   postgrpc:
-    build:
-      context: .
-      dockerfile: Dockerfilepostgrpc
+    image: slashlight/postgrpc:latest
     restart: always
     ports:
       - "7075:7075"
@@ -33,9 +27,7 @@ services:
       - profilegrpc
 
   community:
-    build:
-      context: .
-      dockerfile: Dockerfilecommunity
+    image: slashlight/community:latest
     restart: always
     ports:
       - "8086:8086"
@@ -45,9 +37,7 @@ services:
       - authgrpc
 
   auth:
-    build:
-      context: .
-      dockerfile: Dockerfileauth
+    image: slashlight/auth:latest
     restart: always
     ports:
       - "8082:8082"
@@ -57,9 +47,7 @@ services:
       - community
 
   file:
-    build:
-      context: .
-      dockerfile: Dockerfilefile
+    image: slashlight/file:latest
     volumes:
       - ./image:/image
     restart: always
@@ -70,9 +58,7 @@ services:
       - auth
 
   profile:
-    build:
-      context: .
-      dockerfile: Dockerfileprofile
+    image: slashlight/profile:latest
     restart: always
     ports:
       - "8084:8084"
@@ -83,9 +69,7 @@ services:
       - file
 
   post:
-    build:
-      context: .
-      dockerfile: Dockerfilepost
+    image: slashlight/post:latest
     restart: always
     ports:
       - "8085:8085"
@@ -96,9 +80,7 @@ services:
       - community
       - profile
   chat:
-    build:
-      context: .
-      dockerfile: Dockerfilechat
+    image: slashlight/chat:latest
     restart: always
     ports:
       - "8087:8087"
@@ -106,6 +88,17 @@ services:
       - db
       - authgrpc
       - post
+
+  stickers:
+    build:
+      context: .
+      dockerfile: Dockerfilesticker
+    restart: always
+    ports:
+      - "8088:8088"
+    depends_on:
+      - db
+      - authgrpc
 
   db:
     image: postgres:latest
