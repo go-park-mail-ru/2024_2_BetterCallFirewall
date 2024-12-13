@@ -31,9 +31,7 @@ func NewStickerController(manager stickers.Usecase, responder Responder) *Sticke
 }
 
 func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *http.Request) {
-	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-	)
+	reqID, ok := r.Context().Value("requestID").(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
@@ -58,13 +56,10 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 	}
 
 	s.Responder.OutputJSON(w, "New sticker is added", reqID)
-	return
 }
 
 func (s StickersHandlerImplementation) GetAllStickers(w http.ResponseWriter, r *http.Request) {
-	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-	)
+	reqID, ok := r.Context().Value("requestID").(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
@@ -77,15 +72,14 @@ func (s StickersHandlerImplementation) GetAllStickers(w http.ResponseWriter, r *
 			return
 		}
 		s.Responder.ErrorInternal(w, err, reqID)
+		return
 	}
 
 	s.Responder.OutputJSON(w, res, reqID)
 }
 
 func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r *http.Request) {
-	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-	)
+	reqID, ok := r.Context().Value("requestID").(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
@@ -104,6 +98,7 @@ func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r 
 			return
 		}
 		s.Responder.ErrorInternal(w, err, reqID)
+		return
 	}
 
 	s.Responder.OutputJSON(w, res, reqID)
