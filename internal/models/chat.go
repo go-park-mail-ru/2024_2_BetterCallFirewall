@@ -11,8 +11,14 @@ type Chat struct {
 }
 
 type Message struct {
-	Sender    uint32    `json:"sender"`
-	Receiver  uint32    `json:"receiver"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
+	Sender    uint32         `json:"sender"`
+	Receiver  uint32         `json:"receiver"`
+	Content   MessageContent `json:"content"`
+	CreatedAt time.Time      `json:"created_at"`
+}
+
+type MessageContent struct {
+	Text        string `json:"text"`
+	FilePath    string `json:"file_path"`
+	StickerPath string `json:"sticker_path"`
 }

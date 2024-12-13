@@ -43,5 +43,5 @@ AND created_at < $3
 ORDER BY created_at DESC
 LIMIT 20;`
 
-	sendNewMessage = `INSERT INTO message(receiver, sender, content) VALUES ($1, $2, $3)`
+	sendNewMessage = `INSERT INTO message(receiver, sender, content, file_path, sticker_path) VALUES ($1, $2, $3, $4, $5)`
 )
