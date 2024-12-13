@@ -50,6 +50,7 @@ services:
     image: slashlight/file:latest
     volumes:
       - ./image:/image
+      - ./files:/files
     restart: always
     ports:
       - "8083:8083"
