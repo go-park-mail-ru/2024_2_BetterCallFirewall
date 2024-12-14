@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -108,7 +109,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
-	if !validate(user) {
+	if !validateAuth(user) {
 		c.responder.ErrorBadRequest(w, my_err.ErrBadUserInfo, reqID)
 		return
 	}
@@ -185,5 +186,14 @@ func validate(user models.User) bool {
 		len(user.FirstName) > 30 || len(user.LastName) > 30 {
 		return false
 	}
+	return true
+}
+
+func validateAuth(user models.User) bool {
+	emailRegex := regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
+	if len(user.Password) < 6 || !emailRegex.MatchString(user.Email) {
+		return false
+	}
+
 	return true
 }

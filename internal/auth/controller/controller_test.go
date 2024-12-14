@@ -168,10 +168,10 @@ func TestRegister(t *testing.T) {
 
 func TestAuth(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
-	jsonUser0, _ := json.Marshal(models.User{ID: 0, FirstName: "Alex", LastName: "Zem", Password: "password"})
-	jsonUser1, _ := json.Marshal(models.User{ID: 1, FirstName: "Alex", LastName: "Zem", Password: "password"})
-	jsonUser2, _ := json.Marshal(models.User{ID: 2, FirstName: "Alex", LastName: "Zem", Password: "password"})
-	jsonUser3, _ := json.Marshal(models.User{ID: 3, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser0, _ := json.Marshal(models.User{ID: 0, Email: "test@test.ru", Password: "password"})
+	jsonUser1, _ := json.Marshal(models.User{ID: 1, Email: "test@test.ru", Password: "password"})
+	jsonUser2, _ := json.Marshal(models.User{ID: 2, Email: "test@test.ru", Password: "password"})
+	jsonUser3, _ := json.Marshal(models.User{ID: 3, Email: "test@test.ru", Password: "password"})
 	jsonUser, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
