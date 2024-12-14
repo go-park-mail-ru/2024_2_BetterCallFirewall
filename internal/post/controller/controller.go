@@ -649,6 +649,10 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateContent(content models.Content) bool {
+	if len(content.File) == 0 && len(content.Text) == 0 {
+		return false
+	}
+
 	return validateFile(content.File) && len(content.Text) < 500
 }
 

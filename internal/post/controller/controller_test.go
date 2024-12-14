@@ -69,7 +69,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				res := &Request{r: req, w: w}
@@ -101,7 +101,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -135,7 +135,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -202,7 +202,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed?community=10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -236,7 +236,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed?community=10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -273,7 +273,7 @@ func TestCreate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed?community=10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -309,6 +309,72 @@ func TestCreate(t *testing.T) {
 				req := httptest.NewRequest(
 					http.MethodPost, "/api/v1/feed?community=10",
 					bytes.NewBuffer([]byte(`{"post_content":{"text":"new post Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed tellus arcu, vulputate rutrum enim vitae, tincidunt imperdiet tellus. Aenean vulputate elit consequat lorem pellentesque bibendum. Donec sed mi posuere dolor semper mollis eu eget dolor. Proin et eleifend magna. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur tempus ultricies mi, eget malesuada metus. Nam sit amet felis nec dolor vehicula dapibus gravida in nunc. Mauris turpis et. "}}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Create(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "10",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/feed?community=10",
+					bytes.NewBuffer([]byte(`{"post_content":{"text":""}}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *PostController, request Request) (Response, error) {
+				implementation.Create(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "11",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/feed?community=text",
+					bytes.NewBuffer([]byte(`{"post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -720,7 +786,7 @@ func TestUpdate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPut, "/api/v1/feed/10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "10"})
@@ -756,7 +822,7 @@ func TestUpdate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPut, "/api/v1/feed/10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "10"})
@@ -792,7 +858,7 @@ func TestUpdate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPut, "/api/v1/feed/10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "10"})
@@ -897,7 +963,7 @@ func TestUpdate(t *testing.T) {
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
 					http.MethodPut, "/api/v1/feed/10?community=10",
-					bytes.NewBuffer([]byte(`{"id":1}`)),
+					bytes.NewBuffer([]byte(`{"id":1, "post_content":{"text":"text"}}`)),
 				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "10"})
@@ -2210,7 +2276,9 @@ func TestComment(t *testing.T) {
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1, "text":"text"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "2"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -2241,7 +2309,9 @@ func TestComment(t *testing.T) {
 		{
 			name: "5",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/feed/2", bytes.NewBuffer([]byte(`{"id":1, "text":"text"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "2"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
