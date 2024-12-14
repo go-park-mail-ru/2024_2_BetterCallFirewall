@@ -91,7 +91,7 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 }
 
 func validate(content models.MessageContent) bool {
-	if len(content.FilePath) > 10 {
+	if len(content.FilePath) > 10 || len(content.StickerPath) > 100 || len(content.Text) > 500 {
 		return false
 	}
 	if content.StickerPath != "" && (len(content.FilePath) > 0 || content.Text != "") {
