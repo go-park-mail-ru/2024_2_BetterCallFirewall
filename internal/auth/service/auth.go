@@ -72,5 +72,5 @@ func (a *AuthServiceImpl) Auth(user models.User, ctx context.Context) (uint32, e
 }
 
 func (a *AuthServiceImpl) validateEmail(email string) bool {
-	return emailRegex.MatchString(email)
+	return emailRegex.MatchString(email) && len(email) < 50
 }
