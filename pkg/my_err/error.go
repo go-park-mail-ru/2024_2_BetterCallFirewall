@@ -37,4 +37,7 @@ var (
 	ErrWrongComment             = errors.New("wrong comment")
 	ErrStickerHasAnotherContent = errors.New("sticker has another content")
 	ErrToMuchFiles              = errors.New("files more then 10")
+	ErrNoStickers           = errors.New("no stickers found")
+	ErrNoImage              = errors.New("file is no image")
+
 )

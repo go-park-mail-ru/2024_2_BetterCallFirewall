@@ -90,6 +90,15 @@ services:
       - authgrpc
       - post
 
+  stickers:
+    image: slashlight/sticker:latest
+    restart: always
+    ports:
+      - "8088:8088"
+    depends_on:
+      - db
+      - authgrpc
+
   db:
     image: postgres:latest
     ports:

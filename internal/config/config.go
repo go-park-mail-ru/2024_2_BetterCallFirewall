@@ -45,6 +45,7 @@ type Config struct {
 	POST          Server
 	PROFILE       Server
 	COMMUNITY     Server
+	STCIKER       Server
 	AUTHGRPC      GRPCServer
 	PROFILEGRPC   GRPCServer
 	POSTGRPC      GRPCServer
@@ -98,6 +99,11 @@ func GetConfig(configFilePath string) (*Config, error) {
 			},
 			CHAT: Server{
 				Port:         os.Getenv("CHAT_HTTP_PORT"),
+				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
+				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
+			},
+			STCIKER: Server{
+				Port:         os.Getenv("STCIKER_HTTP_PORT"),
 				ReadTimeout:  time.Duration(getIntEnv("SERVER_READ_TIMEOUT")) * time.Second,
 				WriteTimeout: time.Duration(getIntEnv("SERVER_WRITE_TIMEOUT")) * time.Second,
 			},

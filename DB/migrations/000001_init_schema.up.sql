@@ -83,6 +83,12 @@ CREATE TABLE IF NOT EXISTS reaction (
                                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS sticker (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    file_path TEXT CONSTRAINT file_path_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
+    profile_id INT REFERENCES profile(id)
+);
+
 ALTER TABLE friend
     ADD FOREIGN KEY ("sender") REFERENCES profile(id) ON DELETE CASCADE,
     ADD FOREIGN KEY ("receiver") REFERENCES profile(id) ON DELETE CASCADE ;
