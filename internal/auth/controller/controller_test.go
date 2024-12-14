@@ -110,12 +110,19 @@ type TestCase struct {
 
 func TestRegister(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
-	jsonUser0, _ := json.Marshal(models.User{ID: 0})
-	jsonUser1, _ := json.Marshal(models.User{ID: 1})
-	jsonUser2, _ := json.Marshal(models.User{ID: 2})
-	jsonUser3, _ := json.Marshal(models.User{ID: 3})
+	jsonUser0, _ := json.Marshal(models.User{ID: 0, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser1, _ := json.Marshal(models.User{ID: 1, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser2, _ := json.Marshal(models.User{ID: 2, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser3, _ := json.Marshal(models.User{ID: 3, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonUser)),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request error",
+		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer([]byte("wrong json"))),
@@ -161,12 +168,19 @@ func TestRegister(t *testing.T) {
 
 func TestAuth(t *testing.T) {
 	controller := NewAuthController(&MockResponder{}, MockAuthService{}, MockSessionManager{})
-	jsonUser0, _ := json.Marshal(models.User{ID: 0})
-	jsonUser1, _ := json.Marshal(models.User{ID: 1})
-	jsonUser2, _ := json.Marshal(models.User{ID: 2})
-	jsonUser3, _ := json.Marshal(models.User{ID: 3})
+	jsonUser0, _ := json.Marshal(models.User{ID: 0, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser1, _ := json.Marshal(models.User{ID: 1, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser2, _ := json.Marshal(models.User{ID: 2, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser3, _ := json.Marshal(models.User{ID: 3, FirstName: "Alex", LastName: "Zem", Password: "password"})
+	jsonUser, _ := json.Marshal(models.User{ID: 3})
 
 	testCases := []TestCase{
+		{
+			w:        httptest.NewRecorder(),
+			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonUser)),
+			wantCode: http.StatusBadRequest,
+			wantBody: "bad request error",
+		},
 		{
 			w:        httptest.NewRecorder(),
 			r:        httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer([]byte("wrong json"))),

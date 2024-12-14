@@ -39,4 +39,5 @@ var (
 	ErrNoStickers           = errors.New("no stickers found")
 	ErrNoImage              = errors.New("file is no image")
 	ErrBadCommunity         = errors.New("bad community data")
+	ErrBadUserInfo          = errors.New("bad username or password")
 )
