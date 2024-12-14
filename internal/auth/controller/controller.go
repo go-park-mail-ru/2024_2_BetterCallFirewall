@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -16,6 +17,8 @@ import (
 
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
+
+var emailRegex = regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
 
 type AuthService interface {
 	Register(user models.User, ctx context.Context) (uint32, error)
@@ -58,6 +61,10 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
+	if !validate(user) {
+		c.responder.ErrorBadRequest(w, my_err.ErrBadUserInfo, reqID)
+		return
+	}
 
 	user.ID, err = c.serviceAuth.Register(user, r.Context())
 	if errors.Is(err, my_err.ErrUserAlreadyExists) || errors.Is(err, my_err.ErrNonValidEmail) || errors.Is(
@@ -83,6 +90,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		Value:    sess.ID,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
 
@@ -101,6 +109,10 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
+		return
+	}
+	if !validateAuth(user) {
+		c.responder.ErrorBadRequest(w, my_err.ErrBadUserInfo, reqID)
 		return
 	}
 
@@ -126,6 +138,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		Value:    sess.ID,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
 	http.SetCookie(w, cookie)
@@ -162,9 +175,26 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Value:    sess.ID,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
 	http.SetCookie(w, cookie)
 
 	c.responder.OutputJSON(w, "user logout", reqID)
+}
+
+func validate(user models.User) bool {
+	if len([]rune(user.FirstName)) < 3 || len([]rune(user.LastName)) < 3 || len([]rune(user.Password)) < 6 ||
+		len(user.FirstName) > 30 || len(user.LastName) > 30 {
+		return false
+	}
+	return true
+}
+
+func validateAuth(user models.User) bool {
+	if len([]rune(user.Password)) < 6 || !emailRegex.MatchString(user.Email) {
+		return false
+	}
+
+	return true
 }

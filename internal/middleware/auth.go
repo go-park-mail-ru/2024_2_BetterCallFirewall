@@ -21,52 +21,55 @@ type SessionManager interface {
 }
 
 func Auth(sm SessionManager, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := noAuthUrls[r.URL.Path]; ok {
-			logout(w, r, sm)
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		sessionCookie, err := r.Cookie("session_id")
-		if err != nil {
-			unauthorized(w, r, err)
-			return
-		}
-
-		sess, err := sm.Check(sessionCookie.Value)
-		if err != nil {
-			unauthorized(w, r, err)
-			return
-		}
-
-		if sess.CreatedAt <= time.Now().Add(-time.Hour).Unix() {
-			if err := sm.Destroy(sess); err != nil {
-				log.Println(r.Context().Value("requestID"), err)
-				internalErr(w)
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := noAuthUrls[r.URL.Path]; ok {
+				logout(w, r, sm)
+				next.ServeHTTP(w, r)
 				return
 			}
 
-			sess, err = sm.Create(sess.UserID)
+			sessionCookie, err := r.Cookie("session_id")
 			if err != nil {
-				log.Println(r.Context().Value("requestID"), err)
-				internalErr(w)
+				unauthorized(w, r, err)
 				return
 			}
 
-			cookie := &http.Cookie{
-				Name:     "session_id",
-				Value:    sess.ID,
-				Path:     "/",
-				HttpOnly: true,
-				Expires:  time.Now().AddDate(0, 0, 1),
+			sess, err := sm.Check(sessionCookie.Value)
+			if err != nil {
+				unauthorized(w, r, err)
+				return
 			}
-			http.SetCookie(w, cookie)
-		}
 
-		ctx := models.ContextWithSession(r.Context(), sess)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+			if sess.CreatedAt <= time.Now().Add(-time.Hour).Unix() {
+				if err := sm.Destroy(sess); err != nil {
+					log.Println(r.Context().Value("requestID"), err)
+					internalErr(w)
+					return
+				}
+
+				sess, err = sm.Create(sess.UserID)
+				if err != nil {
+					log.Println(r.Context().Value("requestID"), err)
+					internalErr(w)
+					return
+				}
+
+				cookie := &http.Cookie{
+					Name:     "session_id",
+					Value:    sess.ID,
+					Path:     "/",
+					HttpOnly: true,
+					Secure:   true,
+					Expires:  time.Now().AddDate(0, 0, 1),
+				}
+				http.SetCookie(w, cookie)
+			}
+
+			ctx := models.ContextWithSession(r.Context(), sess)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		},
+	)
 }
 
 func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
@@ -90,6 +93,7 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 		Value:    sess.ID,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
 
