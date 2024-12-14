@@ -72,7 +72,7 @@ func (mr *MockPostServiceMockRecorder) CheckLikes(ctx, postID, userID any) *gomo
 }
 
 // Create mocks base method.
-func (m *MockPostService) Create(ctx context.Context, post *models.Post) (uint32, error) {
+func (m *MockPostService) Create(ctx context.Context, post *models.PostDto) (uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, post)
 	ret0, _ := ret[0].(uint32)
@@ -87,7 +87,7 @@ func (mr *MockPostServiceMockRecorder) Create(ctx, post any) *gomock.Call {
 }
 
 // CreateCommunityPost mocks base method.
-func (m *MockPostService) CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error) {
+func (m *MockPostService) CreateCommunityPost(ctx context.Context, post *models.PostDto) (uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCommunityPost", ctx, post)
 	ret0, _ := ret[0].(uint32)
@@ -130,10 +130,10 @@ func (mr *MockPostServiceMockRecorder) DeleteLikeFromPost(ctx, postID, userID an
 }
 
 // Get mocks base method.
-func (m *MockPostService) Get(ctx context.Context, postID, userID uint32) (*models.Post, error) {
+func (m *MockPostService) Get(ctx context.Context, postID, userID uint32) (*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, postID, userID)
-	ret0, _ := ret[0].(*models.Post)
+	ret0, _ := ret[0].(*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -145,10 +145,10 @@ func (mr *MockPostServiceMockRecorder) Get(ctx, postID, userID any) *gomock.Call
 }
 
 // GetBatch mocks base method.
-func (m *MockPostService) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error) {
+func (m *MockPostService) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBatch", ctx, lastID, userID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -160,10 +160,10 @@ func (mr *MockPostServiceMockRecorder) GetBatch(ctx, lastID, userID any) *gomock
 }
 
 // GetBatchFromFriend mocks base method.
-func (m *MockPostService) GetBatchFromFriend(ctx context.Context, userID, lastID uint32) ([]*models.Post, error) {
+func (m *MockPostService) GetBatchFromFriend(ctx context.Context, userID, lastID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBatchFromFriend", ctx, userID, lastID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -175,10 +175,10 @@ func (mr *MockPostServiceMockRecorder) GetBatchFromFriend(ctx, userID, lastID an
 }
 
 // GetCommunityPost mocks base method.
-func (m *MockPostService) GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error) {
+func (m *MockPostService) GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.PostDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCommunityPost", ctx, communityID, userID, lastID)
-	ret0, _ := ret[0].([]*models.Post)
+	ret0, _ := ret[0].([]*models.PostDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -219,7 +219,7 @@ func (mr *MockPostServiceMockRecorder) SetLikeToPost(ctx, postID, userID any) *g
 }
 
 // Update mocks base method.
-func (m *MockPostService) Update(ctx context.Context, post *models.Post) error {
+func (m *MockPostService) Update(ctx context.Context, post *models.PostDto) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, post)
 	ret0, _ := ret[0].(error)
@@ -257,10 +257,10 @@ func (m *MockCommentService) EXPECT() *MockCommentServiceMockRecorder {
 }
 
 // Comment mocks base method.
-func (m *MockCommentService) Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (*models.Comment, error) {
+func (m *MockCommentService) Comment(ctx context.Context, userID, postID uint32, comment *models.ContentDto) (*models.CommentDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Comment", ctx, userID, postID, comment)
-	ret0, _ := ret[0].(*models.Comment)
+	ret0, _ := ret[0].(*models.CommentDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -286,7 +286,7 @@ func (mr *MockCommentServiceMockRecorder) DeleteComment(ctx, commentID, userID a
 }
 
 // EditComment mocks base method.
-func (m *MockCommentService) EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error {
+func (m *MockCommentService) EditComment(ctx context.Context, commentID, userID uint32, comment *models.ContentDto) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EditComment", ctx, commentID, userID, comment)
 	ret0, _ := ret[0].(error)
@@ -300,10 +300,10 @@ func (mr *MockCommentServiceMockRecorder) EditComment(ctx, commentID, userID, co
 }
 
 // GetComments mocks base method.
-func (m *MockCommentService) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
+func (m *MockCommentService) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.CommentDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetComments", ctx, postID, lastID, newest)
-	ret0, _ := ret[0].([]*models.Comment)
+	ret0, _ := ret[0].([]*models.CommentDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

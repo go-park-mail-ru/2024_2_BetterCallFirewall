@@ -42,7 +42,7 @@ func (m *MockdbI) EXPECT() *MockdbIMockRecorder {
 }
 
 // CreateComment mocks base method.
-func (m *MockdbI) CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error) {
+func (m *MockdbI) CreateComment(ctx context.Context, comment *models.ContentDto, userID, postID uint32) (uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateComment", ctx, comment, userID, postID)
 	ret0, _ := ret[0].(uint32)
@@ -86,10 +86,10 @@ func (mr *MockdbIMockRecorder) GetCommentAuthor(ctx, commentID any) *gomock.Call
 }
 
 // GetComments mocks base method.
-func (m *MockdbI) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
+func (m *MockdbI) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.CommentDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetComments", ctx, postID, lastID, newest)
-	ret0, _ := ret[0].([]*models.Comment)
+	ret0, _ := ret[0].([]*models.CommentDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -101,7 +101,7 @@ func (mr *MockdbIMockRecorder) GetComments(ctx, postID, lastID, newest any) *gom
 }
 
 // UpdateComment mocks base method.
-func (m *MockdbI) UpdateComment(ctx context.Context, comment *models.Content, commentID uint32) error {
+func (m *MockdbI) UpdateComment(ctx context.Context, comment *models.ContentDto, commentID uint32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateComment", ctx, comment, commentID)
 	ret0, _ := ret[0].(error)

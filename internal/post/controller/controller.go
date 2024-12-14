@@ -21,22 +21,22 @@ import (
 const (
 	postIDkey    = "id"
 	commentIDKey = "comment_id"
-	imagePrefix   = "/image/"
-	filePrefix = "/files/"
+	imagePrefix  = "/image/"
+	filePrefix   = "/files/"
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type PostService interface {
-	Create(ctx context.Context, post *models.Post) (uint32, error)
-	Get(ctx context.Context, postID, userID uint32) (*models.Post, error)
-	Update(ctx context.Context, post *models.Post) error
+	Create(ctx context.Context, post *models.PostDto) (uint32, error)
+	Get(ctx context.Context, postID, userID uint32) (*models.PostDto, error)
+	Update(ctx context.Context, post *models.PostDto) error
 	Delete(ctx context.Context, postID uint32) error
-	GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error)
-	GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.Post, error)
+	GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.PostDto, error)
+	GetBatchFromFriend(ctx context.Context, userID uint32, lastID uint32) ([]*models.PostDto, error)
 	GetPostAuthorID(ctx context.Context, postID uint32) (uint32, error)
 
-	GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.Post, error)
-	CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error)
+	GetCommunityPost(ctx context.Context, communityID, userID, lastID uint32) ([]*models.PostDto, error)
+	CreateCommunityPost(ctx context.Context, post *models.PostDto) (uint32, error)
 	CheckAccessToCommunity(ctx context.Context, userID uint32, communityID uint32) bool
 
 	SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error
@@ -45,10 +45,10 @@ type PostService interface {
 }
 
 type CommentService interface {
-	Comment(ctx context.Context, userID, postID uint32, comment *models.Content) (*models.Comment, error)
+	Comment(ctx context.Context, userID, postID uint32, comment *models.ContentDto) (*models.CommentDto, error)
 	DeleteComment(ctx context.Context, commentID, userID uint32) error
-	EditComment(ctx context.Context, commentID, userID uint32, comment *models.Content) error
-	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error)
+	EditComment(ctx context.Context, commentID, userID uint32, comment *models.ContentDto) error
+	GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.CommentDto, error)
 }
 
 type Responder interface {
@@ -92,10 +92,6 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validateContent(newPost.PostContent) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
-		return
-	}
 	if comunity != "" {
 		comID, err := strconv.ParseUint(comunity, 10, 32)
 		if err != nil {
@@ -123,7 +119,7 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 	newPost.ID = id
 
-	pc.responder.OutputJSON(w, newPost, reqID)
+	pc.responder.OutputJSON(w, newPost.FromDto(), reqID)
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +152,7 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	pc.responder.OutputJSON(w, post, reqID)
+	pc.responder.OutputJSON(w, post.FromDto(), reqID)
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
@@ -197,11 +193,6 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-
-	if !validateContent(post.PostContent) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
-		return
-	}
 	post.ID = id
 
 	if err := pc.postService.Update(r.Context(), post); err != nil {
@@ -213,7 +204,7 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pc.responder.OutputJSON(w, post, reqID)
+	pc.responder.OutputJSON(w, post.FromDto(), reqID)
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
@@ -266,7 +257,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		reqID, ok   = r.Context().Value(middleware.RequestKey).(string)
 		section     = r.URL.Query().Get("section")
 		communityID = r.URL.Query().Get("community")
-		posts       []*models.Post
+		posts       []*models.PostDto
 		intLastID   uint64
 		err         error
 		id          uint64
@@ -322,10 +313,15 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	pc.responder.OutputJSON(w, posts, reqID)
+	res := make([]models.Post, 0, len(posts))
+	for _, post := range posts {
+		res = append(res, post.FromDto())
+	}
+
+	pc.responder.OutputJSON(w, res, reqID)
 }
 
-func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error) {
+func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, error) {
 	var newPost models.Post
 
 	err := json.NewDecoder(r.Body).Decode(&newPost)
@@ -333,13 +329,18 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.Post, error)
 		return nil, err
 	}
 
+	if !validateContent(newPost.PostContent) {
+		return nil, my_err.ErrBadPostOrComment
+	}
+
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
 		return nil, err
 	}
 	newPost.Header.AuthorID = sess.UserID
+	post := newPost.ToDto()
 
-	return &newPost, nil
+	return &post, nil
 }
 
 func getIDFromURL(r *http.Request, key string) (uint32, error) {
@@ -502,18 +503,19 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validateContent(content) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
+		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
 	}
 
-	newComment, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, &content)
+	contentDto := content.ToDto()
+	newComment, err := pc.commentService.Comment(r.Context(), sess.UserID, postID, &contentDto)
 	if err != nil {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
 	newComment.Content.CreatedAt = time.Now()
 
-	pc.responder.OutputJSON(w, newComment, reqID)
+	pc.responder.OutputJSON(w, newComment.FromDto(), reqID)
 }
 
 func (pc *PostController) DeleteComment(w http.ResponseWriter, r *http.Request) {
@@ -578,11 +580,12 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validateContent(content) {
-		pc.responder.ErrorBadRequest(w, my_err.ErrTextTooLong, reqID)
+		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
 	}
 
-	if err := pc.commentService.EditComment(r.Context(), commentID, sess.UserID, &content); err != nil {
+	contentDto := content.ToDto()
+	if err := pc.commentService.EditComment(r.Context(), commentID, sess.UserID, &contentDto); err != nil {
 		if errors.Is(err, my_err.ErrAccessDenied) {
 			pc.responder.ErrorBadRequest(w, err, reqID)
 			return
@@ -637,13 +640,31 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pc.responder.OutputJSON(w, comments, reqID)
+	res := make([]models.Comment, 0, len(comments))
+	for _, comment := range comments {
+		res = append(res, comment.FromDto())
+	}
+
+	pc.responder.OutputJSON(w, res, reqID)
 }
 
 func validateContent(content models.Content) bool {
 	return validateFile(content.File) && len(content.Text) < 500
 }
 
-func validateFile(filepath models.Picture) bool {
-	return len(filepath) < 100 && (len(filepath) == 0 || strings.HasPrefix(string(filepath), filePrefix) || strings.HasPrefix(string(filepath), imagePrefix))
+func validateFile(filepaths []models.Picture) bool {
+	if len(filepaths) > 10 {
+		return false
+	}
+
+	for _, f := range filepaths {
+		if len(f) > 100 {
+			return false
+		}
+		if !(strings.HasPrefix(string(f), filePrefix) || strings.HasPrefix(string(f), imagePrefix)) {
+			return false
+		}
+	}
+
+	return true
 }
