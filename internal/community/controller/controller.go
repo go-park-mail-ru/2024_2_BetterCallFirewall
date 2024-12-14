@@ -363,6 +363,9 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 	if err != nil {
 		return models.Community{}, err
 	}
+	if !validate(res) {
+		return models.Community{}, my_err.ErrBadCommunity
+	}
 
 	return res, nil
 }
@@ -381,4 +384,12 @@ func getIDFromQuery(r *http.Request) (uint32, error) {
 	}
 
 	return uint32(uid), nil
+}
+
+func validate(data models.Community) bool {
+	if len(data.Name) < 3 || len(data.Name) >= 30 || len(data.About) >= 60 {
+		return false
+	}
+
+	return true
 }

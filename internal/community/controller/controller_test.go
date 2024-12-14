@@ -58,12 +58,14 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -87,13 +89,17 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -117,12 +123,14 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -147,12 +155,14 @@ func TestGetOne(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().GetOne(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -175,42 +185,46 @@ func TestGetOne(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -235,12 +249,14 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -263,13 +279,17 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -293,9 +313,11 @@ func TestGetAll(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -320,13 +342,16 @@ func TestGetAll(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.CommunityCard{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -348,42 +373,46 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -408,12 +437,14 @@ func TestUpdate(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -436,12 +467,14 @@ func TestUpdate(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -465,18 +498,22 @@ func TestUpdate(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"name"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -495,18 +532,22 @@ func TestUpdate(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "5",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"name"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -526,18 +567,22 @@ func TestUpdate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.communityService.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "6",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"name"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -557,42 +602,79 @@ func TestUpdate(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.communityService.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "7",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"a"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = mux.SetURLVars(req, map[string]string{"id": "1"})
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(ctx context.Context, implementation *Controller, request Request) (Response, error) {
+				implementation.Update(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -617,12 +699,14 @@ func TestDelete(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -645,12 +729,14 @@ func TestDelete(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -675,12 +761,14 @@ func TestDelete(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -706,12 +794,14 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.communityService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -737,42 +827,46 @@ func TestDelete(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.communityService.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -797,12 +891,14 @@ func TestCreate(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -825,18 +921,22 @@ func TestCreate(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "3",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"name"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
@@ -854,18 +954,22 @@ func TestCreate(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1}`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1", bytes.NewBuffer([]byte(`{"id":1, "name":"name"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
@@ -883,42 +987,46 @@ func TestCreate(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -943,12 +1051,14 @@ func TestJoinToCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -971,12 +1081,14 @@ func TestJoinToCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1000,13 +1112,17 @@ func TestJoinToCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().JoinCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().JoinCommunity(
+					gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1031,42 +1147,46 @@ func TestJoinToCommunity(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().JoinCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1091,12 +1211,14 @@ func TestLeaveFromCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1119,12 +1241,14 @@ func TestLeaveFromCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1148,13 +1272,17 @@ func TestLeaveFromCommunity(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().LeaveCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().LeaveCommunity(
+					gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1179,42 +1307,46 @@ func TestLeaveFromCommunity(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().LeaveCommunity(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1239,12 +1371,14 @@ func TestAddAdmin(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1267,12 +1401,14 @@ func TestAddAdmin(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1297,18 +1433,22 @@ func TestAddAdmin(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(false)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`{kj`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`{kj`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
@@ -1328,18 +1468,22 @@ func TestAddAdmin(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "5",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
@@ -1358,19 +1502,25 @@ func TestAddAdmin(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
-				m.communityService.EXPECT().AddAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().AddAdmin(
+					gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "6",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
@@ -1390,18 +1540,22 @@ func TestAddAdmin(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
 				m.communityService.EXPECT().AddAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "7",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)))
+				req := httptest.NewRequest(
+					http.MethodPost, "/api/v1/community/1/add_admin", bytes.NewBuffer([]byte(`1`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				req = mux.SetURLVars(req, map[string]string{"id": "1"})
@@ -1420,43 +1574,49 @@ func TestAddAdmin(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.communityService.EXPECT().CheckAccess(gomock.Any(), gomock.Any(), gomock.Any()).Return(true)
-				m.communityService.EXPECT().AddAdmin(gomock.Any(), gomock.Any(), gomock.Any()).Return(my_err.ErrWrongCommunity)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().AddAdmin(
+					gomock.Any(), gomock.Any(), gomock.Any(),
+				).Return(my_err.ErrWrongCommunity)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1481,12 +1641,14 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1509,13 +1671,17 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1538,13 +1704,17 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.communityService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1567,12 +1737,14 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1594,41 +1766,45 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
