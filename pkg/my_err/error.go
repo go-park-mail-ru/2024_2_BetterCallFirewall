@@ -36,4 +36,5 @@ var (
 	ErrTextTooLong          = errors.New("text len is too big")
 	ErrWrongComment         = errors.New("wrong comment")
 	ErrNoStickers           = errors.New("no stickers found")
+	ErrNoImage              = errors.New("file is no image")
 )

@@ -1,14 +1,20 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/stickers"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+const imagePrefix = "/image/"
+
+//go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type Responder interface {
 	OutputJSON(w http.ResponseWriter, data any, requestID string)
 	OutputNoMoreContentJSON(w http.ResponseWriter, requestID string)
@@ -37,15 +43,21 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	filePath := r.URL.Query().Get("file_path")
-	if filePath == "" {
-		s.Responder.ErrorBadRequest(w, my_err.ErrInvalidQuery, reqID)
+	filePath := ""
+	if err := json.NewDecoder(r.Body).Decode(&filePath); err != nil {
+		s.Responder.ErrorBadRequest(w, my_err.ErrNoFile, reqID)
+		fmt.Println(err)
+		return
+	}
+
+	if !validate(filePath) {
+		s.Responder.ErrorBadRequest(w, my_err.ErrNoImage, reqID)
 		return
 	}
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		s.Responder.ErrorInternal(w, err, reqID)
+		s.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -87,7 +99,7 @@ func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r 
 
 	sess, err := models.SessionFromContext(r.Context())
 	if err != nil {
-		s.Responder.ErrorInternal(w, err, reqID)
+		s.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 
@@ -102,4 +114,8 @@ func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r 
 	}
 
 	s.Responder.OutputJSON(w, res, reqID)
+}
+
+func validate(filepath string) bool {
+	return len(filepath) < 100 && strings.HasPrefix(filepath, imagePrefix)
 }
