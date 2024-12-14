@@ -17,3 +17,6 @@ gen-proto:
 
 lint:
 	golangci-lint run
+
+gen-easy-json:
+	easyjson -all internal/models/*.go

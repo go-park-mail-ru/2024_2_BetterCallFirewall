@@ -5,12 +5,14 @@ import (
 	"time"
 )
 
+//easyjson:json
 type Chat struct {
 	LastMessage string    `json:"last_message"`
 	LastDate    time.Time `json:"last_date"`
 	Receiver    Header    `json:"receiver"`
 }
 
+//easyjson:json
 type Message struct {
 	Sender    uint32         `json:"sender"`
 	Receiver  uint32         `json:"receiver"`
@@ -18,6 +20,7 @@ type Message struct {
 	CreatedAt time.Time      `json:"created_at"`
 }
 
+//easyjson:skip
 type MessageDto struct {
 	Sender    uint32
 	Receiver  uint32
@@ -43,12 +46,14 @@ func (m *MessageDto) FromDto() Message {
 	}
 }
 
+//easyjson:json
 type MessageContent struct {
 	Text        string   `json:"text"`
 	FilePath    []string `json:"file_path"`
 	StickerPath string   `json:"sticker_path"`
 }
 
+//easyjson:skip
 type MessageContentDto struct {
 	Text        string
 	FilePath    string

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//easyjson:skip
 type TestCase struct {
 	content    Content
 	contentDto ContentDto

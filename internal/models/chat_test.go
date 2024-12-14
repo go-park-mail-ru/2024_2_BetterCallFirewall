@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//easyjson:skip
 type TestCaseMessageContent struct {
 	content    MessageContent
 	contentDto MessageContentDto
@@ -49,6 +50,7 @@ func TestToDtoMessageContent(t *testing.T) {
 	}
 }
 
+//easyjson:skip
 type TestCaseMessage struct {
 	message    Message
 	messageDto MessageDto

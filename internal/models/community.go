@@ -1,5 +1,6 @@
 package models
 
+//easyjson:json
 type Community struct {
 	ID               uint32  `json:"id"`
 	Name             string  `json:"name"`
@@ -10,6 +11,7 @@ type Community struct {
 	IsFollowed       bool    `json:"is_followed,omitempty"`
 }
 
+//easyjson:json
 type CommunityCard struct {
 	ID         uint32  `json:"id"`
 	Name       string  `json:"name"`

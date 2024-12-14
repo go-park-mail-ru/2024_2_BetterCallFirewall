@@ -1,5 +1,6 @@
 package models
 
+//easyjson:json
 type Post struct {
 	ID           uint32  `json:"id"`
 	Header       Header  `json:"header"`
@@ -20,6 +21,7 @@ func (p *Post) ToDto() PostDto {
 	}
 }
 
+//easyjson:skip
 type PostDto struct {
 	ID           uint32
 	Header       Header
@@ -40,6 +42,7 @@ func (p *PostDto) FromDto() Post {
 	}
 }
 
+//easyjson:json
 type Header struct {
 	AuthorID    uint32  `json:"author_id"`
 	CommunityID uint32  `json:"community_id"`
@@ -47,6 +50,7 @@ type Header struct {
 	Avatar      Picture `json:"avatar"`
 }
 
+//easyjson:json
 type Comment struct {
 	ID         uint32  `json:"id"`
 	Header     Header  `json:"header"`
@@ -65,6 +69,7 @@ func (c *Comment) ToDto() CommentDto {
 	}
 }
 
+//easyjson:skip
 type CommentDto struct {
 	ID         uint32
 	Header     Header
