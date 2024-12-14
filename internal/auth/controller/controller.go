@@ -18,6 +18,8 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+var emailRegex = regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
+
 type AuthService interface {
 	Register(user models.User, ctx context.Context) (uint32, error)
 	Auth(user models.User, ctx context.Context) (uint32, error)
@@ -190,7 +192,6 @@ func validate(user models.User) bool {
 }
 
 func validateAuth(user models.User) bool {
-	emailRegex := regexp.MustCompile(`^[\w-.]+@([\w-]+\.)\w{2,4}$`)
 	if len(user.Password) < 6 || !emailRegex.MatchString(user.Email) {
 		return false
 	}
