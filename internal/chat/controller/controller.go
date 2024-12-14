@@ -90,17 +90,27 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 	cc.SendChatMsg(ctx, reqID, w)
 }
 
+func validate(content models.MessageContent) bool {
+	if len(content.FilePath) > 10 {
+		return false
+	}
+	if content.StickerPath != "" && (len(content.FilePath) > 0 || content.Text != "") {
+		return false
+	}
+	if content.Text == "" && content.StickerPath == "" && len(content.FilePath) == 0 {
+		return false
+	}
+
+	return true
+}
+
 func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.ResponseWriter) {
 	for msg := range cc.Messages {
-		if len(msg.Content.FilePath) > 10 {
-			cc.responder.ErrorBadRequest(w, my_err.ErrToMuchFiles, reqID)
+		if !validate(msg.Content) {
+			cc.responder.ErrorBadRequest(w, my_err.ErrBadMessageContent, reqID)
 			return
 		}
 		msg := msg.ToDto()
-		if msg.Content.StickerPath != "" && (msg.Content.FilePath != "" || msg.Content.Text != "") {
-			cc.responder.ErrorBadRequest(w, my_err.ErrStickerHasAnotherContent, reqID)
-			return
-		}
 		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, &msg.Content)
 		if err != nil {
 			cc.responder.ErrorInternal(w, err, reqID)
