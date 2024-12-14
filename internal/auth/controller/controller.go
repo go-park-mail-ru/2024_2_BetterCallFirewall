@@ -184,7 +184,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func validate(user models.User) bool {
-	if len(user.FirstName) < 3 || len(user.LastName) < 3 || len(user.Password) < 6 ||
+	if len([]rune(user.FirstName)) < 3 || len([]rune(user.LastName)) < 3 || len([]rune(user.Password)) < 6 ||
 		len(user.FirstName) > 30 || len(user.LastName) > 30 {
 		return false
 	}
@@ -192,7 +192,7 @@ func validate(user models.User) bool {
 }
 
 func validateAuth(user models.User) bool {
-	if len(user.Password) < 6 || !emailRegex.MatchString(user.Email) {
+	if len([]rune(user.Password)) < 6 || !emailRegex.MatchString(user.Email) {
 		return false
 	}
 

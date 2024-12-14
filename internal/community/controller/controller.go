@@ -387,7 +387,7 @@ func getIDFromQuery(r *http.Request) (uint32, error) {
 }
 
 func validate(data models.Community) bool {
-	if len(data.Name) < 3 || len(data.Name) >= 30 || len(data.About) >= 60 {
+	if len([]rune(data.Name)) < 3 || len(data.Name) >= 50 || len([]rune(data.About)) >= 60 {
 		return false
 	}
 

@@ -129,9 +129,9 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 		return nil, err
 	}
 
-	if len(newProfile.FirstName) < 3 || len(newProfile.FirstName) > 30 ||
-		len(newProfile.LastName) < 3 || len(newProfile.LastName) > 30 ||
-		len(newProfile.Bio) > 60 || len(newProfile.Avatar) > 100 {
+	if len([]rune(newProfile.FirstName)) < 3 || len(newProfile.FirstName) > 30 ||
+		len([]rune(newProfile.LastName)) < 3 || len(newProfile.LastName) > 30 ||
+		len(newProfile.Bio) > 100 || len(newProfile.Avatar) > 100 {
 		return nil, errors.New("invalid profile")
 	}
 
