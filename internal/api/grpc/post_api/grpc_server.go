@@ -40,7 +40,13 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 	resp := &Response{
 		Posts: make([]*Post, 0, len(res)),
 	}
+
 	for _, post := range res {
+		files := make([]string, 0, len(post.PostContent.File))
+		for _, f := range post.PostContent.File {
+			files = append(files, string(f))
+		}
+
 		resp.Posts = append(
 			resp.Posts, &Post{
 				ID: post.ID,
@@ -52,7 +58,7 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 				},
 				PostContent: &Content{
 					Text:      post.PostContent.Text,
-					File:      string(post.PostContent.File),
+					File:      files,
 					CreatedAt: post.PostContent.CreatedAt.Unix(),
 					UpdatedAt: post.PostContent.UpdatedAt.Unix(),
 				},

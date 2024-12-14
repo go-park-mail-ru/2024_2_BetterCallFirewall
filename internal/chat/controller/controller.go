@@ -87,21 +87,31 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 	}()
 	go client.Write()
 	go client.Read(sess.UserID)
-	cc.SendChatMsg(ctx, reqID)
+	cc.SendChatMsg(ctx, reqID, w)
 }
 
-func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
+func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.ResponseWriter) {
 	for msg := range cc.Messages {
-		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, msg.Content)
+		if len(msg.Content.FilePath) > 10 {
+			cc.responder.ErrorBadRequest(w, my_err.ErrToMuchFiles, reqID)
+			return
+		}
+		msg := msg.ToDto()
+		if msg.Content.StickerPath != "" && (msg.Content.FilePath != "" || msg.Content.Text != "") {
+			cc.responder.ErrorBadRequest(w, my_err.ErrStickerHasAnotherContent, reqID)
+			return
+		}
+		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, &msg.Content)
 		if err != nil {
-			cc.responder.LogError(err, reqID)
+			cc.responder.ErrorInternal(w, err, reqID)
 			return
 		}
 
 		resConn, ok := mapUserConn[msg.Receiver]
 		if ok {
 			//resConn.Socket.ReadMessage()
-			resConn.Receive <- msg
+			m := msg.FromDto()
+			resConn.Receive <- &m
 		}
 	}
 }

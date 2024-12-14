@@ -68,9 +68,12 @@ func TestGetAuthorsPosts(t *testing.T) {
 				return &Response{
 						Posts: []*Post{
 							{
-								ID:          1,
-								PostContent: &Content{Text: "New Post", CreatedAt: createTime.Unix(), UpdatedAt: createTime.Unix()},
-								Head:        &Header{AuthorID: 1, Author: "Alexey Zemliakov"},
+								ID: 1,
+								PostContent: &Content{
+									Text: "New Post", CreatedAt: createTime.Unix(), UpdatedAt: createTime.Unix(),
+									File: []string{},
+								},
+								Head: &Header{AuthorID: 1, Author: "Alexey Zemliakov"},
 							},
 						},
 					},
@@ -82,9 +85,11 @@ func TestGetAuthorsPosts(t *testing.T) {
 					Return(
 						[]*models.Post{
 							{
-								ID:          1,
-								PostContent: models.Content{Text: "New Post", CreatedAt: createTime, UpdatedAt: createTime},
-								Header:      models.Header{AuthorID: 1, Author: "Alexey Zemliakov"},
+								ID: 1,
+								PostContent: models.Content{
+									Text: "New Post", CreatedAt: createTime, UpdatedAt: createTime,
+								},
+								Header: models.Header{AuthorID: 1, Author: "Alexey Zemliakov"},
 							},
 						},
 						nil,
@@ -94,29 +99,31 @@ func TestGetAuthorsPosts(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			adapter, mock := getAdapter(ctrl)
-			ctx := context.Background()
+				adapter, mock := getAdapter(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(input, mock)
+				v.SetupMock(input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, adapter, input)
-			assert.Equal(t, res, actual)
-			assert.Equal(t, status.Code(err), v.ExpectedErrCode)
-		})
+				actual, err := v.Run(ctx, adapter, input)
+				assert.Equal(t, res, actual)
+				assert.Equal(t, status.Code(err), v.ExpectedErrCode)
+			},
+		)
 	}
 }
 

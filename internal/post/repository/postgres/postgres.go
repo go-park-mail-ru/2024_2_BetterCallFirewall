@@ -48,7 +48,7 @@ func NewAdapter(db *sql.DB) *Adapter {
 	}
 }
 
-func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error) {
+func (a *Adapter) Create(ctx context.Context, post *models.PostDto) (uint32, error) {
 	var postID uint32
 
 	if err := a.db.QueryRowContext(
@@ -60,8 +60,8 @@ func (a *Adapter) Create(ctx context.Context, post *models.Post) (uint32, error)
 	return postID, nil
 }
 
-func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.Post, error) {
-	var post models.Post
+func (a *Adapter) Get(ctx context.Context, postID uint32) (*models.PostDto, error) {
+	var post models.PostDto
 
 	if err := a.db.QueryRowContext(ctx, getPost, postID).
 		Scan(
@@ -97,7 +97,7 @@ func (a *Adapter) Delete(ctx context.Context, postID uint32) error {
 	return nil
 }
 
-func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
+func (a *Adapter) Update(ctx context.Context, post *models.PostDto) error {
 	res, err := a.db.ExecContext(
 		ctx, updatePost, post.PostContent.Text, post.PostContent.UpdatedAt, post.PostContent.File, post.ID,
 	)
@@ -118,7 +118,7 @@ func (a *Adapter) Update(ctx context.Context, post *models.Post) error {
 	return nil
 }
 
-func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error) {
+func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.PostDto, error) {
 	rows, err := a.db.QueryContext(ctx, getPostBatch, lastID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -128,10 +128,10 @@ func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, 
 	}
 	defer rows.Close()
 
-	var posts []*models.Post
+	var posts []*models.PostDto
 
 	for rows.Next() {
-		var post models.Post
+		var post models.PostDto
 		if err := rows.Scan(
 			&post.ID, &post.Header.AuthorID, &post.Header.CommunityID,
 			&post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt,
@@ -148,7 +148,7 @@ func (a *Adapter) GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, 
 	return posts, nil
 }
 
-func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error) {
+func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.PostDto, error) {
 	friends := convertSliceToString(friendsID)
 	rows, err := a.db.QueryContext(ctx, getFriendsPost, lastID, friends)
 	if rows != nil {
@@ -165,8 +165,8 @@ func (a *Adapter) GetFriendsPosts(ctx context.Context, friendsID []uint32, lastI
 	return createPostBatchFromRows(rows)
 }
 
-func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.Post, error) {
-	var posts []*models.Post
+func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]*models.PostDto, error) {
+	var posts []*models.PostDto
 
 	rows, err := a.db.QueryContext(ctx, getProfilePosts, header.AuthorID)
 
@@ -180,7 +180,7 @@ func (a *Adapter) GetAuthorPosts(ctx context.Context, header *models.Header) ([]
 
 	defer rows.Close()
 	for rows.Next() {
-		var post models.Post
+		var post models.PostDto
 		err = rows.Scan(&post.ID, &post.PostContent.Text, &post.PostContent.File, &post.PostContent.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("postgres get author posts: %w", err)
@@ -205,11 +205,11 @@ func (a *Adapter) GetPostAuthor(ctx context.Context, postID uint32) (uint32, err
 	return authorID, nil
 }
 
-func createPostBatchFromRows(rows *sql.Rows) ([]*models.Post, error) {
-	var posts []*models.Post
+func createPostBatchFromRows(rows *sql.Rows) ([]*models.PostDto, error) {
+	var posts []*models.PostDto
 
 	for rows.Next() {
-		var post models.Post
+		var post models.PostDto
 		if err := rows.Scan(
 			&post.ID, &post.Header.AuthorID, &post.PostContent.Text, &post.PostContent.File,
 			&post.PostContent.CreatedAt,
@@ -241,7 +241,7 @@ func convertSliceToString(sl []uint32) string {
 	return res
 }
 
-func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error) {
+func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.PostDto, communityID uint32) (uint32, error) {
 	var ID uint32
 	if err := a.db.QueryRowContext(
 		ctx, createCommunityPost, communityID, post.PostContent.Text, post.PostContent.File,
@@ -253,15 +253,15 @@ func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.Post, co
 
 }
 
-func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32) ([]*models.Post, error) {
-	var posts []*models.Post
+func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32) ([]*models.PostDto, error) {
+	var posts []*models.PostDto
 	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
 	if err != nil {
 		return nil, fmt.Errorf("postgres get community posts: %w", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
-		post := &models.Post{}
+		post := &models.PostDto{}
 		err = rows.Scan(
 			&post.ID, &post.Header.CommunityID, &post.PostContent.Text, &post.PostContent.File,
 			&post.PostContent.CreatedAt,
@@ -323,7 +323,9 @@ func (a *Adapter) CheckLikes(ctx context.Context, postID, userID uint32) (bool, 
 	return true, nil
 }
 
-func (a *Adapter) CreateComment(ctx context.Context, comment *models.Content, userID, postID uint32) (uint32, error) {
+func (a *Adapter) CreateComment(
+	ctx context.Context, comment *models.ContentDto, userID, postID uint32,
+) (uint32, error) {
 	var id uint32
 
 	if err := a.db.QueryRowContext(
@@ -354,7 +356,7 @@ func (a *Adapter) DeleteComment(ctx context.Context, commentID uint32) error {
 	return nil
 }
 
-func (a *Adapter) UpdateComment(ctx context.Context, comment *models.Content, commentID uint32) error {
+func (a *Adapter) UpdateComment(ctx context.Context, comment *models.ContentDto, commentID uint32) error {
 	res, err := a.db.ExecContext(
 		ctx, updateComment, comment.Text, comment.File, commentID,
 	)
@@ -375,7 +377,7 @@ func (a *Adapter) UpdateComment(ctx context.Context, comment *models.Content, co
 	return nil
 }
 
-func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.Comment, error) {
+func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32, newest bool) ([]*models.CommentDto, error) {
 	var (
 		rows *sql.Rows
 		err  error
@@ -394,9 +396,9 @@ func (a *Adapter) GetComments(ctx context.Context, postID, lastID uint32, newest
 		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
 
-	var comments []*models.Comment
+	var comments []*models.CommentDto
 	for rows.Next() {
-		comment := models.Comment{}
+		comment := models.CommentDto{}
 		if err := rows.Scan(
 			&comment.ID, &comment.Header.AuthorID, &comment.Content.Text, &comment.Content.File,
 			&comment.Content.CreatedAt,

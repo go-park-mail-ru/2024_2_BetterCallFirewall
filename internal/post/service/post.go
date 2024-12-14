@@ -11,16 +11,16 @@ import (
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type DB interface {
-	Create(ctx context.Context, post *models.Post) (uint32, error)
-	Get(ctx context.Context, postID uint32) (*models.Post, error)
-	Update(ctx context.Context, post *models.Post) error
+	Create(ctx context.Context, post *models.PostDto) (uint32, error)
+	Get(ctx context.Context, postID uint32) (*models.PostDto, error)
+	Update(ctx context.Context, post *models.PostDto) error
 	Delete(ctx context.Context, postID uint32) error
-	GetPosts(ctx context.Context, lastID uint32) ([]*models.Post, error)
-	GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.Post, error)
+	GetPosts(ctx context.Context, lastID uint32) ([]*models.PostDto, error)
+	GetFriendsPosts(ctx context.Context, friendsID []uint32, lastID uint32) ([]*models.PostDto, error)
 	GetPostAuthor(ctx context.Context, postID uint32) (uint32, error)
 
-	CreateCommunityPost(ctx context.Context, post *models.Post, communityID uint32) (uint32, error)
-	GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.Post, error)
+	CreateCommunityPost(ctx context.Context, post *models.PostDto, communityID uint32) (uint32, error)
+	GetCommunityPosts(ctx context.Context, communityID uint32, lastID uint32) ([]*models.PostDto, error)
 
 	SetLikeToPost(ctx context.Context, postID uint32, userID uint32) error
 	DeleteLikeFromPost(ctx context.Context, postID uint32, userID uint32) error
@@ -54,7 +54,7 @@ func NewPostServiceImpl(db DB, profileRepo ProfileRepo, repo CommunityRepo) *Pos
 	}
 }
 
-func (s *PostServiceImpl) Create(ctx context.Context, post *models.Post) (uint32, error) {
+func (s *PostServiceImpl) Create(ctx context.Context, post *models.PostDto) (uint32, error) {
 	id, err := s.db.Create(ctx, post)
 	if err != nil {
 		return 0, fmt.Errorf("create post: %w", err)
@@ -63,7 +63,7 @@ func (s *PostServiceImpl) Create(ctx context.Context, post *models.Post) (uint32
 	return id, nil
 }
 
-func (s *PostServiceImpl) Get(ctx context.Context, postID, userID uint32) (*models.Post, error) {
+func (s *PostServiceImpl) Get(ctx context.Context, postID, userID uint32) (*models.PostDto, error) {
 	post, err := s.db.Get(ctx, postID)
 	if err != nil {
 		return nil, fmt.Errorf("get post: %w", err)
@@ -85,7 +85,7 @@ func (s *PostServiceImpl) Delete(ctx context.Context, postID uint32) error {
 	return nil
 }
 
-func (s *PostServiceImpl) Update(ctx context.Context, post *models.Post) error {
+func (s *PostServiceImpl) Update(ctx context.Context, post *models.PostDto) error {
 	post.PostContent.UpdatedAt = time.Now()
 
 	err := s.db.Update(ctx, post)
@@ -96,7 +96,7 @@ func (s *PostServiceImpl) Update(ctx context.Context, post *models.Post) error {
 	return nil
 }
 
-func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.Post, error) {
+func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID, userID uint32) ([]*models.PostDto, error) {
 	posts, err := s.db.GetPosts(ctx, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
@@ -113,7 +113,7 @@ func (s *PostServiceImpl) GetBatch(ctx context.Context, lastID, userID uint32) (
 
 func (s *PostServiceImpl) GetBatchFromFriend(
 	ctx context.Context, userID uint32, lastID uint32,
-) ([]*models.Post, error) {
+) ([]*models.PostDto, error) {
 	friends, err := s.profileRepo.GetFriendsID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get friends: %w", err)
@@ -146,7 +146,7 @@ func (s *PostServiceImpl) GetPostAuthorID(ctx context.Context, postID uint32) (u
 	return id, nil
 }
 
-func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.Post) (uint32, error) {
+func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.PostDto) (uint32, error) {
 	id, err := s.db.CreateCommunityPost(ctx, post, post.Header.CommunityID)
 	if err != nil {
 		return 0, fmt.Errorf("create post: %w", err)
@@ -157,7 +157,7 @@ func (s *PostServiceImpl) CreateCommunityPost(ctx context.Context, post *models.
 
 func (s *PostServiceImpl) GetCommunityPost(
 	ctx context.Context, communityID, userID, lastID uint32,
-) ([]*models.Post, error) {
+) ([]*models.PostDto, error) {
 	posts, err := s.db.GetCommunityPosts(ctx, communityID, lastID)
 	if err != nil {
 		return nil, fmt.Errorf("get posts: %w", err)
@@ -205,7 +205,7 @@ func (s *PostServiceImpl) CheckLikes(ctx context.Context, postID, userID uint32)
 	return res, nil
 }
 
-func (s *PostServiceImpl) setPostFields(ctx context.Context, post *models.Post, userID uint32) error {
+func (s *PostServiceImpl) setPostFields(ctx context.Context, post *models.PostDto, userID uint32) error {
 	var (
 		header *models.Header
 		err    error
