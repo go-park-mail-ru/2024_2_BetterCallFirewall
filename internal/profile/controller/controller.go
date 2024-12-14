@@ -129,6 +129,12 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 		return nil, err
 	}
 
+	if len(newProfile.FirstName) < 3 || len(newProfile.FirstName) > 30 ||
+		len(newProfile.LastName) < 3 || len(newProfile.LastName) > 30 ||
+		len(newProfile.Bio) > 60 || len(newProfile.Avatar) > 100 {
+		return nil, errors.New("invalid profile")
+	}
+
 	return &newProfile, nil
 }
 
@@ -545,6 +551,10 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+	if !validate(request) {
+		h.Responder.ErrorBadRequest(w, errors.New("too small password or old and new same"), reqID)
+		return
+	}
 
 	if err = h.ProfileManager.ChangePassword(
 		r.Context(), sess.UserID, request.OldPassword, request.NewPassword,
@@ -561,4 +571,12 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 	}
 
 	h.Responder.OutputJSON(w, "password change", reqID)
+}
+
+func validate(request models.ChangePasswordReq) bool {
+	if len(request.OldPassword) < 6 || len(request.NewPassword) < 6 || request.OldPassword == request.NewPassword {
+		return false
+	}
+
+	return true
 }

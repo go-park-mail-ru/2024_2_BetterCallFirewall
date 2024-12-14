@@ -47,7 +47,9 @@ func TestGetHeader(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetHeader(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -58,12 +60,14 @@ func TestGetHeader(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -75,7 +79,9 @@ func TestGetHeader(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetHeader(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -87,12 +93,14 @@ func TestGetHeader(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, my_err.ErrProfileNotFound)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -104,7 +112,9 @@ func TestGetHeader(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetHeader(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -116,12 +126,14 @@ func TestGetHeader(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("internal error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("internal error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -133,7 +145,9 @@ func TestGetHeader(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetHeader(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -145,42 +159,46 @@ func TestGetHeader(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{}, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, header, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, header, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -194,7 +212,9 @@ func TestGetProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -205,12 +225,14 @@ func TestGetProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -222,7 +244,9 @@ func TestGetProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -233,13 +257,17 @@ func TestGetProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, my_err.ErrProfileNotFound)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(
+					&models.FullProfile{}, my_err.ErrProfileNotFound,
+				)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -251,7 +279,9 @@ func TestGetProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -262,10 +292,14 @@ func TestGetProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, my_err.ErrNoMoreContent)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(
+					&models.FullProfile{}, my_err.ErrNoMoreContent,
+				)
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -277,7 +311,9 @@ func TestGetProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -288,13 +324,17 @@ func TestGetProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(
+					&models.FullProfile{}, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -306,7 +346,9 @@ func TestGetProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -318,42 +360,46 @@ func TestGetProfile(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -367,7 +413,9 @@ func TestUpdateProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.UpdateProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -378,12 +426,14 @@ func TestUpdateProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -395,7 +445,9 @@ func TestUpdateProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.UpdateProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -406,25 +458,31 @@ func TestUpdateProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "3",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPut, "/api/v1/profile",
-					bytes.NewBuffer([]byte(`{"id":0, "first_name":"Alexey"}`)))
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/profile",
+					bytes.NewBuffer([]byte(`{"id":0, "first_name":"Alexey", "last_name":"Zemliakov"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.UpdateProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -436,25 +494,31 @@ func TestUpdateProfile(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().UpdateProfile(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
 			name: "4",
 			SetupInput: func() (*Request, error) {
-				req := httptest.NewRequest(http.MethodPut, "/api/v1/profile",
-					bytes.NewBuffer([]byte(`{"id":1, "first_name":"Alexey"}`)))
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/profile",
+					bytes.NewBuffer([]byte(`{"id":1, "first_name":"Alexey", "last_name":"Zemliakov"}`)),
+				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.UpdateProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -466,42 +530,79 @@ func TestUpdateProfile(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().UpdateProfile(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodPut, "/api/v1/profile",
+					bytes.NewBuffer([]byte(`{"id":0, "first_name":"Alexey", "last_name":""}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.UpdateProfile(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						_, _ = request.w.Write([]byte("bad request"))
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -515,7 +616,9 @@ func TestDeleteProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.DeleteProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -526,12 +629,14 @@ func TestDeleteProfile(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -543,7 +648,9 @@ func TestDeleteProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.DeleteProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -555,12 +662,14 @@ func TestDeleteProfile(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().DeleteProfile(gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -572,7 +681,9 @@ func TestDeleteProfile(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.DeleteProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -584,42 +695,46 @@ func TestDeleteProfile(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().DeleteProfile(gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -633,7 +748,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -644,12 +761,14 @@ func TestGetProfileByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -661,7 +780,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -672,12 +793,14 @@ func TestGetProfileByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -689,7 +812,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -700,12 +825,14 @@ func TestGetProfileByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -717,7 +844,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -728,13 +857,17 @@ func TestGetProfileByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, my_err.ErrProfileNotFound)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(
+					&models.FullProfile{}, my_err.ErrProfileNotFound,
+				)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -746,7 +879,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -757,13 +892,17 @@ func TestGetProfileByID(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(
+					&models.FullProfile{}, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -775,7 +914,9 @@ func TestGetProfileByID(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetProfileById(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -787,42 +928,46 @@ func TestGetProfileByID(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetProfileById(gomock.Any(), gomock.Any()).Return(&models.FullProfile{}, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -836,7 +981,9 @@ func TestGetAll(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAll(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -847,12 +994,14 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -864,7 +1013,9 @@ func TestGetAll(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAll(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -875,12 +1026,14 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -892,7 +1045,9 @@ func TestGetAll(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAll(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -903,13 +1058,17 @@ func TestGetAll(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetAll(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetAll(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -921,7 +1080,9 @@ func TestGetAll(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAll(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -933,9 +1094,11 @@ func TestGetAll(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAll(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -947,7 +1110,9 @@ func TestGetAll(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAll(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -960,43 +1125,48 @@ func TestGetAll(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAll(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.ShortProfile{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1010,7 +1180,9 @@ func TestSendFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SendFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1021,12 +1193,14 @@ func TestSendFriendReq(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1038,7 +1212,9 @@ func TestSendFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SendFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1049,12 +1225,14 @@ func TestSendFriendReq(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1067,7 +1245,9 @@ func TestSendFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SendFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1079,12 +1259,14 @@ func TestSendFriendReq(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().SendFriendReq(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1097,7 +1279,9 @@ func TestSendFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SendFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1109,42 +1293,46 @@ func TestSendFriendReq(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().SendFriendReq(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1158,7 +1346,9 @@ func TestAcceptFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.AcceptFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1169,12 +1359,14 @@ func TestAcceptFriendReq(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1186,7 +1378,9 @@ func TestAcceptFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.AcceptFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1197,12 +1391,14 @@ func TestAcceptFriendReq(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1215,7 +1411,9 @@ func TestAcceptFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.AcceptFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1227,12 +1425,14 @@ func TestAcceptFriendReq(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().AcceptFriendReq(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1245,7 +1445,9 @@ func TestAcceptFriendReq(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.AcceptFriendReq(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1257,42 +1459,46 @@ func TestAcceptFriendReq(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().AcceptFriendReq(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1306,7 +1512,9 @@ func TestRemoveFromFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.RemoveFromFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1317,12 +1525,14 @@ func TestRemoveFromFriends(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1334,7 +1544,9 @@ func TestRemoveFromFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.RemoveFromFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1345,12 +1557,14 @@ func TestRemoveFromFriends(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1363,7 +1577,9 @@ func TestRemoveFromFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.RemoveFromFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1375,12 +1591,14 @@ func TestRemoveFromFriends(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().RemoveFromFriends(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1393,7 +1611,9 @@ func TestRemoveFromFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.RemoveFromFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1405,42 +1625,46 @@ func TestRemoveFromFriends(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().RemoveFromFriends(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1454,7 +1678,9 @@ func TestUnsubscribe(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.Unsubscribe(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1465,12 +1691,14 @@ func TestUnsubscribe(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1482,7 +1710,9 @@ func TestUnsubscribe(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.Unsubscribe(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1493,12 +1723,14 @@ func TestUnsubscribe(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1511,7 +1743,9 @@ func TestUnsubscribe(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.Unsubscribe(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1523,12 +1757,14 @@ func TestUnsubscribe(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().Unsubscribe(gomock.Any(), gomock.Any()).Return(errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1541,7 +1777,9 @@ func TestUnsubscribe(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.Unsubscribe(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1553,42 +1791,46 @@ func TestUnsubscribe(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().Unsubscribe(gomock.Any(), gomock.Any()).Return(nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1602,7 +1844,9 @@ func TestGetAllFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1613,12 +1857,14 @@ func TestGetAllFriends(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1630,7 +1876,9 @@ func TestGetAllFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1641,12 +1889,14 @@ func TestGetAllFriends(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1658,7 +1908,9 @@ func TestGetAllFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1669,13 +1921,17 @@ func TestGetAllFriends(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetAllFriends(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetAllFriends(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1687,7 +1943,9 @@ func TestGetAllFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1699,9 +1957,11 @@ func TestGetAllFriends(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllFriends(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -1713,7 +1973,9 @@ func TestGetAllFriends(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllFriends(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1726,43 +1988,48 @@ func TestGetAllFriends(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllFriends(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.ShortProfile{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1776,7 +2043,9 @@ func TestGetAllSubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1787,12 +2056,14 @@ func TestGetAllSubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1804,7 +2075,9 @@ func TestGetAllSubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1815,12 +2088,14 @@ func TestGetAllSubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1832,7 +2107,9 @@ func TestGetAllSubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1843,13 +2120,17 @@ func TestGetAllSubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetAllSubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetAllSubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1861,7 +2142,9 @@ func TestGetAllSubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1873,9 +2156,11 @@ func TestGetAllSubs(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllSubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -1887,7 +2172,9 @@ func TestGetAllSubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1900,43 +2187,48 @@ func TestGetAllSubs(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllSubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.ShortProfile{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1950,7 +2242,9 @@ func TestGetAllSubscriptions(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubscriptions(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1961,12 +2255,14 @@ func TestGetAllSubscriptions(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -1978,7 +2274,9 @@ func TestGetAllSubscriptions(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubscriptions(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -1989,12 +2287,14 @@ func TestGetAllSubscriptions(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2006,7 +2306,9 @@ func TestGetAllSubscriptions(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubscriptions(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2017,13 +2319,17 @@ func TestGetAllSubscriptions(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetAllSubscriptions(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetAllSubscriptions(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2035,7 +2341,9 @@ func TestGetAllSubscriptions(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubscriptions(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2047,9 +2355,11 @@ func TestGetAllSubscriptions(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllSubscriptions(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -2061,7 +2371,9 @@ func TestGetAllSubscriptions(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetAllSubscriptions(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2074,43 +2386,48 @@ func TestGetAllSubscriptions(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetAllSubscriptions(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.ShortProfile{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -2124,7 +2441,9 @@ func TestGetCommunitySubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetCommunitySubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2135,12 +2454,14 @@ func TestGetCommunitySubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2152,7 +2473,9 @@ func TestGetCommunitySubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetCommunitySubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2163,12 +2486,14 @@ func TestGetCommunitySubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2180,7 +2505,9 @@ func TestGetCommunitySubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetCommunitySubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2191,13 +2518,17 @@ func TestGetCommunitySubs(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().GetCommunitySubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().GetCommunitySubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2209,7 +2540,9 @@ func TestGetCommunitySubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetCommunitySubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2221,9 +2554,11 @@ func TestGetCommunitySubs(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetCommunitySubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(func(w, req any) {
-					request.w.WriteHeader(http.StatusNoContent)
-				})
+				m.responder.EXPECT().OutputNoMoreContentJSON(request.w, gomock.Any()).Do(
+					func(w, req any) {
+						request.w.WriteHeader(http.StatusNoContent)
+					},
+				)
 			},
 		},
 		{
@@ -2235,7 +2570,9 @@ func TestGetCommunitySubs(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.GetCommunitySubs(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2248,43 +2585,48 @@ func TestGetCommunitySubs(t *testing.T) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().GetCommunitySubs(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 					[]*models.ShortProfile{{ID: 1}},
-					nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+					nil,
+				)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -2298,7 +2640,9 @@ func TestSearch(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SearchProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2309,12 +2653,14 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2325,7 +2671,9 @@ func TestSearch(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SearchProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2336,13 +2684,17 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("error"))
-				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusInternalServerError)
-					if _, err1 := request.w.Write([]byte("error")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, errors.New("error"),
+				)
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2353,7 +2705,9 @@ func TestSearch(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SearchProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2364,12 +2718,14 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2380,7 +2736,9 @@ func TestSearch(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SearchProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2392,12 +2750,14 @@ func TestSearch(t *testing.T) {
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
 				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
-				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(func(w, data, req any) {
-					request.w.WriteHeader(http.StatusOK)
-					if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 		{
@@ -2408,7 +2768,9 @@ func TestSearch(t *testing.T) {
 				res := &Request{r: req, w: w}
 				return res, nil
 			},
-			Run: func(ctx context.Context, implementation *ProfileHandlerImplementation, request Request) (Response, error) {
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
 				implementation.SearchProfile(request.w, request.r)
 				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
 				return res, nil
@@ -2419,43 +2781,331 @@ func TestSearch(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request Request, m *mocks) {
 				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
-				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, my_err.ErrSessionNotFound)
-				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(func(w, err, req any) {
-					request.w.WriteHeader(http.StatusBadRequest)
-					if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
-						panic(err1)
-					}
-				})
+				m.profileManager.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, my_err.ErrSessionNotFound,
+				)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getController(ctrl)
-			ctx := context.Background()
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	tests := []TableTest[Response, Request]{
+		{
+			name: "1",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(http.MethodGet, "/api/v1/profile/password", nil)
+				w := httptest.NewRecorder()
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "2",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte("dejfoh")),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "3",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte(`{"old_password":"password"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte(`{"old_password":"password", "new_password":"password"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "5",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte(`{"old_password":"password", "new_password":"password1"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusBadRequest, Body: "bad request"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.profileManager.EXPECT().ChangePassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(my_err.ErrUserNotFound)
+				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusBadRequest)
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "6",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte(`{"old_password":"password", "new_password":"password1"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusInternalServerError, Body: "error"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.profileManager.EXPECT().ChangePassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(errors.New("error"))
+				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, err, req any) {
+						request.w.WriteHeader(http.StatusInternalServerError)
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+		{
+			name: "7",
+			SetupInput: func() (*Request, error) {
+				req := httptest.NewRequest(
+					http.MethodGet, "/api/v1/profile/password",
+					bytes.NewBuffer([]byte(`{"old_password":"password", "new_password":"password1"}`)),
+				)
+				w := httptest.NewRecorder()
+				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
+				res := &Request{r: req, w: w}
+				return res, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *ProfileHandlerImplementation, request Request,
+			) (Response, error) {
+				implementation.ChangePassword(request.w, request.r)
+				res := Response{StatusCode: request.w.Code, Body: request.w.Body.String()}
+				return res, nil
+			},
+			ExpectedResult: func() (Response, error) {
+				return Response{StatusCode: http.StatusOK, Body: "OK"}, nil
+			},
+			ExpectedErr: nil,
+			SetupMock: func(request Request, m *mocks) {
+				m.responder.EXPECT().LogError(gomock.Any(), gomock.Any())
+				m.profileManager.EXPECT().ChangePassword(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil)
+				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
+					func(w, data, req any) {
+						request.w.WriteHeader(http.StatusOK)
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
+					},
+				)
+			},
+		},
+	}
+
+	for _, v := range tests {
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				serv, mock := getController(ctrl)
+				ctx := context.Background()
+
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
+
+				v.SetupMock(*input, mock)
+
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
+
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
