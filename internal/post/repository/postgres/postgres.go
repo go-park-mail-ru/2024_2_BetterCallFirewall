@@ -250,15 +250,18 @@ func (a *Adapter) CreateCommunityPost(ctx context.Context, post *models.PostDto,
 	}
 
 	return ID, nil
-
 }
 
 func (a *Adapter) GetCommunityPosts(ctx context.Context, communityID, id uint32) ([]*models.PostDto, error) {
 	var posts []*models.PostDto
 	rows, err := a.db.QueryContext(ctx, getCommunityPosts, communityID, id)
 	if err != nil {
-		return nil, fmt.Errorf("postgres get community posts: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrNoMoreContent
+		}
+		return nil, fmt.Errorf("postgres get posts: %w", err)
 	}
+
 	defer rows.Close()
 	for rows.Next() {
 		post := &models.PostDto{}
