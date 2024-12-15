@@ -26,7 +26,7 @@ var fileFormat = map[string]struct{}{
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
 	Download(ctx context.Context, file multipart.File, format string) (string, error)
-	DownloadNonImage(ctx context.Context, file multipart.File, format string) (string, error)
+	DownloadNonImage(ctx context.Context, file multipart.File, format, realName string) (string, error)
 	UploadNonImage(ctx context.Context, name string) ([]byte, error)
 }
 
@@ -142,8 +142,12 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 	if _, ok := fileFormat[format]; ok {
 		url, err = fc.fileService.Download(r.Context(), file, format)
 	} else {
-
-		url, err = fc.fileService.DownloadNonImage(r.Context(), file, format)
+		name := header.Filename
+		if len(name+format) > 55 {
+			fc.responder.ErrorBadRequest(w, errors.New("file name is too big"), reqID)
+			return
+		}
+		url, err = fc.fileService.DownloadNonImage(r.Context(), file, format, name)
 	}
 
 	if err != nil {

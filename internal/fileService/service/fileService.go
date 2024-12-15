@@ -37,10 +37,12 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, format 
 	return filePath, nil
 }
 
-func (f *FileService) DownloadNonImage(ctx context.Context, file multipart.File, format string) (string, error) {
+func (f *FileService) DownloadNonImage(
+	ctx context.Context, file multipart.File, format, realName string,
+) (string, error) {
 	var (
 		fileName = uuid.New().String()
-		filePath = fmt.Sprintf("/files/%s.%s", fileName, format)
+		filePath = fmt.Sprintf("/files/%s|%s.%s", fileName, realName, format)
 		dst, err = os.Create(filePath)
 	)
 	defer func(dst *os.File) {

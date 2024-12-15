@@ -58,18 +58,18 @@ func (mr *MockfileServiceMockRecorder) Download(ctx, file, format any) *gomock.C
 }
 
 // DownloadNonImage mocks base method.
-func (m *MockfileService) DownloadNonImage(ctx context.Context, file multipart.File, format string) (string, error) {
+func (m *MockfileService) DownloadNonImage(ctx context.Context, file multipart.File, format, realName string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DownloadNonImage", ctx, file, format)
+	ret := m.ctrl.Call(m, "DownloadNonImage", ctx, file, format, realName)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // DownloadNonImage indicates an expected call of DownloadNonImage.
-func (mr *MockfileServiceMockRecorder) DownloadNonImage(ctx, file, format any) *gomock.Call {
+func (mr *MockfileServiceMockRecorder) DownloadNonImage(ctx, file, format, realName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadNonImage", reflect.TypeOf((*MockfileService)(nil).DownloadNonImage), ctx, file, format)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadNonImage", reflect.TypeOf((*MockfileService)(nil).DownloadNonImage), ctx, file, format, realName)
 }
 
 // Upload mocks base method.
