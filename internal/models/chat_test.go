@@ -142,8 +142,6 @@ func TestMarshalChat(t *testing.T) {
 func TestUnmarshalChat(t *testing.T) {
 	sl := []byte(`{"last_message":"message","last_date":"0001-01-01T00:00:00Z","receiver":{"author_id":0,"community_id":0,"author":"Andrew Savvateev","avatar":""}}`)
 	c := &Chat{}
-	err := easyjson.Unmarshal(sl, c)
-	assert.NoError(t, err)
 	want := &Chat{
 		LastMessage: "message",
 		LastDate:    time.Time{},
@@ -152,5 +150,11 @@ func TestUnmarshalChat(t *testing.T) {
 		},
 	}
 
+	err := easyjson.Unmarshal(sl, c)
+	assert.NoError(t, err)
+	assert.Equal(t, want, c)
+
+	err = json.Unmarshal(sl, c)
+	assert.NoError(t, err)
 	assert.Equal(t, want, c)
 }
