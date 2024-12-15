@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -9,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
@@ -124,7 +124,7 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 
 func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.FullProfile, error) {
 	newProfile := models.FullProfile{}
-	err := json.NewDecoder(r.Body).Decode(&newProfile)
+	err := easyjson.UnmarshalFromReader(r.Body, &newProfile)
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +547,7 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 	}
 
 	var request models.ChangePasswordReq
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &request); err != nil {
 		h.Responder.ErrorBadRequest(w, err, reqID)
 		return
 	}

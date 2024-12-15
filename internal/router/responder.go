@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/mailru/easyjson"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -22,12 +23,14 @@ func fullUnwrap(err error) error {
 	return last
 }
 
+//esyjson:json
 type Response struct {
 	Success bool   `json:"success"`
 	Data    any    `json:"data,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
+//easyjson:skip
 type Respond struct {
 	logger *log.Logger
 }
@@ -47,7 +50,8 @@ func (r *Respond) OutputJSON(w http.ResponseWriter, data any, requestID string) 
 	w.WriteHeader(http.StatusOK)
 
 	r.logger.Infof("req: %s: success request", requestID)
-	if err := json.NewEncoder(w).Encode(&Response{Success: true, Data: data}); err != nil {
+
+	if _, err := easyjson.MarshalToWriter(&Response{Success: true, Data: data}, w); err != nil {
 		r.logger.Error(err)
 	}
 }

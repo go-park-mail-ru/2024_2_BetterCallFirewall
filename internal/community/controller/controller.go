@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -359,7 +360,7 @@ func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, error) {
 	var res models.Community
 
-	err := json.NewDecoder(r.Body).Decode(&res)
+	err := easyjson.UnmarshalFromReader(r.Body, &res)
 	if err != nil {
 		return models.Community{}, err
 	}
