@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//easyjson:json
 type Content struct {
 	Text      string    `json:"text"`
 	File      []Picture `json:"file,omitempty"`
@@ -29,6 +30,7 @@ func (c *Content) ToDto() ContentDto {
 	}
 }
 
+//easyjson:skip
 type ContentDto struct {
 	Text      string
 	File      Picture

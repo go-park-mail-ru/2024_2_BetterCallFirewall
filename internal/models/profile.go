@@ -1,5 +1,6 @@
 package models
 
+//easyjson:json
 type FullProfile struct {
 	ID             uint32    `json:"id"`
 	FirstName      string    `json:"first_name"`
@@ -14,6 +15,7 @@ type FullProfile struct {
 	Posts          []*Post   `json:"posts"`
 }
 
+//easyjson:json
 type ShortProfile struct {
 	ID             uint32  `json:"id"`
 	FirstName      string  `json:"first_name"`
@@ -25,6 +27,7 @@ type ShortProfile struct {
 	Avatar         Picture `json:"avatar"`
 }
 
+//easyjson:json
 type ChangePasswordReq struct {
 	OldPassword string `json:"old_password"`
 	NewPassword string `json:"new_password"`

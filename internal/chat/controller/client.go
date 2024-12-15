@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/mailru/easyjson"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -26,7 +26,7 @@ func (c *Client) Read(userID uint32) {
 			c.chatController.responder.LogError(err, wc)
 			return
 		}
-		err = json.Unmarshal(jsonMessage, msg)
+		err = easyjson.Unmarshal(jsonMessage, msg)
 		if err != nil {
 			c.chatController.responder.LogError(err, wc)
 			return
@@ -40,7 +40,7 @@ func (c *Client) Write() {
 	defer c.Socket.Close()
 	for msg := range c.Receive {
 		msg.CreatedAt = time.Now()
-		jsonForSend, err := json.Marshal(msg)
+		jsonForSend, err := easyjson.Marshal(msg)
 		if err != nil {
 			c.chatController.responder.LogError(err, wc)
 			return

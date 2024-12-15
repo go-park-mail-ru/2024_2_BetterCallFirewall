@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -324,7 +324,7 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, error) {
 	var newPost models.Post
 
-	err := json.NewDecoder(r.Body).Decode(&newPost)
+	err := easyjson.UnmarshalFromReader(r.Body, &newPost)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +497,7 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var content models.Content
-	if err := json.NewDecoder(r.Body).Decode(&content); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &content); err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
@@ -574,7 +574,7 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var content models.Content
-	if err := json.NewDecoder(r.Body).Decode(&content); err != nil {
+	if err := easyjson.UnmarshalFromReader(r.Body, &content); err != nil {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}

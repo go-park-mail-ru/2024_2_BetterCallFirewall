@@ -11,9 +11,9 @@ import (
 	"github.com/2024_2_BetterCallFirewall/internal/ext_grpc/adapter/auth"
 	"github.com/2024_2_BetterCallFirewall/internal/router"
 	"github.com/2024_2_BetterCallFirewall/internal/router/stickers"
-	controller "github.com/2024_2_BetterCallFirewall/internal/stickers/controller"
-	repository "github.com/2024_2_BetterCallFirewall/internal/stickers/repository"
-	service "github.com/2024_2_BetterCallFirewall/internal/stickers/service"
+	"github.com/2024_2_BetterCallFirewall/internal/stickers/controller"
+	"github.com/2024_2_BetterCallFirewall/internal/stickers/repository"
+	"github.com/2024_2_BetterCallFirewall/internal/stickers/service"
 	"github.com/2024_2_BetterCallFirewall/pkg/start_postgres"
 )
 
@@ -26,7 +26,8 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 		ForceColors:     true,
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DB.Host,
 		cfg.DB.Port,
 		cfg.DB.User,

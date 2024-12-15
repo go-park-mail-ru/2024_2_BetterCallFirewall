@@ -2,13 +2,13 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"time"
 
+	"github.com/mailru/easyjson"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
@@ -56,7 +56,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.User{}
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := easyjson.UnmarshalFromReader(r.Body, &user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
@@ -106,7 +106,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.User{}
-	err := json.NewDecoder(r.Body).Decode(&user)
+	err := easyjson.UnmarshalFromReader(r.Body, &user)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
