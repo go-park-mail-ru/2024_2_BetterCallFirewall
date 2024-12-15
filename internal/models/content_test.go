@@ -1,8 +1,11 @@
 package models
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/mailru/easyjson"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,4 +51,41 @@ func TestToDto(t *testing.T) {
 		res := test.content.ToDto()
 		assert.Equal(t, test.contentDto, res)
 	}
+}
+
+func TestMarshalJson(t *testing.T) {
+	c := &Content{
+		Text:      "comment",
+		File:      []Picture{Picture("image")},
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+	}
+	want := []byte(`{"text":"comment","file":["image"],"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`)
+
+	res, err := easyjson.Marshal(c)
+	assert.NoError(t, err)
+	assert.Equal(t, want, res)
+
+	res, err = json.Marshal(c)
+	assert.NoError(t, err)
+	assert.Equal(t, want, res)
+}
+
+func TestUnmarshallJson(t *testing.T) {
+	sl := []byte(`{"text":"comment","file":["image"],"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`)
+	c := &Content{}
+	want := &Content{
+		Text:      "comment",
+		File:      []Picture{Picture("image")},
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+	}
+
+	err := easyjson.Unmarshal(sl, c)
+	assert.NoError(t, err)
+	assert.Equal(t, want, c)
+
+	err = json.Unmarshal(sl, want)
+	assert.NoError(t, err)
+	assert.Equal(t, want, c)
 }
