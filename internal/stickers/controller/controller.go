@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/stickers"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -37,7 +38,7 @@ func NewStickerController(manager stickers.Usecase, responder Responder) *Sticke
 }
 
 func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
@@ -71,7 +72,7 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 }
 
 func (s StickersHandlerImplementation) GetAllStickers(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
@@ -91,7 +92,7 @@ func (s StickersHandlerImplementation) GetAllStickers(w http.ResponseWriter, r *
 }
 
 func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 
 	if !ok {
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
