@@ -55,9 +55,9 @@ func GetHTTPServer(cfg *config.Config) (*http.Server, error) {
 	rout := stickers.NewRouter(stickerController, sm, logger)
 	server := &http.Server{
 		Handler:      rout,
-		Addr:         fmt.Sprintf(":%s", cfg.STCIKER.Port),
-		ReadTimeout:  cfg.STCIKER.ReadTimeout,
-		WriteTimeout: cfg.STCIKER.WriteTimeout,
+		Addr:         fmt.Sprintf(":%s", cfg.STICKER.Port),
+		ReadTimeout:  cfg.STICKER.ReadTimeout,
+		WriteTimeout: cfg.STICKER.WriteTimeout,
 	}
 
 	return server, nil

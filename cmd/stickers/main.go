@@ -22,7 +22,7 @@ func main() {
 		panic(err)
 	}
 
-	log.Printf("Starting server on port %s", cfg.STCIKER.Port)
+	log.Printf("Starting server on port %s", cfg.STICKER.Port)
 	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
