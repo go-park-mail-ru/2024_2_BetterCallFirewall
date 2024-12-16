@@ -653,7 +653,7 @@ func validateContent(content models.Content) bool {
 		return false
 	}
 
-	return validateFile(content.File) && len(content.Text) < 500
+	return validateFile(content.File) && len([]rune(content.Text)) < 1000
 }
 
 func validateFile(filepaths []models.Picture) bool {
@@ -662,7 +662,7 @@ func validateFile(filepaths []models.Picture) bool {
 	}
 
 	for _, f := range filepaths {
-		if len(f) > 100 {
+		if len([]rune(f)) > 100 {
 			return false
 		}
 		if !(strings.HasPrefix(string(f), filePrefix) || strings.HasPrefix(string(f), imagePrefix)) {

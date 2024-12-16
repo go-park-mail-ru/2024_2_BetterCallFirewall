@@ -129,9 +129,9 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 		return nil, err
 	}
 
-	if len([]rune(newProfile.FirstName)) < 3 || len(newProfile.FirstName) > 30 ||
-		len([]rune(newProfile.LastName)) < 3 || len(newProfile.LastName) > 30 ||
-		len(newProfile.Bio) > 100 || len(newProfile.Avatar) > 100 {
+	if len([]rune(newProfile.FirstName)) < 3 || len([]rune(newProfile.FirstName)) > 30 ||
+		len([]rune(newProfile.LastName)) < 3 || len([]rune(newProfile.LastName)) > 30 ||
+		len(newProfile.Bio) > 100 || len([]rune(newProfile.Avatar)) > 100 {
 		return nil, errors.New("invalid profile")
 	}
 
@@ -574,7 +574,7 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 }
 
 func validate(request models.ChangePasswordReq) bool {
-	if len(request.OldPassword) < 6 || len(request.NewPassword) < 6 || request.OldPassword == request.NewPassword {
+	if len([]rune(request.OldPassword)) < 6 || len([]rune(request.NewPassword)) < 6 || request.OldPassword == request.NewPassword {
 		return false
 	}
 

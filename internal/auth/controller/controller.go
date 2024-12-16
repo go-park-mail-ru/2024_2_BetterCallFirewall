@@ -185,7 +185,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 
 func validate(user models.User) bool {
 	if len([]rune(user.FirstName)) < 3 || len([]rune(user.LastName)) < 3 || len([]rune(user.Password)) < 6 ||
-		len(user.FirstName) > 30 || len(user.LastName) > 30 {
+		len([]rune(user.FirstName)) > 30 || len([]rune(user.LastName)) > 30 {
 		return false
 	}
 	return true

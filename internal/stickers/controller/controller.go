@@ -117,5 +117,5 @@ func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r 
 }
 
 func validate(filepath string) bool {
-	return len(filepath) < 100 && strings.HasPrefix(filepath, imagePrefix)
+	return len([]rune(filepath)) < 100 && strings.HasPrefix(filepath, imagePrefix)
 }
