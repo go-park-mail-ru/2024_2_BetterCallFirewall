@@ -134,7 +134,7 @@ func TestAddNewSticker(t *testing.T) {
 			name: "4",
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
-					http.MethodPost, "/api/v1/stickers", bytes.NewBuffer([]byte(`"/image/someimage"`)),
+					http.MethodPost, "/api/v1/stickers", bytes.NewBuffer([]byte(`{"file":"/image/someimage"}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))
@@ -167,7 +167,7 @@ func TestAddNewSticker(t *testing.T) {
 			name: "5",
 			SetupInput: func() (*Request, error) {
 				req := httptest.NewRequest(
-					http.MethodPost, "/api/v1/stickers", bytes.NewBuffer([]byte(`"/image/someimage"`)),
+					http.MethodPost, "/api/v1/stickers", bytes.NewBuffer([]byte(`{"file":"/image/someimage"}`)),
 				)
 				w := httptest.NewRecorder()
 				req = req.WithContext(models.ContextWithSession(req.Context(), &models.Session{ID: "1", UserID: 1}))

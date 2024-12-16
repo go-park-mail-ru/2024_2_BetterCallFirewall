@@ -43,14 +43,14 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 		s.Responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	filePath := ""
+	filePath := models.StickerRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&filePath); err != nil {
 		s.Responder.ErrorBadRequest(w, my_err.ErrNoFile, reqID)
 		fmt.Println(err)
 		return
 	}
 
-	if !validate(filePath) {
+	if !validate(filePath.File) {
 		s.Responder.ErrorBadRequest(w, my_err.ErrNoImage, reqID)
 		return
 	}
@@ -61,7 +61,7 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 		return
 	}
 
-	err = s.StickersManager.AddNewSticker(r.Context(), filePath, sess.UserID)
+	err = s.StickersManager.AddNewSticker(r.Context(), filePath.File, sess.UserID)
 	if err != nil {
 		s.Responder.ErrorInternal(w, err, reqID)
 		return
