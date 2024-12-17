@@ -79,7 +79,7 @@ func (fc *FileController) UploadNonImage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	fc.responder.OutputBytes(w, []byte(sanitize(string(res))), reqID)
+	fc.responder.OutputBytes(w, res, reqID)
 }
 
 func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +104,7 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fc.responder.OutputBytes(w, []byte(sanitize(string(res))), reqID)
+	fc.responder.OutputBytes(w, res, reqID)
 }
 
 func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
@@ -161,5 +161,5 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		fc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	fc.responder.OutputJSON(w, sanitize(url), reqID)
+	fc.responder.OutputJSON(w, url, reqID)
 }
