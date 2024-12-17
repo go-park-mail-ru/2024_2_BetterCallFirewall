@@ -61,7 +61,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 					Path:     "/",
 					HttpOnly: true,
 					Secure:   true,
-					SameSite: http.SameSiteLaxMode,
+					SameSite: http.SameSiteStrictMode,
 					Expires:  time.Now().AddDate(0, 0, 1),
 				}
 				http.SetCookie(w, cookie)
@@ -95,7 +95,7 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
 

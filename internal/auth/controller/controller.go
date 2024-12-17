@@ -91,7 +91,7 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
 
@@ -140,7 +140,7 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().AddDate(0, 0, 1),
 	}
 	http.SetCookie(w, cookie)
@@ -178,7 +178,7 @@ func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
 	http.SetCookie(w, cookie)
