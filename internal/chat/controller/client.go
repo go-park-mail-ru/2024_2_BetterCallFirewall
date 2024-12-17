@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 )
@@ -18,16 +19,24 @@ type Client struct {
 	chatController *ChatController
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
 func (c *Client) Read(userID uint32) {
 	defer c.Socket.Close()
 	for {
 		msg := &models.Message{}
 		_, jsonMessage, err := c.Socket.ReadMessage()
+		clearJson := sanitize(string(jsonMessage))
 		if err != nil {
 			c.chatController.responder.LogError(fmt.Errorf("read message: %w", err), wc)
 			return
 		}
-		err = easyjson.Unmarshal(jsonMessage, msg)
+		err = easyjson.Unmarshal([]byte(clearJson), msg)
+
 		if err != nil {
 			c.chatController.responder.LogError(err, wc)
 			return

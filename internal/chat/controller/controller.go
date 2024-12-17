@@ -174,8 +174,9 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 	if id == "" {
 		return 0, my_err.ErrEmptyId
 	}
+	clearId := sanitize(id)
 
-	uid, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(clearId, 10, 32)
 	if err != nil {
 		return 0, err
 	}

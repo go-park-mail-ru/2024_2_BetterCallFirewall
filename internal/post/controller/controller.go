@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -74,10 +75,25 @@ func NewPostController(service PostService, commentService CommentService, respo
 	}
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
+func sanitizeFiles(pics []models.Picture) []models.Picture {
+	var results []models.Picture
+	for _, pic := range pics {
+		results = append(results, models.Picture(sanitize(string(pic))))
+	}
+
+	return results
+}
+
 func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
-		comunity  = r.URL.Query().Get("community")
+		comunity  = sanitize(r.URL.Query().Get("community"))
 		id        uint32
 		err       error
 	)
@@ -119,7 +135,13 @@ func (pc *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 	newPost.ID = id
 
-	pc.responder.OutputJSON(w, newPost.FromDto(), reqID)
+	post := newPost.FromDto()
+	post.PostContent.Text = sanitize(post.PostContent.Text)
+	post.PostContent.File = sanitizeFiles(post.PostContent.File)
+	post.Header.Avatar = models.Picture(sanitize(string(post.Header.Avatar)))
+	post.Header.Author = sanitize(post.Header.Author)
+
+	pc.responder.OutputJSON(w, post, reqID)
 }
 
 func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
@@ -151,15 +173,21 @@ func (pc *PostController) GetOne(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	newPost := post.FromDto()
 
-	pc.responder.OutputJSON(w, post.FromDto(), reqID)
+	newPost.PostContent.Text = sanitize(newPost.PostContent.Text)
+	newPost.PostContent.File = sanitizeFiles(newPost.PostContent.File)
+	newPost.Header.Avatar = models.Picture(sanitize(string(newPost.Header.Avatar)))
+	newPost.Header.Author = sanitize(newPost.Header.Author)
+
+	pc.responder.OutputJSON(w, newPost, reqID)
 }
 
 func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		id, err   = getIDFromURL(r, postIDkey)
-		community = r.URL.Query().Get("community")
+		community = sanitize(r.URL.Query().Get("community"))
 	)
 
 	if err != nil {
@@ -203,15 +231,21 @@ func (pc *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorInternal(w, err, reqID)
 		return
 	}
+	newPost := post.FromDto()
 
-	pc.responder.OutputJSON(w, post.FromDto(), reqID)
+	newPost.PostContent.Text = sanitize(newPost.PostContent.Text)
+	newPost.PostContent.File = sanitizeFiles(newPost.PostContent.File)
+	newPost.Header.Avatar = models.Picture(sanitize(string(newPost.Header.Avatar)))
+	newPost.Header.Author = sanitize(newPost.Header.Author)
+
+	pc.responder.OutputJSON(w, newPost, reqID)
 }
 
 func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok   = r.Context().Value(middleware.RequestKey).(string)
 		postID, err = getIDFromURL(r, postIDkey)
-		community   = r.URL.Query().Get("community")
+		community   = sanitize(r.URL.Query().Get("community"))
 	)
 
 	if !ok {
@@ -255,8 +289,8 @@ func (pc *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok   = r.Context().Value(middleware.RequestKey).(string)
-		section     = r.URL.Query().Get("section")
-		communityID = r.URL.Query().Get("community")
+		section     = sanitize(r.URL.Query().Get("section"))
+		communityID = sanitize(r.URL.Query().Get("community"))
 		posts       []*models.PostDto
 		intLastID   uint64
 		err         error
@@ -315,7 +349,13 @@ func (pc *PostController) GetBatchPosts(w http.ResponseWriter, r *http.Request) 
 
 	res := make([]models.Post, 0, len(posts))
 	for _, post := range posts {
-		res = append(res, post.FromDto())
+		newPost := post.FromDto()
+
+		newPost.PostContent.Text = sanitize(newPost.PostContent.Text)
+		newPost.PostContent.File = sanitizeFiles(newPost.PostContent.File)
+		newPost.Header.Avatar = models.Picture(sanitize(string(newPost.Header.Avatar)))
+		newPost.Header.Author = sanitize(newPost.Header.Author)
+		res = append(res, newPost)
 	}
 
 	pc.responder.OutputJSON(w, res, reqID)
@@ -340,6 +380,11 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, err
 	newPost.Header.AuthorID = sess.UserID
 	post := newPost.ToDto()
 
+	post.PostContent.Text = sanitize(post.PostContent.Text)
+	post.PostContent.File = models.Picture(sanitize(string(post.PostContent.File)))
+	post.Header.Avatar = models.Picture(sanitize(string(post.Header.Avatar)))
+	post.Header.Author = sanitize(post.Header.Author)
+
 	return &post, nil
 }
 
@@ -350,8 +395,9 @@ func getIDFromURL(r *http.Request, key string) (uint32, error) {
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
+	clearID := sanitize(id)
 
-	uid, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(clearID, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -365,8 +411,8 @@ func getLastID(r *http.Request) (uint64, error) {
 	if lastID == "" {
 		return math.MaxInt32, nil
 	}
-
-	intLastID, err := strconv.ParseUint(lastID, 10, 32)
+	clearLastID := sanitize(lastID)
+	intLastID, err := strconv.ParseUint(clearLastID, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -502,6 +548,8 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	content.Text = sanitize(content.Text)
+
 	if !validateContent(content) {
 		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
@@ -514,6 +562,10 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newComment.Content.CreatedAt = time.Now()
+	newComment.Content.Text = sanitize(newComment.Content.Text)
+	newComment.Content.File = models.Picture(sanitize(string(newComment.Content.File)))
+	newComment.Header.Avatar = models.Picture(sanitize(string(newComment.Header.Avatar)))
+	newComment.Header.Author = sanitize(newComment.Header.Author)
 
 	pc.responder.OutputJSON(w, newComment.FromDto(), reqID)
 }
@@ -579,6 +631,8 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	content.Text = sanitize(content.Text)
+
 	if !validateContent(content) {
 		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
 		return
@@ -620,7 +674,7 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 		pc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	sorting := r.URL.Query().Get("sort")
+	sorting := sanitize(r.URL.Query().Get("sort"))
 	newest := true
 	if sorting == "old" {
 		newest = false
@@ -643,6 +697,14 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 	res := make([]models.Comment, 0, len(comments))
 	for _, comment := range comments {
 		res = append(res, comment.FromDto())
+	}
+
+	for _, newComment := range res {
+		newComment.Content.CreatedAt = time.Now()
+		newComment.Content.Text = sanitize(newComment.Content.Text)
+		newComment.Content.File = sanitizeFiles(newComment.Content.File)
+		newComment.Header.Avatar = models.Picture(sanitize(string(newComment.Header.Avatar)))
+		newComment.Header.Author = sanitize(newComment.Header.Author)
 	}
 
 	pc.responder.OutputJSON(w, res, reqID)

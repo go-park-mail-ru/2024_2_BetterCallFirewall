@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/stickers"
@@ -37,6 +39,18 @@ func NewStickerController(manager stickers.Usecase, responder Responder) *Sticke
 	}
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
+func sanitizeFiles(pics []*models.Picture) {
+	for _, pic := range pics {
+		*pic = models.Picture(sanitize(string(*pic)))
+	}
+}
+
 func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 
@@ -51,6 +65,7 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 		return
 	}
 
+	filePath.File = sanitize(filePath.File)
 	if !validate(filePath.File) {
 		s.Responder.ErrorBadRequest(w, my_err.ErrNoImage, reqID)
 		return
@@ -88,6 +103,7 @@ func (s StickersHandlerImplementation) GetAllStickers(w http.ResponseWriter, r *
 		return
 	}
 
+	sanitizeFiles(res)
 	s.Responder.OutputJSON(w, res, reqID)
 }
 
@@ -113,7 +129,7 @@ func (s StickersHandlerImplementation) GetMineStickers(w http.ResponseWriter, r 
 		s.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-
+	sanitizeFiles(res)
 	s.Responder.OutputJSON(w, res, reqID)
 }
 

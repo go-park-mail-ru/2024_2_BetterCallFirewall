@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
@@ -39,6 +40,27 @@ func NewProfileController(manager profile.ProfileUsecase, responder Responder) *
 	}
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
+func sanitizeProfile(fullProfile *models.FullProfile) {
+	fullProfile.Bio = sanitize(fullProfile.Bio)
+	fullProfile.Avatar = models.Picture(sanitize(string(fullProfile.Avatar)))
+	fullProfile.FirstName = sanitize(fullProfile.FirstName)
+	fullProfile.LastName = sanitize(fullProfile.LastName)
+}
+
+func sanitizeProfiles(shorts []*models.ShortProfile) {
+	for _, short := range shorts {
+		short.Avatar = models.Picture(sanitize(string(short.Avatar)))
+		short.FirstName = sanitize(short.FirstName)
+		short.LastName = sanitize(short.LastName)
+	}
+}
+
 func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
@@ -53,6 +75,8 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 
 	userId := sess.UserID
 	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
+	header.Author = sanitize(header.Author)
+	header.Avatar = models.Picture(sanitize(string(header.Avatar)))
 	if err != nil {
 		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
@@ -90,6 +114,7 @@ func (h *ProfileHandlerImplementation) GetProfile(w http.ResponseWriter, r *http
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
+	sanitizeProfile(userProfile)
 
 	h.Responder.OutputJSON(w, userProfile, reqID)
 }
@@ -119,6 +144,7 @@ func (h *ProfileHandlerImplementation) UpdateProfile(w http.ResponseWriter, r *h
 		return
 	}
 
+	sanitizeProfile(newProfile)
 	h.Responder.OutputJSON(w, newProfile, reqID)
 }
 
@@ -128,6 +154,7 @@ func (h *ProfileHandlerImplementation) getNewProfile(r *http.Request) (*models.F
 	if err != nil {
 		return nil, err
 	}
+	sanitizeProfile(&newProfile)
 
 	if len([]rune(newProfile.FirstName)) < 3 || len([]rune(newProfile.FirstName)) > 30 ||
 		len([]rune(newProfile.LastName)) < 3 || len([]rune(newProfile.LastName)) > 30 ||
@@ -169,8 +196,9 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 	if id == "" {
 		return 0, my_err.ErrEmptyId
 	}
+	clearID := sanitize(id)
 
-	uid, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(clearID, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +223,7 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 		return
 	}
 
-	profile, err := h.ProfileManager.GetProfileById(r.Context(), id)
+	uprofile, err := h.ProfileManager.GetProfileById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
@@ -204,12 +232,13 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
+	sanitizeProfile(uprofile)
 
-	h.Responder.OutputJSON(w, profile, reqID)
+	h.Responder.OutputJSON(w, uprofile, reqID)
 }
 
 func GetLastId(r *http.Request) (uint32, error) {
-	strLastId := r.URL.Query().Get("last_id")
+	strLastId := sanitize(r.URL.Query().Get("last_id"))
 	if strLastId == "" {
 		return 0, nil
 	}
@@ -250,6 +279,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
+	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
@@ -387,7 +417,7 @@ func (h *ProfileHandlerImplementation) GetAllFriends(w http.ResponseWriter, r *h
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
-
+	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
@@ -420,6 +450,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
+	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
@@ -454,6 +485,7 @@ func (h *ProfileHandlerImplementation) GetAllSubscriptions(w http.ResponseWriter
 		return
 	}
 
+	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
@@ -489,14 +521,15 @@ func (h *ProfileHandlerImplementation) GetCommunitySubs(w http.ResponseWriter, r
 		return
 	}
 
+	sanitizeProfiles(subs)
 	h.Responder.OutputJSON(w, subs, reqID)
 }
 
 func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
-		subStr    = r.URL.Query().Get("q")
-		lastID    = r.URL.Query().Get("id")
+		subStr    = sanitize(r.URL.Query().Get("q"))
+		lastID    = sanitize(r.URL.Query().Get("id"))
 		id        uint64
 		err       error
 	)
@@ -531,6 +564,7 @@ func (h *ProfileHandlerImplementation) SearchProfile(w http.ResponseWriter, r *h
 		return
 	}
 
+	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
 
@@ -574,6 +608,8 @@ func (h *ProfileHandlerImplementation) ChangePassword(w http.ResponseWriter, r *
 }
 
 func validate(request models.ChangePasswordReq) bool {
+	request.OldPassword = sanitize(request.OldPassword)
+	request.NewPassword = sanitize(request.NewPassword)
 	if len([]rune(request.OldPassword)) < 6 || len([]rune(request.NewPassword)) < 6 || request.OldPassword == request.NewPassword {
 		return false
 	}

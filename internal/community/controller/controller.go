@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
@@ -50,6 +51,11 @@ func NewCommunityController(responder responder, service communityService) *Cont
 		service:   service,
 	}
 }
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
 
 func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
@@ -75,13 +81,17 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	community.Name = sanitize(community.Name)
+	community.Avatar = models.Picture(sanitize(string(community.Avatar)))
+	community.About = sanitize(community.About)
+
 	c.responder.OutputJSON(w, community, reqID)
 }
 
 func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
-		lastID    = r.URL.Query().Get("id")
+		lastID    = sanitize(r.URL.Query().Get("id"))
 		intLastID uint64
 		err       error
 	)
@@ -115,6 +125,12 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	if len(res) == 0 {
 		c.responder.OutputNoMoreContentJSON(w, reqID)
 		return
+	}
+
+	for _, card := range res {
+		card.Name = sanitize(card.Name)
+		card.Avatar = models.Picture(sanitize(string(card.Avatar)))
+		card.About = sanitize(card.About)
 	}
 
 	c.responder.OutputJSON(w, res, reqID)
@@ -154,6 +170,10 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
+
+	newCommunity.Avatar = models.Picture(sanitize(string(newCommunity.Avatar)))
+	newCommunity.Name = sanitize(newCommunity.Name)
+	newCommunity.About = sanitize(newCommunity.About)
 
 	c.responder.OutputJSON(w, newCommunity, reqID)
 }
@@ -317,8 +337,8 @@ func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
-		subStr    = r.URL.Query().Get("q")
-		lastID    = r.URL.Query().Get("id")
+		subStr    = sanitize(r.URL.Query().Get("q"))
+		lastID    = sanitize(r.URL.Query().Get("id"))
 		id        uint64
 		err       error
 	)
@@ -354,6 +374,12 @@ func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, card := range cards {
+		card.Name = sanitize(card.Name)
+		card.Avatar = models.Picture(sanitize(string(card.Avatar)))
+		card.About = sanitize(card.About)
+	}
+
 	c.responder.OutputJSON(w, cards, reqID)
 }
 
@@ -367,6 +393,9 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 	if !validate(res) {
 		return models.Community{}, my_err.ErrBadCommunity
 	}
+	res.Avatar = models.Picture(sanitize(string(res.Avatar)))
+	res.Name = sanitize(res.Name)
+	res.About = sanitize(res.About)
 
 	return res, nil
 }
@@ -378,8 +407,9 @@ func getIDFromQuery(r *http.Request) (uint32, error) {
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
+	clearID := sanitize(id)
 
-	uid, err := strconv.ParseUint(id, 10, 32)
+	uid, err := strconv.ParseUint(clearID, 10, 32)
 	if err != nil {
 		return 0, err
 	}

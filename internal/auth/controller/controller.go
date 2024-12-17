@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/auth"
@@ -49,6 +50,12 @@ func NewAuthController(
 	}
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
@@ -57,6 +64,9 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 	err := easyjson.UnmarshalFromReader(r.Body, &user)
+	user.FirstName = sanitize(user.FirstName)
+	user.LastName = sanitize(user.LastName)
+	user.Email = sanitize(user.Email)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
@@ -108,6 +118,8 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 	err := easyjson.UnmarshalFromReader(r.Body, &user)
+	user.Email = sanitize(user.Email)
+	user.Password = sanitize(user.Password)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
