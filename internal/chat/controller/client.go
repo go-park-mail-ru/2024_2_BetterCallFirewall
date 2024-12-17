@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -23,7 +24,7 @@ func (c *Client) Read(userID uint32) {
 		msg := &models.Message{}
 		_, jsonMessage, err := c.Socket.ReadMessage()
 		if err != nil {
-			c.chatController.responder.LogError(err, wc)
+			c.chatController.responder.LogError(fmt.Errorf("read message: %w", err), wc)
 			return
 		}
 		err = easyjson.Unmarshal(jsonMessage, msg)
@@ -47,7 +48,7 @@ func (c *Client) Write() {
 		}
 		err = c.Socket.WriteMessage(websocket.TextMessage, jsonForSend)
 		if err != nil {
-			c.chatController.responder.LogError(err, wc)
+			c.chatController.responder.LogError(fmt.Errorf("write message: %w", err), wc)
 			return
 		}
 	}
