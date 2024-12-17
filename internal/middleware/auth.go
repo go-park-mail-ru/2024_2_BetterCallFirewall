@@ -61,6 +61,7 @@ func Auth(sm SessionManager, next http.Handler) http.Handler {
 					Path:     "/",
 					HttpOnly: true,
 					Secure:   true,
+					SameSite: http.SameSiteLaxMode,
 					Expires:  time.Now().AddDate(0, 0, 1),
 				}
 				http.SetCookie(w, cookie)
@@ -94,6 +95,7 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().AddDate(0, 0, -1),
 	}
 
@@ -102,7 +104,7 @@ func logout(w http.ResponseWriter, r *http.Request, sm SessionManager) {
 
 func unauthorized(w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
+	w.Header().Set("Access-Control-Allow-Origin", "https://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.WriteHeader(http.StatusUnauthorized)
 
@@ -113,7 +115,7 @@ func unauthorized(w http.ResponseWriter, r *http.Request, err error) {
 
 func internalErr(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json:charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "http://vilka.online")
+	w.Header().Set("Access-Control-Allow-Origin", "https://vilka.online")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	w.WriteHeader(http.StatusInternalServerError)
