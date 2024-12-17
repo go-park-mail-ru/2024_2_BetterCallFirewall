@@ -229,6 +229,23 @@ func TestAddNewSticker(t *testing.T) {
 	}
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
+func TestSanitizeFiles(t *testing.T) {
+	xssV := models.Picture("<script> alert(1) </script>")
+	file := models.Picture("filepath")
+	empty := models.Picture("")
+	test := []*models.Picture{&xssV, &file}
+	expected := []*models.Picture{&empty, &file}
+	sanitizeFiles(test)
+	assert.Equal(t, expected, test)
+}
+
 func TestGetAllSticker(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

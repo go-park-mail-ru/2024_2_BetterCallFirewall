@@ -2191,6 +2191,20 @@ func TestDeleteLikeFromPost(t *testing.T) {
 	}
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
+func TestSanitizeFiles(t *testing.T) {
+	test := []models.Picture{"<script> alert(1) </script>", "filepath"}
+	expected := []models.Picture{"", "filepath"}
+	res := sanitizeFiles(test)
+	assert.Equal(t, expected, res)
+}
+
 func TestComment(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

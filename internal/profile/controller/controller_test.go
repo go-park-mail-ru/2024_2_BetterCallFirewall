@@ -202,6 +202,57 @@ func TestGetHeader(t *testing.T) {
 	}
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
+func TestSanitizeProfile(t *testing.T) {
+	testProfile := &models.FullProfile{
+		FirstName: "Andrew",
+		LastName:  "<script> alert(1) </script>",
+		Bio:       "<script> alert(1) </script>",
+		Avatar:    "file",
+	}
+
+	expProfile := &models.FullProfile{
+		FirstName: "Andrew",
+		LastName:  "",
+		Bio:       "",
+		Avatar:    "file",
+	}
+
+	sanitizeProfile(testProfile)
+	assert.Equal(t, expProfile, testProfile)
+}
+
+func TestSanitizeProfiles(t *testing.T) {
+	short1 := &models.ShortProfile{
+		FirstName: "Andrew",
+		LastName:  "Savvateev",
+		Avatar:    "filepath",
+	}
+
+	short2 := &models.ShortProfile{
+		FirstName: "Andrew",
+		LastName:  "<script> alert(1) </script>",
+		Avatar:    "<script> alert(1) </script>",
+	}
+
+	short3 := &models.ShortProfile{
+		FirstName: "Andrew",
+		LastName:  "",
+		Avatar:    "",
+	}
+
+	test := []*models.ShortProfile{short1, short2}
+	exp := []*models.ShortProfile{short1, short3}
+	sanitizeProfiles(test)
+	assert.Equal(t, exp, test)
+}
+
 func TestGetProfile(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

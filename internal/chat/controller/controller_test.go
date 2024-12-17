@@ -36,6 +36,13 @@ func TestNewController(t *testing.T) {
 	assert.NotNil(t, res)
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
 func TestGetAllChat(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

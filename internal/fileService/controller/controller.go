@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -50,11 +51,17 @@ func NewFileController(fileService fileService, responder responder) *FileContro
 	}
 }
 
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
+
 func (fc *FileController) UploadNonImage(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value("requestID").(string)
 		vars      = mux.Vars(r)
-		name      = vars["name"]
+		name      = sanitize(vars["name"])
 	)
 
 	if !ok {
@@ -72,14 +79,14 @@ func (fc *FileController) UploadNonImage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	fc.responder.OutputBytes(w, res, reqID)
+	fc.responder.OutputBytes(w, []byte(sanitize(string(res))), reqID)
 }
 
 func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
 		vars      = mux.Vars(r)
-		name      = vars["name"]
+		name      = sanitize(vars["name"])
 	)
 
 	if !ok {
@@ -97,7 +104,7 @@ func (fc *FileController) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fc.responder.OutputBytes(w, res, reqID)
+	fc.responder.OutputBytes(w, []byte(sanitize(string(res))), reqID)
 }
 
 func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
@@ -154,5 +161,5 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		fc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
-	fc.responder.OutputJSON(w, url, reqID)
+	fc.responder.OutputJSON(w, sanitize(url), reqID)
 }

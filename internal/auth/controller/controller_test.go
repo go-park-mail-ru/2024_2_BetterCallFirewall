@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -164,6 +166,13 @@ func TestRegister(t *testing.T) {
 			t.Errorf("Register() body = %s, want %s", tt.w.Body.String(), tt.wantBody)
 		}
 	}
+}
+
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
 }
 
 func TestAuth(t *testing.T) {
