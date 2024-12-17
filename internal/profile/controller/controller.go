@@ -75,8 +75,6 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 
 	userId := sess.UserID
 	header, err := h.ProfileManager.GetHeader(r.Context(), userId)
-	header.Author = sanitize(header.Author)
-	header.Avatar = models.Picture(sanitize(string(header.Avatar)))
 	if err != nil {
 		if errors.Is(err, my_err.ErrProfileNotFound) {
 			h.Responder.ErrorBadRequest(w, err, reqID)
@@ -86,6 +84,10 @@ func (h *ProfileHandlerImplementation) GetHeader(w http.ResponseWriter, r *http.
 		return
 	}
 
+	if header != nil {
+		header.Author = sanitize(header.Author)
+		header.Avatar = models.Picture(sanitize(string(header.Avatar)))
+	}
 	h.Responder.OutputJSON(w, &header, reqID)
 }
 

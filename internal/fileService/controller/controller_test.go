@@ -288,6 +288,13 @@ func TestUploadNonImage(t *testing.T) {
 	}
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
 func TestDownload(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

@@ -81,9 +81,11 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	community.Name = sanitize(community.Name)
-	community.Avatar = models.Picture(sanitize(string(community.Avatar)))
-	community.About = sanitize(community.About)
+	if community != nil {
+		community.Name = sanitize(community.Name)
+		community.Avatar = models.Picture(sanitize(string(community.Avatar)))
+		community.About = sanitize(community.About)
+	}
 
 	c.responder.OutputJSON(w, community, reqID)
 }
