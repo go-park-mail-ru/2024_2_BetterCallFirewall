@@ -11,7 +11,7 @@ package controller
 
 import (
 	context "context"
-	multipart "mime/multipart"
+	io "io"
 	http "net/http"
 	reflect "reflect"
 
@@ -43,7 +43,7 @@ func (m *MockfileService) EXPECT() *MockfileServiceMockRecorder {
 }
 
 // Download mocks base method.
-func (m *MockfileService) Download(ctx context.Context, file multipart.File, format string) (string, error) {
+func (m *MockfileService) Download(ctx context.Context, file io.Reader, format string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Download", ctx, file, format)
 	ret0, _ := ret[0].(string)
@@ -58,7 +58,7 @@ func (mr *MockfileServiceMockRecorder) Download(ctx, file, format any) *gomock.C
 }
 
 // DownloadNonImage mocks base method.
-func (m *MockfileService) DownloadNonImage(ctx context.Context, file multipart.File, format, realName string) (string, error) {
+func (m *MockfileService) DownloadNonImage(ctx context.Context, file io.Reader, format, realName string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DownloadNonImage", ctx, file, format, realName)
 	ret0, _ := ret[0].(string)

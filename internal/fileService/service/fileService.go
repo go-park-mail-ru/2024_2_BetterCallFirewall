@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"os"
 
 	"github.com/google/uuid"
@@ -16,7 +15,7 @@ func NewFileService() *FileService {
 	return &FileService{}
 }
 
-func (f *FileService) Download(ctx context.Context, file multipart.File, format string) (string, error) {
+func (f *FileService) Download(ctx context.Context, file io.Reader, format string) (string, error) {
 	var (
 		fileName = uuid.New().String()
 		filePath = fmt.Sprintf("/image/%s.%s", fileName, format)
@@ -38,7 +37,7 @@ func (f *FileService) Download(ctx context.Context, file multipart.File, format 
 }
 
 func (f *FileService) DownloadNonImage(
-	ctx context.Context, file multipart.File, format, realName string,
+	ctx context.Context, file io.Reader, format, realName string,
 ) (string, error) {
 	var (
 		fileName = uuid.New().String()

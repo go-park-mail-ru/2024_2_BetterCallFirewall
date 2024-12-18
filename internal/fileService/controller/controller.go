@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -26,8 +28,8 @@ var fileFormat = map[string]struct{}{
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
-	Download(ctx context.Context, file multipart.File, format string) (string, error)
-	DownloadNonImage(ctx context.Context, file multipart.File, format, realName string) (string, error)
+	Download(ctx context.Context, file io.Reader, format string) (string, error)
+	DownloadNonImage(ctx context.Context, file io.Reader, format, realName string) (string, error)
 	UploadNonImage(ctx context.Context, name string) ([]byte, error)
 }
 
@@ -49,6 +51,17 @@ func NewFileController(fileService fileService, responder responder) *FileContro
 		fileService: fileService,
 		responder:   responder,
 	}
+}
+
+func getFormat(buf []byte) string {
+	formats := http.DetectContentType(buf)
+	format := strings.Split(formats, "/")[1]
+
+	if strings.HasPrefix(format, "plain") {
+		format = "txt"
+	}
+
+	return format
 }
 
 func sanitize(input string) string {
@@ -138,23 +151,29 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		}
 	}(file)
 
-	formats := strings.Split(header.Header.Get("Content-Type"), "/")
-	if len(formats) != 2 {
-		fc.responder.ErrorBadRequest(w, my_err.ErrWrongFiletype, reqID)
+	buf := bytes.NewBuffer(make([]byte, 20))
+	n, err := file.Read(buf.Bytes())
+	if err != nil {
+		fc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
+	format := getFormat(buf.Bytes()[:n])
+
+	_, err = io.Copy(buf, file)
+	if err != nil {
+		fc.responder.ErrorBadRequest(w, err, reqID)
+	}
 	var url string
-	format := formats[1]
 
 	if _, ok := fileFormat[format]; ok {
-		url, err = fc.fileService.Download(r.Context(), file, format)
+		url, err = fc.fileService.Download(r.Context(), buf, format)
 	} else {
 		name := header.Filename
 		if len(name+format) > 55 {
 			fc.responder.ErrorBadRequest(w, errors.New("file name is too big"), reqID)
 			return
 		}
-		url, err = fc.fileService.DownloadNonImage(r.Context(), file, format, name)
+		url, err = fc.fileService.DownloadNonImage(r.Context(), buf, format, name)
 	}
 
 	if err != nil {
