@@ -136,7 +136,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	err := r.ParseMultipartForm(10 * (10 << 20)) // 100Mbyte
+	err := r.ParseMultipartForm(100 * (1 << 23)) // 100Mbyte
 	if err != nil {
 		fc.responder.ErrorBadRequest(w, my_err.ErrToLargeFile, reqID)
 		return
