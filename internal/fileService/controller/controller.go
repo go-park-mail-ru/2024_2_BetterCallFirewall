@@ -26,9 +26,10 @@ var fileFormat = map[string]struct{}{
 }
 
 const (
-	charset = "charset=utf"
-	txt     = "txt"
-	plain   = "plain"
+	charset   = "charset=utf"
+	txt       = "txt"
+	plain     = "plain"
+	maxMemory = 10 * 1024 * 1024
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
@@ -136,7 +137,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		fc.responder.LogError(my_err.ErrInvalidContext, "")
 	}
 
-	err := r.ParseMultipartForm(100 * (1 << 23)) // 100Mbyte
+	err := r.ParseMultipartForm(maxMemory) // 100Mbyte
 	if err != nil {
 		fc.responder.ErrorBadRequest(w, my_err.ErrToLargeFile, reqID)
 		return
