@@ -55,6 +55,9 @@ func (c *Client) Read(userID uint32) {
 		msg.Content.Text = sanitize(msg.Content.Text)
 		msg.Content.FilePath = sanitizeFiles(msg.Content.FilePath)
 		msg.Content.StickerPath = sanitize(msg.Content.StickerPath)
+		if msg.Content.Text == "" && msg.Content.StickerPath == "" && len(msg.Content.FilePath) == 0 {
+			msg.Content.Text = "Я хотел отправить XSS"
+		}
 		msg.Sender = userID
 		c.chatController.Messages <- msg
 	}
