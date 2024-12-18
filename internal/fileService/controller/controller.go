@@ -29,7 +29,7 @@ const (
 	charset   = "charset=utf"
 	txt       = "txt"
 	plain     = "plain"
-	maxMemory = 10 * 1024 * 1024
+	maxMemory = 100 * 1024 * 1024
 )
 
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
