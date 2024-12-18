@@ -41,7 +41,9 @@ func (p *ProfileRepo) Create(user *models.User, ctx context.Context) (uint32, er
 
 func (p *ProfileRepo) GetByEmail(email string, ctx context.Context) (*models.User, error) {
 	user := &models.User{}
-	err := p.DB.QueryRowContext(ctx, GetUserByEmail, email).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password)
+	err := p.DB.QueryRowContext(ctx, GetUserByEmail, email).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("postgres get user: %w", my_err.ErrUserNotFound)
@@ -54,7 +56,9 @@ func (p *ProfileRepo) GetByEmail(email string, ctx context.Context) (*models.Use
 
 func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.FullProfile, error) {
 	res := &models.FullProfile{}
-	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar)
+	err := p.DB.QueryRowContext(ctx, GetProfileByID, id).Scan(
+		&res.ID, &res.FirstName, &res.LastName, &res.Bio, &res.Avatar,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, my_err.ErrProfileNotFound
@@ -138,7 +142,10 @@ func (p *ProfileRepo) UpdateProfile(ctx context.Context, profile *models.FullPro
 }
 
 func (p *ProfileRepo) UpdateWithAvatar(ctx context.Context, newProfile *models.FullProfile) error {
-	_, err := p.DB.ExecContext(ctx, UpdateProfileAvatar, newProfile.ID, newProfile.Avatar, newProfile.FirstName, newProfile.LastName, newProfile.Bio)
+	_, err := p.DB.ExecContext(
+		ctx, UpdateProfileAvatar, newProfile.ID, newProfile.Avatar, newProfile.FirstName, newProfile.LastName,
+		newProfile.Bio,
+	)
 	if err != nil {
 		return fmt.Errorf("update profile with avatar %w", err)
 	}
@@ -159,7 +166,7 @@ func (p *ProfileRepo) CheckFriendship(ctx context.Context, self uint32, profile 
 	err := p.DB.QueryRowContext(ctx, CheckFriendship, self, profile).Scan(&status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return true, nil
+			return false, nil
 		}
 		return false, fmt.Errorf("check friendship: %w", err)
 	}
@@ -233,7 +240,9 @@ func (p *ProfileRepo) GetAllSubs(ctx context.Context, u uint32, lastId uint32) (
 	return res, nil
 }
 
-func (p *ProfileRepo) GetAllSubscriptions(ctx context.Context, u uint32, lastId uint32) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetAllSubscriptions(
+	ctx context.Context, u uint32, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	res := make([]*models.ShortProfile, 0)
 	rows, err := p.DB.QueryContext(ctx, GetAllSubscriptions, u, lastId, LIMIT)
 	if err != nil {
@@ -313,7 +322,9 @@ func (p *ProfileRepo) GetHeader(ctx context.Context, u uint32) (*models.Header, 
 	return profile, nil
 }
 
-func (p *ProfileRepo) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+func (p *ProfileRepo) GetCommunitySubs(
+	ctx context.Context, communityID uint32, lastInsertId uint32,
+) ([]*models.ShortProfile, error) {
 	var subs []*models.ShortProfile
 	rows, err := p.DB.QueryContext(ctx, GetCommunitySubs, communityID, lastInsertId, LIMIT)
 	if err != nil {
@@ -353,4 +364,31 @@ func (p *ProfileRepo) Search(ctx context.Context, query string, lastID uint32) (
 	}
 
 	return res, nil
+}
+
+func (p *ProfileRepo) GetUserById(ctx context.Context, id uint32) (*models.User, error) {
+	user := &models.User{}
+	err := p.DB.QueryRowContext(ctx, GetUserByID, id).Scan(
+		&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("postgres get user: %w", my_err.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf("postgres get user: %w", err)
+	}
+
+	return user, nil
+}
+
+func (p *ProfileRepo) ChangePassword(ctx context.Context, id uint32, password string) error {
+	if err := p.DB.QueryRowContext(ctx, ChangePassword, password, id).Err(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("postgres change password: %w", my_err.ErrUserNotFound)
+		}
+
+		return fmt.Errorf("change password: %w", err)
+	}
+
+	return nil
 }

@@ -38,7 +38,9 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 
 	for rows.Next() {
 		chat := &models.Chat{}
-		if err := rows.Scan(&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.Receiver.Avatar, &chat.LastMessage, &chat.LastDate); err != nil {
+		if err := rows.Scan(
+			&chat.Receiver.AuthorID, &chat.Receiver.Author, &chat.Receiver.Avatar, &chat.LastMessage, &chat.LastDate,
+		); err != nil {
 			return nil, fmt.Errorf("postgres get chats: %w", err)
 		}
 		chats = append(chats, chat)
@@ -51,8 +53,10 @@ func (cr *Repo) GetChats(ctx context.Context, userID uint32, lastUpdateTime time
 	return chats, nil
 }
 
-func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, lastSentTime time.Time) ([]*models.Message, error) {
-	var messages []*models.Message
+func (cr *Repo) GetMessages(
+	ctx context.Context, userID uint32, chatID uint32, lastSentTime time.Time,
+) ([]*models.MessageDto, error) {
+	var messages []*models.MessageDto
 
 	rows, err := cr.db.QueryContext(ctx, getLatestMessagesBatch, userID, chatID, pq.FormatTimestamp(lastSentTime))
 
@@ -65,8 +69,15 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 	defer rows.Close()
 
 	for rows.Next() {
-		msg := &models.Message{}
-		if err := rows.Scan(&msg.Sender, &msg.Receiver, &msg.Content, &msg.CreatedAt); err != nil {
+		msg := &models.MessageDto{}
+		if err := rows.Scan(
+			&msg.Sender,
+			&msg.Receiver,
+			&msg.Content.Text,
+			&msg.Content.FilePath,
+			&msg.Content.StickerPath,
+			&msg.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("postgres get messages: %w", err)
 		}
 		messages = append(messages, msg)
@@ -79,8 +90,12 @@ func (cr *Repo) GetMessages(ctx context.Context, userID uint32, chatID uint32, l
 
 }
 
-func (cr *Repo) SendNewMessage(ctx context.Context, receiver uint32, sender uint32, message string) error {
-	_, err := cr.db.ExecContext(ctx, sendNewMessage, receiver, sender, message)
+func (cr *Repo) SendNewMessage(
+	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContentDto,
+) error {
+	_, err := cr.db.ExecContext(
+		ctx, sendNewMessage, receiver, sender, message.Text, message.FilePath, message.StickerPath,
+	)
 	if err != nil {
 		return fmt.Errorf("postgres send new message: %w", err)
 	}

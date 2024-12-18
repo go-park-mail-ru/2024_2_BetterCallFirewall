@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -16,11 +17,30 @@ type MockProfileDB struct {
 	Storage struct{}
 }
 
+func (m MockProfileDB) GetUserById(ctx context.Context, id uint32) (*models.User, error) {
+	if id == 0 {
+		return nil, ErrExec
+	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+	return &models.User{Password: string(hashedPassword)}, nil
+}
+
+func (m MockProfileDB) ChangePassword(ctx context.Context, id uint32, password string) error {
+	if id == 1 {
+		return errMock
+	}
+
+	return nil
+}
+
 func (m MockProfileDB) CheckFriendship(ctx context.Context, u uint32, u2 uint32) (bool, error) {
 	return false, nil
 }
 
-func (m MockProfileDB) GetCommunitySubs(ctx context.Context, communityID uint32, lastInsertId uint32) ([]*models.ShortProfile, error) {
+func (m MockProfileDB) GetCommunitySubs(
+	ctx context.Context, communityID uint32, lastInsertId uint32,
+) ([]*models.ShortProfile, error) {
 	return nil, nil
 }
 
@@ -199,6 +219,31 @@ func (m MockPostDB) GetAuthorsPosts(ctx context.Context, header *models.Header, 
 	}
 
 	return nil, nil
+}
+
+type changePasswordTests struct {
+	ctx         context.Context
+	userID      uint32
+	oldPassword string
+	newPassword string
+	err         error
+}
+
+func TestChangePassword(t *testing.T) {
+	tests := []changePasswordTests{
+		{ctx: context.Background(), userID: 0, err: ErrExec},
+		{ctx: context.Background(), userID: 1, err: my_err.ErrWrongEmailOrPassword},
+		{ctx: context.Background(), userID: 1, oldPassword: "password", err: errMock},
+		{ctx: context.Background(), userID: 2, oldPassword: "password", err: nil},
+	}
+
+	for i, tt := range tests {
+		err := pu.ChangePassword(tt.ctx, tt.userID, tt.oldPassword, tt.newPassword)
+		if !errors.Is(err, tt.err) {
+			t.Errorf("case %d: expected error %s, got %s", i, tt.err, err)
+		}
+	}
+
 }
 
 func TestGetProfileByID(t *testing.T) {
@@ -632,8 +677,11 @@ func TestSearch(t *testing.T) {
 	tests := []TestSearchInput{
 		{str: "", ID: 0, ctx: context.Background(), want: nil, err: ErrExec},
 		{str: "alexey", ID: 1, ctx: context.Background(), want: nil, err: my_err.ErrSessionNotFound},
-		{str: "alexey", ID: 10, ctx: models.ContextWithSession(context.Background(), &models.Session{ID: "1", UserID: 10}),
-			want: nil, err: nil},
+		{
+			str: "alexey", ID: 10,
+			ctx:  models.ContextWithSession(context.Background(), &models.Session{ID: "1", UserID: 10}),
+			want: nil, err: nil,
+		},
 	}
 
 	for caseNum, test := range tests {

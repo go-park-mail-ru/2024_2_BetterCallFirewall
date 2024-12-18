@@ -19,7 +19,9 @@ func NewChatService(repo chat.ChatRepository) *ChatService {
 	}
 }
 
-func (cs *ChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdateTime time.Time) ([]*models.Chat, error) {
+func (cs *ChatService) GetAllChats(
+	ctx context.Context, userID uint32, lastUpdateTime time.Time,
+) ([]*models.Chat, error) {
 	chats, err := cs.repo.GetChats(ctx, userID, lastUpdateTime)
 
 	if err != nil {
@@ -29,7 +31,9 @@ func (cs *ChatService) GetAllChats(ctx context.Context, userID uint32, lastUpdat
 	return chats, nil
 }
 
-func (cs *ChatService) GetChat(ctx context.Context, userID uint32, chatID uint32, lastSent time.Time) ([]*models.Message, error) {
+func (cs *ChatService) GetChat(
+	ctx context.Context, userID uint32, chatID uint32, lastSent time.Time,
+) ([]*models.Message, error) {
 	messages, err := cs.repo.GetMessages(ctx, userID, chatID, lastSent)
 	if err != nil {
 		return nil, fmt.Errorf("get all messages: %w", err)
@@ -39,10 +43,18 @@ func (cs *ChatService) GetChat(ctx context.Context, userID uint32, chatID uint32
 		messages[i].CreatedAt = convertTime(m.CreatedAt)
 	}
 
-	return messages, nil
+	res := make([]*models.Message, 0, len(messages))
+	for _, m := range messages {
+		mes := m.FromDto()
+		res = append(res, &mes)
+	}
+
+	return res, nil
 }
 
-func (cs *ChatService) SendNewMessage(ctx context.Context, receiver uint32, sender uint32, message string) error {
+func (cs *ChatService) SendNewMessage(
+	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContentDto,
+) error {
 	err := cs.repo.SendNewMessage(ctx, receiver, sender, message)
 	if err != nil {
 		return fmt.Errorf("send new message: %w", err)
