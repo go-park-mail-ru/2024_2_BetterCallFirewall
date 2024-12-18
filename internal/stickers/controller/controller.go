@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -61,7 +60,6 @@ func (s StickersHandlerImplementation) AddNewSticker(w http.ResponseWriter, r *h
 	filePath := models.StickerRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&filePath); err != nil {
 		s.Responder.ErrorBadRequest(w, my_err.ErrNoFile, reqID)
-		fmt.Println(err)
 		return
 	}
 

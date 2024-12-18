@@ -25,22 +25,36 @@ func sanitize(input string) string {
 	return cleaned
 }
 
+func sanitizeFiles(input []string) []string {
+	var output []string
+	for _, f := range input {
+		res := sanitize(f)
+		if res != "" {
+			output = append(output, res)
+		}
+	}
+
+	return output
+}
+
 func (c *Client) Read(userID uint32) {
 	defer c.Socket.Close()
 	for {
 		msg := &models.Message{}
 		_, jsonMessage, err := c.Socket.ReadMessage()
-		clearJson := sanitize(string(jsonMessage))
 		if err != nil {
 			c.chatController.responder.LogError(fmt.Errorf("read message: %w", err), wc)
 			return
 		}
-		err = easyjson.Unmarshal([]byte(clearJson), msg)
 
+		err = easyjson.Unmarshal(jsonMessage, msg)
 		if err != nil {
 			c.chatController.responder.LogError(err, wc)
 			return
 		}
+		msg.Content.Text = sanitize(msg.Content.Text)
+		msg.Content.FilePath = sanitizeFiles(msg.Content.FilePath)
+		msg.Content.StickerPath = sanitize(msg.Content.StickerPath)
 		msg.Sender = userID
 		c.chatController.Messages <- msg
 	}
@@ -50,6 +64,9 @@ func (c *Client) Write() {
 	defer c.Socket.Close()
 	for msg := range c.Receive {
 		msg.CreatedAt = time.Now()
+		msg.Content.Text = sanitize(msg.Content.Text)
+		msg.Content.FilePath = sanitizeFiles(msg.Content.FilePath)
+		msg.Content.StickerPath = sanitize(msg.Content.StickerPath)
 		jsonForSend, err := easyjson.Marshal(msg)
 		if err != nil {
 			c.chatController.responder.LogError(err, wc)

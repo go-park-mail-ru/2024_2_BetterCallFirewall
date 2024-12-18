@@ -392,12 +392,13 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 	if err != nil {
 		return models.Community{}, err
 	}
-	if !validate(res) {
-		return models.Community{}, my_err.ErrBadCommunity
-	}
 	res.Avatar = models.Picture(sanitize(string(res.Avatar)))
 	res.Name = sanitize(res.Name)
 	res.About = sanitize(res.About)
+
+	if !validate(res) {
+		return models.Community{}, my_err.ErrBadCommunity
+	}
 
 	return res, nil
 }
@@ -405,13 +406,12 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 func getIDFromQuery(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 
-	id := vars["id"]
+	id := sanitize(vars["id"])
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
-	clearID := sanitize(id)
 
-	uid, err := strconv.ParseUint(clearID, 10, 32)
+	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		return 0, err
 	}

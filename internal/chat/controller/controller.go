@@ -129,7 +129,7 @@ func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
-		lastTimeQuery = r.URL.Query().Get("lastTime")
+		lastTimeQuery = sanitize(r.URL.Query().Get("lastTime"))
 		lastTime      time.Time
 		err           error
 	)
@@ -170,13 +170,12 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 
 func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := sanitize(vars["id"])
 	if id == "" {
 		return 0, my_err.ErrEmptyId
 	}
-	clearId := sanitize(id)
 
-	uid, err := strconv.ParseUint(clearId, 10, 32)
+	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -189,7 +188,7 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	var (
 		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
-		lastTimeQuery = r.URL.Query().Get("lastTime")
+		lastTimeQuery = sanitize(r.URL.Query().Get("lastTime"))
 		lastTime      time.Time
 		err           error
 	)

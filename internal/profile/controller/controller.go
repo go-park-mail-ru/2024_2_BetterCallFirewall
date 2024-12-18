@@ -194,13 +194,12 @@ func (h *ProfileHandlerImplementation) DeleteProfile(w http.ResponseWriter, r *h
 
 func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := sanitize(vars["id"])
 	if id == "" {
 		return 0, my_err.ErrEmptyId
 	}
-	clearID := sanitize(id)
 
-	uid, err := strconv.ParseUint(clearID, 10, 32)
+	uid, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -234,8 +233,8 @@ func (h *ProfileHandlerImplementation) GetProfileById(w http.ResponseWriter, r *
 		h.Responder.ErrorInternal(w, err, reqID)
 		return
 	}
-	sanitizeProfile(uprofile)
 
+	sanitizeProfile(uprofile)
 	h.Responder.OutputJSON(w, uprofile, reqID)
 }
 
@@ -281,6 +280,7 @@ func (h *ProfileHandlerImplementation) GetAll(w http.ResponseWriter, r *http.Req
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
+
 	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }
@@ -452,6 +452,7 @@ func (h *ProfileHandlerImplementation) GetAllSubs(w http.ResponseWriter, r *http
 		h.Responder.OutputNoMoreContentJSON(w, reqID)
 		return
 	}
+
 	sanitizeProfiles(profiles)
 	h.Responder.OutputJSON(w, profiles, reqID)
 }

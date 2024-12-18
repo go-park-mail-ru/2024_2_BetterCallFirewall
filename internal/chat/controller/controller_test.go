@@ -43,6 +43,13 @@ func TestSanitize(t *testing.T) {
 	assert.Equal(t, expected, res)
 }
 
+func TestSanitizeFiles(t *testing.T) {
+	test := []string{"<script> alert(1) </script>"}
+	var expected []string
+	res := sanitizeFiles(test)
+	assert.Equal(t, expected, res)
+}
+
 func TestGetAllChat(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{

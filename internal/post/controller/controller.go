@@ -369,6 +369,11 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, err
 		return nil, err
 	}
 
+	newPost.PostContent.Text = sanitize(newPost.PostContent.Text)
+	newPost.PostContent.File = sanitizeFiles(newPost.PostContent.File)
+	newPost.Header.Avatar = models.Picture(sanitize(string(newPost.Header.Avatar)))
+	newPost.Header.Author = sanitize(newPost.Header.Author)
+
 	if !validateContent(newPost.PostContent) {
 		return nil, my_err.ErrBadPostOrComment
 	}
@@ -380,11 +385,6 @@ func (pc *PostController) getPostFromBody(r *http.Request) (*models.PostDto, err
 	newPost.Header.AuthorID = sess.UserID
 	post := newPost.ToDto()
 
-	post.PostContent.Text = sanitize(post.PostContent.Text)
-	post.PostContent.File = models.Picture(sanitize(string(post.PostContent.File)))
-	post.Header.Avatar = models.Picture(sanitize(string(post.Header.Avatar)))
-	post.Header.Author = sanitize(post.Header.Author)
-
 	return &post, nil
 }
 
@@ -392,10 +392,10 @@ func getIDFromURL(r *http.Request, key string) (uint32, error) {
 	vars := mux.Vars(r)
 
 	id := vars[key]
-	if id == "" {
+	clearID := sanitize(id)
+	if clearID == "" {
 		return 0, errors.New("id is empty")
 	}
-	clearID := sanitize(id)
 
 	uid, err := strconv.ParseUint(clearID, 10, 32)
 	if err != nil {
@@ -407,11 +407,11 @@ func getIDFromURL(r *http.Request, key string) (uint32, error) {
 
 func getLastID(r *http.Request) (uint64, error) {
 	lastID := r.URL.Query().Get("id")
-
-	if lastID == "" {
+	clearLastID := sanitize(lastID)
+	if clearLastID == "" {
 		return math.MaxInt32, nil
 	}
-	clearLastID := sanitize(lastID)
+
 	intLastID, err := strconv.ParseUint(clearLastID, 10, 32)
 	if err != nil {
 		return 0, err
@@ -549,6 +549,7 @@ func (pc *PostController) Comment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content.Text = sanitize(content.Text)
+	content.File = sanitizeFiles(content.File)
 
 	if !validateContent(content) {
 		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
@@ -632,6 +633,7 @@ func (pc *PostController) EditComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content.Text = sanitize(content.Text)
+	content.File = sanitizeFiles(content.File)
 
 	if !validateContent(content) {
 		pc.responder.ErrorBadRequest(w, my_err.ErrBadPostOrComment, reqID)
@@ -700,7 +702,6 @@ func (pc *PostController) GetComments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, newComment := range res {
-		newComment.Content.CreatedAt = time.Now()
 		newComment.Content.Text = sanitize(newComment.Content.Text)
 		newComment.Content.File = sanitizeFiles(newComment.Content.File)
 		newComment.Header.Avatar = models.Picture(sanitize(string(newComment.Header.Avatar)))

@@ -64,13 +64,15 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 	err := easyjson.UnmarshalFromReader(r.Body, &user)
-	user.FirstName = sanitize(user.FirstName)
-	user.LastName = sanitize(user.LastName)
-	user.Email = sanitize(user.Email)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router register: %w", err), reqID)
 		return
 	}
+
+	user.FirstName = sanitize(user.FirstName)
+	user.LastName = sanitize(user.LastName)
+	user.Email = sanitize(user.Email)
+
 	if !validate(user) {
 		c.responder.ErrorBadRequest(w, my_err.ErrBadUserInfo, reqID)
 		return
@@ -118,12 +120,13 @@ func (c *AuthController) Auth(w http.ResponseWriter, r *http.Request) {
 
 	user := models.User{}
 	err := easyjson.UnmarshalFromReader(r.Body, &user)
-	user.Email = sanitize(user.Email)
-	user.Password = sanitize(user.Password)
 	if err != nil {
 		c.responder.ErrorBadRequest(w, fmt.Errorf("router auth: %w", err), reqID)
 		return
 	}
+	user.Email = sanitize(user.Email)
+	user.Password = sanitize(user.Password)
+
 	if !validateAuth(user) {
 		c.responder.ErrorBadRequest(w, my_err.ErrBadUserInfo, reqID)
 		return
