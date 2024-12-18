@@ -25,6 +25,12 @@ var fileFormat = map[string]struct{}{
 	"gif":  {},
 }
 
+const (
+	charset = "charset=utf"
+	txt     = "txt"
+	plain   = "plain"
+)
+
 //go:generate mockgen -destination=mock.go -source=$GOFILE -package=${GOPACKAGE}
 type fileService interface {
 	Upload(ctx context.Context, name string) ([]byte, error)
@@ -57,8 +63,12 @@ func getFormat(buf []byte) string {
 	formats := http.DetectContentType(buf)
 	format := strings.Split(formats, "/")[1]
 
-	if strings.HasPrefix(format, "plain") {
-		format = "txt"
+	if strings.Contains(format, charset) {
+		format = strings.Split(format, ";")[0]
+	}
+
+	if format == plain {
+		format = txt
 	}
 
 	return format

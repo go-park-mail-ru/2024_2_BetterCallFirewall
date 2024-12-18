@@ -391,6 +391,23 @@ func TestDownload(t *testing.T) {
 	}
 }
 
+func TestGetFormat(t *testing.T) {
+	tests := []struct {
+		input  []byte
+		output string
+	}{
+		{input: []byte("some text"), output: "txt"},
+		{input: []byte("<!DOCTYPE HTML>"), output: "html"},
+	}
+
+	for i, tt := range tests {
+		actual := getFormat(tt.input)
+		if actual != tt.output {
+			t.Errorf("%d: expected %s, got %s", i, tt.output, actual)
+		}
+	}
+}
+
 type Request struct {
 	w *httptest.ResponseRecorder
 	r *http.Request
