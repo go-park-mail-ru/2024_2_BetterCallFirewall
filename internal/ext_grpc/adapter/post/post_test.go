@@ -65,6 +65,7 @@ func TestGetAuthorsPost(t *testing.T) {
 							Text:      "new post",
 							CreatedAt: time.Unix(createTime.Unix(), 0),
 							UpdatedAt: time.Unix(createTime.Unix(), 0),
+							File:      []models.Picture{},
 						},
 						Header: models.Header{
 							AuthorID: 1,
@@ -75,51 +76,55 @@ func TestGetAuthorsPost(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request *models.Header, m *mocks) {
 				m.client.EXPECT().GetAuthorsPosts(gomock.Any(), gomock.Any()).
-					Return(&post_api.Response{
-						Posts: []*post_api.Post{
-							{
-								ID: 1,
-								PostContent: &post_api.Content{
-									Text:      "new post",
-									CreatedAt: createTime.Unix(),
-									UpdatedAt: createTime.Unix(),
-								},
-								Head: &post_api.Header{
-									AuthorID: 1,
+					Return(
+						&post_api.Response{
+							Posts: []*post_api.Post{
+								{
+									ID: 1,
+									PostContent: &post_api.Content{
+										Text:      "new post",
+										CreatedAt: createTime.Unix(),
+										UpdatedAt: createTime.Unix(),
+									},
+									Head: &post_api.Header{
+										AuthorID: 1,
+									},
 								},
 							},
-						},
-					}, nil)
+						}, nil,
+					)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			adapter, mock := getAdapter(ctrl)
-			ctx := context.Background()
+				adapter, mock := getAdapter(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(input, mock)
+				v.SetupMock(input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, adapter, input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, adapter, input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 

@@ -57,6 +57,8 @@ func (m mockProfileController) GetCommunitySubs(w http.ResponseWriter, r *http.R
 
 func (m mockProfileController) SearchProfile(w http.ResponseWriter, r *http.Request) {}
 
+func (m mockProfileController) ChangePassword(w http.ResponseWriter, r *http.Request) {}
+
 func TestNewRouter(t *testing.T) {
 	r := NewRouter(mockProfileController{}, mockSessionManager{}, logrus.New(), &metrics.HttpMetrics{})
 	assert.NotNil(t, r)

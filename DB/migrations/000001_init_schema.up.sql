@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS post (
                                     id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                                     author_id INT REFERENCES profile(id) ON DELETE CASCADE,
                                     community_id INT REFERENCES community(id) ON DELETE CASCADE DEFAULT NULL,
-                                    content TEXT CONSTRAINT content_post_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
-                                    file_path TEXT CONSTRAINT file_path_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
+                                    content TEXT CONSTRAINT content_post_length CHECK (CHAR_LENGTH(content) <= 1000) DEFAULT '',
+                                    file_path TEXT CONSTRAINT file_path_length CHECK (CHAR_LENGTH(file_path) <= 1000) DEFAULT '',
                                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS message (
                                        receiver INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        sender INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        content TEXT CONSTRAINT content_message_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                       file_path TEXT CONSTRAINT file_path_message_length CHECK (CHAR_LENGTH(file_path) <= 1000) DEFAULT '',
+                                       sticker_path TEXT CONSTRAINT sticker_path_message_length CHECK (CHAR_LENGTH(sticker_path) <= 100) DEFAULT '',
                                        is_read BOOLEAN DEFAULT FALSE,
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -67,6 +69,8 @@ CREATE TABLE IF NOT EXISTS comment (
                                        user_id INT REFERENCES profile(id) ON DELETE CASCADE ,
                                        post_id INT REFERENCES post(id) ON DELETE CASCADE ,
                                        content TEXT CONSTRAINT content_comment_length CHECK (CHAR_LENGTH(content) <= 500) DEFAULT '',
+                                       file_path TEXT CONSTRAINT file_path_comment CHECK ( CHAR_LENGTH(file_path) <= 1000 ) DEFAULT '',
+                                       sticker_path TEXT CONSTRAINT sticker_path_comment_length CHECK (CHAR_LENGTH(sticker_path) <= 200) DEFAULT '',
                                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -77,6 +81,12 @@ CREATE TABLE IF NOT EXISTS reaction (
                                         user_id INT REFERENCES profile(id) ON DELETE CASCADE DEFAULT NULL,
                                         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS sticker (
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    file_path TEXT CONSTRAINT file_path_length CHECK (CHAR_LENGTH(file_path) <= 100) DEFAULT '',
+    profile_id INT REFERENCES profile(id)
 );
 
 ALTER TABLE friend

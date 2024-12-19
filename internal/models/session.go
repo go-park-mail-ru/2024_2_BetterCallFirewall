@@ -9,6 +9,7 @@ import (
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
 
+//easyjson:skip
 type Session struct {
 	ID        string
 	UserID    uint32

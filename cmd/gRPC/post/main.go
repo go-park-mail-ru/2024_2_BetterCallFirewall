@@ -38,7 +38,9 @@ func main() {
 	}
 	go func() {
 		http.Handle("/api/v1/metrics", promhttp.Handler())
-		http.ListenAndServe(":6002", nil)
+		if err = http.ListenAndServe(":6002", nil); err != nil {
+			panic(err)
+		}
 	}()
 
 	log.Printf("Listening on :%s with protocol gRPC", cfg.POSTGRPC.Port)
