@@ -172,7 +172,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(buf, file)
 	if err != nil {
-		fc.responder.ErrorBadRequest(w, err, reqID
+		fc.responder.ErrorBadRequest(w, err, reqID)
 		return
 	}
 	var url string
