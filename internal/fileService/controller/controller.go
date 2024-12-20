@@ -181,7 +181,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		url, err = fc.fileService.Download(r.Context(), buf, format)
 	} else {
 		name := header.Filename
-		if len([]rune(name+format)) > 55 {
+		if len([]rune(name+format)) > 53 {
 			fc.responder.ErrorBadRequest(w, errors.New("file name is too big"), reqID)
 			return
 		}
