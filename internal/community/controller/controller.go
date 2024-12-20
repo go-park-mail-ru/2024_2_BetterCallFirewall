@@ -173,6 +173,10 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.Update(r.Context(), id, &newCommunity)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -209,6 +213,10 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.Delete(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -263,6 +271,10 @@ func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.JoinCommunity(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -290,6 +302,10 @@ func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) 
 
 	err = c.service.LeaveCommunity(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}

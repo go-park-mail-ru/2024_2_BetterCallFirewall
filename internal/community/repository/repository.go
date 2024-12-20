@@ -92,6 +92,9 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 		)
 	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("update community: %w", err)
 	}
 
@@ -101,6 +104,9 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 	_, err := c.db.ExecContext(ctx, Delete, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("delete community: %w", err)
 	}
 
@@ -110,6 +116,9 @@ func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 func (c CommunityRepository) JoinCommunity(ctx context.Context, communityId, author uint32) error {
 	_, err := c.db.ExecContext(ctx, JoinCommunity, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("join community: %w", err)
 	}
 
@@ -119,6 +128,9 @@ func (c CommunityRepository) JoinCommunity(ctx context.Context, communityId, aut
 func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
 	_, err := c.db.ExecContext(ctx, LeaveCommunity, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("leave community: %w", err)
 	}
 	access := c.CheckAccess(ctx, communityId, author)
@@ -126,6 +138,9 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 	if access {
 		_, err := c.db.ExecContext(ctx, DeleteAdmin, communityId, author)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return my_err.ErrWrongCommunity
+			}
 			return fmt.Errorf("delete admin: %w", err)
 		}
 	}
@@ -136,6 +151,9 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, author uint32) error {
 	_, err := c.db.ExecContext(ctx, InsertNewAdmin, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("insert new admin: %w", err)
 	}
 	return nil
