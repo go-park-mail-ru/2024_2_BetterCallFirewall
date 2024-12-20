@@ -172,7 +172,8 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(buf, file)
 	if err != nil {
-		fc.responder.ErrorBadRequest(w, err, reqID)
+		fc.responder.ErrorBadRequest(w, err, reqID
+		return
 	}
 	var url string
 
@@ -180,7 +181,7 @@ func (fc *FileController) Download(w http.ResponseWriter, r *http.Request) {
 		url, err = fc.fileService.Download(r.Context(), buf, format)
 	} else {
 		name := header.Filename
-		if len(name+format) > 55 {
+		if len([]rune(name+format)) > 55 {
 			fc.responder.ErrorBadRequest(w, errors.New("file name is too big"), reqID)
 			return
 		}
