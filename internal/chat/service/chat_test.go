@@ -25,17 +25,21 @@ func (m MockRepo) GetChats(ctx context.Context, userID uint32, lastUpdateTime ti
 	return []*models.Chat{}, nil
 }
 
-func (m MockRepo) GetMessages(ctx context.Context, userID uint32, chatID uint32, lastSentTime time.Time) ([]*models.Message, error) {
+func (m MockRepo) GetMessages(
+	ctx context.Context, userID uint32, chatID uint32, lastSentTime time.Time,
+) ([]*models.MessageDto, error) {
 	if userID == 0 || chatID == 0 {
 		return nil, errMock
 	}
-	return []*models.Message{
+	return []*models.MessageDto{
 		{CreatedAt: createTime},
 	}, nil
 }
 
-func (m MockRepo) SendNewMessage(ctx context.Context, receiver uint32, sender uint32, message string) error {
-	if receiver == 0 || sender == 0 || message == "" {
+func (m MockRepo) SendNewMessage(
+	ctx context.Context, receiver uint32, sender uint32, message *models.MessageContentDto,
+) error {
+	if receiver == 0 || sender == 0 || message.Text == "" {
 		return errMock
 	}
 	return nil
@@ -115,7 +119,7 @@ func TestGetChat(t *testing.T) {
 type TestStructSendNewMessage struct {
 	sender   uint32
 	receiver uint32
-	message  string
+	message  *models.MessageContentDto
 	wantErr  error
 }
 
@@ -125,25 +129,25 @@ func TestSendNewMessage(t *testing.T) {
 		{
 			sender:   0,
 			receiver: 10,
-			message:  "hello",
+			message:  &models.MessageContentDto{Text: "hello"},
 			wantErr:  errMock,
 		},
 		{
 			sender:   10,
 			receiver: 0,
-			message:  "hello",
+			message:  &models.MessageContentDto{Text: "hello"},
 			wantErr:  errMock,
 		},
 		{
 			sender:   1,
 			receiver: 10,
-			message:  "",
+			message:  &models.MessageContentDto{Text: ""},
 			wantErr:  errMock,
 		},
 		{
 			sender:   1,
 			receiver: 10,
-			message:  "hello",
+			message:  &models.MessageContentDto{Text: "hello"},
 			wantErr:  nil,
 		},
 	}

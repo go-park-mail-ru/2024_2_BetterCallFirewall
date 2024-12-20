@@ -36,6 +36,20 @@ func TestNewController(t *testing.T) {
 	assert.NotNil(t, res)
 }
 
+func TestSanitize(t *testing.T) {
+	test := "<script> alert(1) </script>"
+	expected := ""
+	res := sanitize(test)
+	assert.Equal(t, expected, res)
+}
+
+func TestSanitizeFiles(t *testing.T) {
+	test := []string{"<script> alert(1) </script>"}
+	var expected []string
+	res := sanitizeFiles(test)
+	assert.Equal(t, expected, res)
+}
+
 func TestGetAllChat(t *testing.T) {
 	tests := []TableTest[Response, Request]{
 		{
@@ -60,7 +74,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -87,7 +103,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -148,7 +166,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
-						request.w.Write([]byte("OK"))
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -179,7 +199,9 @@ func TestGetAllChat(t *testing.T) {
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusInternalServerError)
-						request.w.Write([]byte("error"))
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -241,7 +263,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -268,7 +292,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -296,7 +322,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -325,7 +353,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorBadRequest(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusBadRequest)
-						request.w.Write([]byte("bad request"))
+						if _, err1 := request.w.Write([]byte("bad request")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -356,7 +386,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().ErrorInternal(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, err, req any) {
 						request.w.WriteHeader(http.StatusInternalServerError)
-						request.w.Write([]byte("error"))
+						if _, err1 := request.w.Write([]byte("error")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},
@@ -417,7 +449,9 @@ func TestGetChat(t *testing.T) {
 				m.responder.EXPECT().OutputJSON(request.w, gomock.Any(), gomock.Any()).Do(
 					func(w, data, req any) {
 						request.w.WriteHeader(http.StatusOK)
-						request.w.Write([]byte("OK"))
+						if _, err1 := request.w.Write([]byte("OK")); err1 != nil {
+							panic(err1)
+						}
 					},
 				)
 			},

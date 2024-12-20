@@ -40,24 +40,33 @@ func (a *Adapter) GetAuthorsPosts(ctx context.Context, req *Request) (*Response,
 	resp := &Response{
 		Posts: make([]*Post, 0, len(res)),
 	}
+
 	for _, post := range res {
-		resp.Posts = append(resp.Posts, &Post{
-			ID: post.ID,
-			Head: &Header{
-				AuthorID:    post.Header.AuthorID,
-				CommunityID: post.Header.CommunityID,
-				Author:      post.Header.Author,
-				Avatar:      string(post.Header.Avatar),
+		files := make([]string, 0, len(post.PostContent.File))
+		for _, f := range post.PostContent.File {
+			files = append(files, string(f))
+		}
+
+		resp.Posts = append(
+			resp.Posts, &Post{
+				ID: post.ID,
+				Head: &Header{
+					AuthorID:    post.Header.AuthorID,
+					CommunityID: post.Header.CommunityID,
+					Author:      post.Header.Author,
+					Avatar:      string(post.Header.Avatar),
+				},
+				PostContent: &Content{
+					Text:      post.PostContent.Text,
+					File:      files,
+					CreatedAt: post.PostContent.CreatedAt.Unix(),
+					UpdatedAt: post.PostContent.UpdatedAt.Unix(),
+				},
+				LikesCount:   post.LikesCount,
+				IsLiked:      post.IsLiked,
+				CommentCount: post.CommentCount,
 			},
-			PostContent: &Content{
-				Text:      post.PostContent.Text,
-				File:      string(post.PostContent.File),
-				CreatedAt: post.PostContent.CreatedAt.Unix(),
-				UpdatedAt: post.PostContent.UpdatedAt.Unix(),
-			},
-			LikesCount: post.LikesCount,
-			IsLiked:    post.IsLiked,
-		})
+		)
 	}
 
 	return resp, nil

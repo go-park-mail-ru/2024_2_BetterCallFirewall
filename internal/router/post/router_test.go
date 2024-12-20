@@ -27,6 +27,14 @@ func (m mockSessionManager) Destroy(sess *models.Session) error {
 
 type mockPostController struct{}
 
+func (m mockPostController) Comment(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockPostController) DeleteComment(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockPostController) EditComment(w http.ResponseWriter, r *http.Request) {}
+
+func (m mockPostController) GetComments(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockPostController) SetLikeOnPost(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockPostController) DeleteLikeFromPost(w http.ResponseWriter, r *http.Request) {}

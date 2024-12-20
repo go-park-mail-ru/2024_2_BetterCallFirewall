@@ -21,7 +21,7 @@ type TestCaseGet struct {
 	ID       uint32
 	wantErr  error
 	dbErr    error
-	wantPost *models.Post
+	wantPost *models.PostDto
 }
 
 func TestGet(t *testing.T) {
@@ -33,11 +33,16 @@ func TestGet(t *testing.T) {
 
 	var ID uint32 = 1
 	rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
-	expect := []*models.Post{
-		{ID: ID, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", File: "http://somefile", CreatedAt: time.Now()}},
+	expect := []*models.PostDto{
+		{
+			ID: ID, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", File: "http://somefile", CreatedAt: time.Now()},
+		},
 	}
 	for _, post := range expect {
-		rows = rows.AddRow(ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
+		rows = rows.AddRow(
+			ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt,
+		)
 	}
 
 	repo := NewAdapter(db)
@@ -63,7 +68,7 @@ func TestGet(t *testing.T) {
 }
 
 type TestCaseCreate struct {
-	post    *models.Post
+	post    *models.PostDto
 	wantID  uint32
 	wantErr error
 	dbErr   error
@@ -79,9 +84,22 @@ func TestCreate(t *testing.T) {
 	repo := NewAdapter(db)
 
 	tests := []TestCaseCreate{
-		{post: &models.Post{Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1"}}, wantID: 1, wantErr: nil, dbErr: nil},
-		{post: &models.Post{Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", File: "http://someFile"}}, wantID: 2, wantErr: nil, dbErr: nil},
-		{post: &models.Post{Header: models.Header{AuthorID: 10}, PostContent: models.Content{Text: "wrong query"}}, wantID: 0, wantErr: errMockDB, dbErr: errMockDB},
+		{
+			post: &models.PostDto{
+				Header: models.Header{AuthorID: 1}, PostContent: models.ContentDto{Text: "content from user 1"},
+			}, wantID: 1, wantErr: nil, dbErr: nil,
+		},
+		{
+			post: &models.PostDto{
+				Header:      models.Header{AuthorID: 2},
+				PostContent: models.ContentDto{Text: "content from user 2", File: "http://someFile"},
+			}, wantID: 2, wantErr: nil, dbErr: nil,
+		},
+		{
+			post: &models.PostDto{
+				Header: models.Header{AuthorID: 10}, PostContent: models.ContentDto{Text: "wrong query"},
+			}, wantID: 0, wantErr: errMockDB, dbErr: errMockDB,
+		},
 	}
 
 	for _, test := range tests {
@@ -137,7 +155,7 @@ func TestDelete(t *testing.T) {
 }
 
 type TestCaseUpdate struct {
-	post         *models.Post
+	post         *models.PostDto
 	rowsAffected int64
 	wantErr      error
 	dbErr        error
@@ -153,15 +171,32 @@ func TestUpdate(t *testing.T) {
 	repo := NewAdapter(db)
 
 	tests := []TestCaseUpdate{
-		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post", File: "http://someFile", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
-		{post: &models.Post{ID: 2, PostContent: models.Content{Text: "wrong ID", UpdatedAt: time.Now()}}, wantErr: my_err.ErrPostNotFound, dbErr: nil, rowsAffected: 0},
-		{post: &models.Post{ID: 1, PostContent: models.Content{Text: "update post who was update early", UpdatedAt: time.Now()}}, wantErr: nil, dbErr: nil, rowsAffected: 1},
-		{post: &models.Post{ID: 5, PostContent: models.Content{Text: "wrong query", UpdatedAt: time.Now()}}, wantErr: errMockDB, dbErr: errMockDB, rowsAffected: 0},
+		{
+			post: &models.PostDto{
+				ID:          1,
+				PostContent: models.ContentDto{Text: "update post", File: "http://someFile", UpdatedAt: time.Now()},
+			}, wantErr: nil, dbErr: nil, rowsAffected: 1,
+		},
+		{
+			post:    &models.PostDto{ID: 2, PostContent: models.ContentDto{Text: "wrong ID", UpdatedAt: time.Now()}},
+			wantErr: my_err.ErrPostNotFound, dbErr: nil, rowsAffected: 0,
+		},
+		{
+			post: &models.PostDto{
+				ID: 1, PostContent: models.ContentDto{Text: "update post who was update early", UpdatedAt: time.Now()},
+			}, wantErr: nil, dbErr: nil, rowsAffected: 1,
+		},
+		{
+			post:    &models.PostDto{ID: 5, PostContent: models.ContentDto{Text: "wrong query", UpdatedAt: time.Now()}},
+			wantErr: errMockDB, dbErr: errMockDB, rowsAffected: 0,
+		},
 	}
 
 	for _, test := range tests {
 		mock.ExpectExec(regexp.QuoteMeta(updatePost)).
-			WithArgs(test.post.PostContent.Text, test.post.PostContent.UpdatedAt, test.post.PostContent.File, test.post.ID).
+			WithArgs(
+				test.post.PostContent.Text, test.post.PostContent.UpdatedAt, test.post.PostContent.File, test.post.ID,
+			).
 			WillReturnResult(sqlmock.NewResult(0, test.rowsAffected)).
 			WillReturnError(test.dbErr)
 
@@ -212,7 +247,7 @@ func TestGetPostAuthor(t *testing.T) {
 
 type TestCaseGetAuthorPosts struct {
 	Author    *models.Header
-	wantPosts []*models.Post
+	wantPosts []*models.PostDto
 	dbErr     error
 	wantErr   error
 }
@@ -230,16 +265,20 @@ func TestGetAuthorsPosts(t *testing.T) {
 	tests := []TestCaseGetAuthorPosts{
 		{
 			Author: &models.Header{AuthorID: 1},
-			wantPosts: []*models.Post{
+			wantPosts: []*models.PostDto{
 				{
-					ID:          1,
-					Header:      models.Header{AuthorID: 1},
-					PostContent: models.Content{Text: "content from user 1", File: "http://somefile", CreatedAt: createTime},
+					ID:     1,
+					Header: models.Header{AuthorID: 1},
+					PostContent: models.ContentDto{
+						Text: "content from user 1", File: "http://somefile", CreatedAt: createTime,
+					},
 				},
 				{
-					ID:          2,
-					Header:      models.Header{AuthorID: 1},
-					PostContent: models.Content{Text: "another content from user 1", File: "http://somefile2", CreatedAt: createTime},
+					ID:     2,
+					Header: models.Header{AuthorID: 1},
+					PostContent: models.ContentDto{
+						Text: "another content from user 1", File: "http://somefile2", CreatedAt: createTime,
+					},
 				},
 			},
 			wantErr: nil,
@@ -247,8 +286,11 @@ func TestGetAuthorsPosts(t *testing.T) {
 		},
 		{
 			Author: &models.Header{AuthorID: 2},
-			wantPosts: []*models.Post{
-				{ID: 3, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
+			wantPosts: []*models.PostDto{
+				{
+					ID: 3, Header: models.Header{AuthorID: 2},
+					PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+				},
 			},
 			wantErr: nil,
 			dbErr:   nil,
@@ -287,7 +329,7 @@ func TestGetAuthorsPosts(t *testing.T) {
 
 type TestCaseGetPosts struct {
 	lastID   uint32
-	wantPost []*models.Post
+	wantPost []*models.PostDto
 	dbErr    error
 	wantErr  error
 }
@@ -300,18 +342,51 @@ func TestGetPosts(t *testing.T) {
 	defer db.Close()
 
 	createTime := time.Now()
-	expect := []*models.Post{
-		{ID: 1, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 2, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 3, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 4, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 5, Header: models.Header{AuthorID: 3}, PostContent: models.Content{Text: "content from user 3", CreatedAt: createTime}},
-		{ID: 6, Header: models.Header{AuthorID: 3}, PostContent: models.Content{Text: "content from user 3", CreatedAt: createTime}},
-		{ID: 7, Header: models.Header{AuthorID: 6}, PostContent: models.Content{Text: "content from user 6", CreatedAt: createTime}},
-		{ID: 8, Header: models.Header{AuthorID: 4}, PostContent: models.Content{Text: "content from user 4", CreatedAt: createTime}},
-		{ID: 9, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 10, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 11, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
+	expect := []*models.PostDto{
+		{
+			ID: 1, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 2, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 3, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 4, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 5, Header: models.Header{AuthorID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 6, Header: models.Header{AuthorID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 7, Header: models.Header{AuthorID: 6},
+			PostContent: models.ContentDto{Text: "content from user 6", CreatedAt: createTime},
+		},
+		{
+			ID: 8, Header: models.Header{AuthorID: 4},
+			PostContent: models.ContentDto{Text: "content from user 4", CreatedAt: createTime},
+		},
+		{
+			ID: 9, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 10, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 11, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
 	}
 
 	repo := NewAdapter(db)
@@ -336,7 +411,10 @@ func TestGetPosts(t *testing.T) {
 	for _, test := range tests {
 		rows := sqlmock.NewRows([]string{"id", "author_id", "community_id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPost {
-			rows.AddRow(post.ID, post.Header.AuthorID, post.Header.CommunityID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
+			rows.AddRow(
+				post.ID, post.Header.AuthorID, post.Header.CommunityID, post.PostContent.Text, post.PostContent.File,
+				post.PostContent.CreatedAt,
+			)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getPostBatch)).
 			WithArgs(test.lastID).
@@ -374,7 +452,7 @@ func TestConvertSliceToString(t *testing.T) {
 type GetFriendsPosts struct {
 	lastID    uint32
 	friendsID []uint32
-	wantPost  []*models.Post
+	wantPost  []*models.PostDto
 	wantErr   error
 	dbErr     error
 }
@@ -388,18 +466,51 @@ func TestGetFriendsPosts(t *testing.T) {
 
 	createTime := time.Now()
 
-	expect := []*models.Post{
-		{ID: 1, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 2, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 3, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 4, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 5, Header: models.Header{AuthorID: 3}, PostContent: models.Content{Text: "content from user 3", CreatedAt: createTime}},
-		{ID: 6, Header: models.Header{AuthorID: 3}, PostContent: models.Content{Text: "content from user 3", CreatedAt: createTime}},
-		{ID: 7, Header: models.Header{AuthorID: 6}, PostContent: models.Content{Text: "content from user 6", CreatedAt: createTime}},
-		{ID: 8, Header: models.Header{AuthorID: 4}, PostContent: models.Content{Text: "content from user 4", CreatedAt: createTime}},
-		{ID: 9, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
-		{ID: 10, Header: models.Header{AuthorID: 1}, PostContent: models.Content{Text: "content from user 1", CreatedAt: createTime}},
-		{ID: 11, Header: models.Header{AuthorID: 2}, PostContent: models.Content{Text: "content from user 2", CreatedAt: createTime}},
+	expect := []*models.PostDto{
+		{
+			ID: 1, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 2, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 3, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 4, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 5, Header: models.Header{AuthorID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 6, Header: models.Header{AuthorID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 7, Header: models.Header{AuthorID: 6},
+			PostContent: models.ContentDto{Text: "content from user 6", CreatedAt: createTime},
+		},
+		{
+			ID: 8, Header: models.Header{AuthorID: 4},
+			PostContent: models.ContentDto{Text: "content from user 4", CreatedAt: createTime},
+		},
+		{
+			ID: 9, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 10, Header: models.Header{AuthorID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 11, Header: models.Header{AuthorID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
 	}
 
 	repo := NewAdapter(db)
@@ -416,7 +527,9 @@ func TestGetFriendsPosts(t *testing.T) {
 	for _, test := range tests {
 		rows := sqlmock.NewRows([]string{"id", "author_id", "content", "file_path", "created_at"})
 		for _, post := range test.wantPost {
-			rows.AddRow(post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt)
+			rows.AddRow(
+				post.ID, post.Header.AuthorID, post.PostContent.Text, post.PostContent.File, post.PostContent.CreatedAt,
+			)
 		}
 		mock.ExpectQuery(regexp.QuoteMeta(getFriendsPost)).
 			WithArgs(test.lastID, convertSliceToString(test.friendsID)).
@@ -424,6 +537,166 @@ func TestGetFriendsPosts(t *testing.T) {
 			WillReturnError(test.dbErr)
 
 		posts, err := repo.GetFriendsPosts(context.Background(), test.friendsID, test.lastID)
+		if !errors.Is(err, test.wantErr) {
+			t.Errorf("unexpected error: got:%v\nwant:%v\n", err, test.wantErr)
+		}
+		assert.Equalf(t, posts, test.wantPost, "result dont match\nwant: %v\ngot:%v", test.wantPost, posts)
+	}
+}
+
+type TestCaseCreateCommunity struct {
+	post        *models.PostDto
+	communityID uint32
+	wantID      uint32
+	wantErr     error
+	dbErr       error
+}
+
+func TestCreateCommunityPost(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	repo := NewAdapter(db)
+
+	tests := []TestCaseCreateCommunity{
+		{
+			communityID: 1,
+			post: &models.PostDto{
+				Header: models.Header{AuthorID: 1}, PostContent: models.ContentDto{Text: "content from user 1"},
+			}, wantID: 1, wantErr: nil, dbErr: nil,
+		},
+		{
+			communityID: 2,
+			post: &models.PostDto{
+				Header:      models.Header{AuthorID: 2},
+				PostContent: models.ContentDto{Text: "content from user 2", File: "http://someFile"},
+			}, wantID: 2, wantErr: nil, dbErr: nil,
+		},
+		{
+			communityID: 3,
+			post: &models.PostDto{
+				Header: models.Header{AuthorID: 10}, PostContent: models.ContentDto{Text: "wrong query"},
+			}, wantID: 0, wantErr: errMockDB, dbErr: errMockDB,
+		},
+	}
+
+	for _, test := range tests {
+		mock.ExpectQuery(regexp.QuoteMeta(createCommunityPost)).
+			WithArgs(test.communityID, test.post.PostContent.Text, test.post.PostContent.File).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(test.wantID)).
+			WillReturnError(test.dbErr)
+
+		id, err := repo.CreateCommunityPost(context.Background(), test.post, test.communityID)
+		if id != test.wantID {
+			t.Errorf("results not match,\n want %v\n have %v", test.wantID, id)
+		}
+		if !errors.Is(err, test.wantErr) {
+			t.Errorf("unexpected err:\n want:%v\n got:%v", test.wantErr, err)
+		}
+	}
+}
+
+type TestCaseGetCommunityPost struct {
+	communityID uint32
+	lastID      uint32
+	wantPost    []*models.PostDto
+	dbErr       error
+	wantErr     error
+}
+
+func TestCommunityPost(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	createTime := time.Now()
+	expect := []*models.PostDto{
+		{
+			ID: 1, Header: models.Header{CommunityID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 2, Header: models.Header{CommunityID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 3, Header: models.Header{CommunityID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 4, Header: models.Header{CommunityID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 5, Header: models.Header{CommunityID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 6, Header: models.Header{CommunityID: 3},
+			PostContent: models.ContentDto{Text: "content from user 3", CreatedAt: createTime},
+		},
+		{
+			ID: 7, Header: models.Header{CommunityID: 6},
+			PostContent: models.ContentDto{Text: "content from user 6", CreatedAt: createTime},
+		},
+		{
+			ID: 8, Header: models.Header{CommunityID: 4},
+			PostContent: models.ContentDto{Text: "content from user 4", CreatedAt: createTime},
+		},
+		{
+			ID: 9, Header: models.Header{CommunityID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+		{
+			ID: 10, Header: models.Header{CommunityID: 1},
+			PostContent: models.ContentDto{Text: "content from user 1", CreatedAt: createTime},
+		},
+		{
+			ID: 11, Header: models.Header{CommunityID: 2},
+			PostContent: models.ContentDto{Text: "content from user 2", CreatedAt: createTime},
+		},
+	}
+
+	repo := NewAdapter(db)
+
+	tests := []TestCaseGetCommunityPost{
+		{lastID: 0, wantPost: nil, wantErr: my_err.ErrNoMoreContent, dbErr: sql.ErrNoRows},
+		{lastID: 1, wantPost: nil, wantErr: errMockDB, dbErr: errMockDB},
+		{
+			lastID:      3,
+			communityID: 1,
+			wantPost:    expect[:3],
+			wantErr:     nil,
+			dbErr:       nil,
+		},
+		{
+			lastID:      11,
+			wantPost:    expect[1:11],
+			communityID: 10,
+			wantErr:     nil,
+			dbErr:       nil,
+		},
+	}
+
+	for _, test := range tests {
+		rows := sqlmock.NewRows([]string{"id", "community_id", "content", "file_path", "created_at"})
+		for _, post := range test.wantPost {
+			rows.AddRow(
+				post.ID, post.Header.CommunityID, post.PostContent.Text, post.PostContent.File,
+				post.PostContent.CreatedAt,
+			)
+		}
+		mock.ExpectQuery(regexp.QuoteMeta(getCommunityPosts)).
+			WithArgs(test.communityID, test.lastID).
+			WillReturnRows(rows).
+			WillReturnError(test.dbErr)
+
+		posts, err := repo.GetCommunityPosts(context.Background(), test.communityID, test.lastID)
 		if !errors.Is(err, test.wantErr) {
 			t.Errorf("unexpected error: got:%v\nwant:%v\n", err, test.wantErr)
 		}

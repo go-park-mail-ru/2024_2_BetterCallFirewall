@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"slices"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/internal/profile"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
@@ -64,7 +66,9 @@ func (p ProfileUsecaseImplementation) GetProfileById(ctx context.Context, u uint
 	return profile, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAll(ctx context.Context, self uint32, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAll(
+	ctx context.Context, self uint32, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	profiles, err := p.repo.GetAll(ctx, self, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all profiles usecase: %w", err)
@@ -172,7 +176,9 @@ func (p ProfileUsecaseImplementation) setStatuses(ctx context.Context, profiles 
 	return nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAllFriends(
+	ctx context.Context, id uint32, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllFriends(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all friends usecase: %w", err)
@@ -189,7 +195,9 @@ func (p ProfileUsecaseImplementation) GetAllFriends(ctx context.Context, id uint
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAllSubs(
+	ctx context.Context, id uint32, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllSubs(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all subs usecase: %w", err)
@@ -203,7 +211,9 @@ func (p ProfileUsecaseImplementation) GetAllSubs(ctx context.Context, id uint32,
 	return res, nil
 }
 
-func (p ProfileUsecaseImplementation) GetAllSubscriptions(ctx context.Context, id uint32, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetAllSubscriptions(
+	ctx context.Context, id uint32, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	res, err := p.repo.GetAllSubscriptions(ctx, id, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get all subscriptions usecase: %w", err)
@@ -226,7 +236,9 @@ func (p ProfileUsecaseImplementation) GetHeader(ctx context.Context, userID uint
 	return header, nil
 }
 
-func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, communityID, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) GetCommunitySubs(
+	ctx context.Context, communityID, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	subs, err := p.repo.GetCommunitySubs(ctx, communityID, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("get subs: %w", err)
@@ -235,7 +247,9 @@ func (p ProfileUsecaseImplementation) GetCommunitySubs(ctx context.Context, comm
 	return subs, nil
 }
 
-func (p ProfileUsecaseImplementation) Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error) {
+func (p ProfileUsecaseImplementation) Search(
+	ctx context.Context, subStr string, lastId uint32,
+) ([]*models.ShortProfile, error) {
 	profiles, err := p.repo.Search(ctx, subStr, lastId)
 	if err != nil {
 		return nil, fmt.Errorf("search: %w", err)
@@ -247,4 +261,30 @@ func (p ProfileUsecaseImplementation) Search(ctx context.Context, subStr string,
 	}
 
 	return profiles, nil
+}
+
+func (p ProfileUsecaseImplementation) ChangePassword(
+	ctx context.Context,
+	userID uint32,
+	oldPassword,
+	newPassword string,
+) error {
+	user, err := p.repo.GetUserById(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("change password usecase: %w", err)
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword)); err != nil {
+		return fmt.Errorf("change password usecase: %w", my_err.ErrWrongEmailOrPassword)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("change password usecase: %w", err)
+	}
+
+	if err := p.repo.ChangePassword(ctx, userID, string(hashedPassword)); err != nil {
+		return fmt.Errorf("change password usecase: %w", err)
+	}
+
+	return nil
 }

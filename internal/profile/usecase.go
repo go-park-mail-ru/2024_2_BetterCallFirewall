@@ -12,6 +12,7 @@ type ProfileUsecase interface {
 	UpdateProfile(context.Context, *models.FullProfile) error
 	DeleteProfile(uint32) error
 	Search(ctx context.Context, subStr string, lastId uint32) ([]*models.ShortProfile, error)
+	ChangePassword(ctx context.Context, userID uint32, oldPassword, newPassword string) error
 
 	SendFriendReq(receiver uint32, sender uint32) error
 	AcceptFriendReq(who uint32, whose uint32) error

@@ -9,7 +9,10 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
+	"github.com/microcosm-cc/bluemonday"
 
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -48,9 +51,14 @@ func NewCommunityController(responder responder, service communityService) *Cont
 		service:   service,
 	}
 }
+func sanitize(input string) string {
+	sanitizer := bluemonday.UGCPolicy()
+	cleaned := sanitizer.Sanitize(input)
+	return cleaned
+}
 
 func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -69,8 +77,18 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	community, err := c.service.GetOne(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
+	}
+
+	if community != nil {
+		community.Name = sanitize(community.Name)
+		community.Avatar = models.Picture(sanitize(string(community.Avatar)))
+		community.About = sanitize(community.About)
 	}
 
 	c.responder.OutputJSON(w, community, reqID)
@@ -78,8 +96,8 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-		lastID    = r.URL.Query().Get("id")
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
+		lastID    = sanitize(r.URL.Query().Get("id"))
 		intLastID uint64
 		err       error
 	)
@@ -115,11 +133,17 @@ func (c *Controller) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, card := range res {
+		card.Name = sanitize(card.Name)
+		card.Avatar = models.Picture(sanitize(string(card.Avatar)))
+		card.About = sanitize(card.About)
+	}
+
 	c.responder.OutputJSON(w, res, reqID)
 }
 
 func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -149,15 +173,23 @@ func (c *Controller) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.Update(r.Context(), id, &newCommunity)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
+
+	newCommunity.Avatar = models.Picture(sanitize(string(newCommunity.Avatar)))
+	newCommunity.Name = sanitize(newCommunity.Name)
+	newCommunity.About = sanitize(newCommunity.About)
 
 	c.responder.OutputJSON(w, newCommunity, reqID)
 }
 
 func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -181,6 +213,10 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.Delete(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -189,7 +225,7 @@ func (c *Controller) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -216,7 +252,7 @@ func (c *Controller) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -235,6 +271,10 @@ func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
 
 	err = c.service.JoinCommunity(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -243,7 +283,7 @@ func (c *Controller) JoinToCommunity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -262,6 +302,10 @@ func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) 
 
 	err = c.service.LeaveCommunity(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
@@ -270,7 +314,7 @@ func (c *Controller) LeaveFromCommunity(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		c.responder.LogError(my_err.ErrInvalidContext, "")
 	}
@@ -314,9 +358,9 @@ func (c *Controller) AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok = r.Context().Value("requestID").(string)
-		subStr    = r.URL.Query().Get("q")
-		lastID    = r.URL.Query().Get("id")
+		reqID, ok = r.Context().Value(middleware.RequestKey).(string)
+		subStr    = sanitize(r.URL.Query().Get("q"))
+		lastID    = sanitize(r.URL.Query().Get("id"))
 		id        uint64
 		err       error
 	)
@@ -352,15 +396,28 @@ func (c *Controller) SearchCommunity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, card := range cards {
+		card.Name = sanitize(card.Name)
+		card.Avatar = models.Picture(sanitize(string(card.Avatar)))
+		card.About = sanitize(card.About)
+	}
+
 	c.responder.OutputJSON(w, cards, reqID)
 }
 
 func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, error) {
 	var res models.Community
 
-	err := json.NewDecoder(r.Body).Decode(&res)
+	err := easyjson.UnmarshalFromReader(r.Body, &res)
 	if err != nil {
 		return models.Community{}, err
+	}
+	res.Avatar = models.Picture(sanitize(string(res.Avatar)))
+	res.Name = sanitize(res.Name)
+	res.About = sanitize(res.About)
+
+	if !validate(res) {
+		return models.Community{}, my_err.ErrBadCommunity
 	}
 
 	return res, nil
@@ -369,7 +426,7 @@ func (c *Controller) getCommunityFromBody(r *http.Request) (models.Community, er
 func getIDFromQuery(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
 
-	id := vars["id"]
+	id := sanitize(vars["id"])
 	if id == "" {
 		return 0, errors.New("id is empty")
 	}
@@ -380,4 +437,12 @@ func getIDFromQuery(r *http.Request) (uint32, error) {
 	}
 
 	return uint32(uid), nil
+}
+
+func validate(data models.Community) bool {
+	if len([]rune(data.Name)) < 3 || len([]rune(data.Name)) >= 50 || len([]rune(data.About)) >= 60 {
+		return false
+	}
+
+	return true
 }

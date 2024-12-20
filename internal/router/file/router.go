@@ -21,6 +21,7 @@ type SessionManager interface {
 type FileController interface {
 	Upload(w http.ResponseWriter, r *http.Request)
 	Download(w http.ResponseWriter, r *http.Request)
+	UploadNonImage(w http.ResponseWriter, r *http.Request)
 }
 
 func NewRouter(
@@ -30,15 +31,9 @@ func NewRouter(
 
 	router.HandleFunc("/image/{name}", fc.Upload).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc("/image", fc.Download).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/files/{name}", fc.UploadNonImage).Methods(http.MethodGet, http.MethodOptions)
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
-	router.Handle(
-		"/", http.HandlerFunc(
-			func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-		),
-	)
 
 	res := middleware.Auth(sm, router)
 	res = middleware.Preflite(res)

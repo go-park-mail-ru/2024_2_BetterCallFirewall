@@ -38,67 +38,69 @@ func TestNewPostService(t *testing.T) {
 var errMock = errors.New("mock error")
 
 func TestCreate(t *testing.T) {
-	tests := []TableTest[uint32, models.Post]{
+	tests := []TableTest[uint32, models.PostDto]{
 		{
 			name: "1",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{PostContent: models.Content{Text: "new post"}}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{PostContent: models.ContentDto{Text: "new post"}}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (uint32, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (uint32, error) {
 				return implementation.Create(ctx, &request)
 			},
 			ExpectedResult: func() (uint32, error) {
 				return 0, nil
 			},
 			ExpectedErr: errMock,
-			SetupMock: func(request models.Post, m *mocks) {
+			SetupMock: func(request models.PostDto, m *mocks) {
 				m.postRepo.EXPECT().Create(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 			},
 		},
 		{
 			name: "2",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{PostContent: models.Content{Text: "new real post"}}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{PostContent: models.ContentDto{Text: "new real post"}}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (uint32, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (uint32, error) {
 				return implementation.Create(ctx, &request)
 			},
 			ExpectedResult: func() (uint32, error) {
 				return 1, nil
 			},
 			ExpectedErr: nil,
-			SetupMock: func(request models.Post, m *mocks) {
+			SetupMock: func(request models.PostDto, m *mocks) {
 				m.postRepo.EXPECT().Create(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -108,16 +110,18 @@ type userAndPostIDs struct {
 }
 
 func TestGet(t *testing.T) {
-	tests := []TableTest[*models.Post, userAndPostIDs]{
+	tests := []TableTest[*models.PostDto, userAndPostIDs]{
 		{
 			name: "1",
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 0, userID: 0}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
+			ExpectedResult: func() (*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -130,22 +134,25 @@ func TestGet(t *testing.T) {
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 1, userID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
+			ExpectedResult: func() (*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndPostIDs, m *mocks) {
 				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					&models.Post{
+					&models.PostDto{
 						Header: models.Header{
 							CommunityID: 0,
 							AuthorID:    1,
 						},
 					},
-					nil)
+					nil,
+				)
 				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
@@ -154,22 +161,25 @@ func TestGet(t *testing.T) {
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 1, userID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
+			ExpectedResult: func() (*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndPostIDs, m *mocks) {
 				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					&models.Post{
+					&models.PostDto{
 						Header: models.Header{
 							CommunityID: 1,
 							AuthorID:    0,
 						},
 					},
-					nil)
+					nil,
+				)
 				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
@@ -178,27 +188,32 @@ func TestGet(t *testing.T) {
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 1, userID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
+			ExpectedResult: func() (*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndPostIDs, m *mocks) {
 				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					&models.Post{
+					&models.PostDto{
 						Header: models.Header{
 							CommunityID: 0,
 							AuthorID:    1,
 						},
 					},
-					nil)
-				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{
-					CommunityID: 0,
-					AuthorID:    1,
-					Author:      "user",
-				}, nil)
+					nil,
+				)
+				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(
+					&models.Header{
+						CommunityID: 0,
+						AuthorID:    1,
+						Author:      "user",
+					}, nil,
+				)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 			},
 		},
@@ -207,27 +222,32 @@ func TestGet(t *testing.T) {
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 1, userID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
+			ExpectedResult: func() (*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndPostIDs, m *mocks) {
 				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					&models.Post{
+					&models.PostDto{
 						Header: models.Header{
 							CommunityID: 1,
 							AuthorID:    0,
 						},
 					},
-					nil)
-				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{
-					CommunityID: 1,
-					AuthorID:    0,
-					Author:      "community",
-				}, nil)
+					nil,
+				)
+				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(
+					&models.Header{
+						CommunityID: 1,
+						AuthorID:    0,
+						Author:      "community",
+					}, nil,
+				)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, errMock)
 			},
@@ -237,11 +257,13 @@ func TestGet(t *testing.T) {
 			SetupInput: func() (*userAndPostIDs, error) {
 				return &userAndPostIDs{postId: 1, userID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs) (*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
 				return implementation.Get(ctx, request.postId, request.userID)
 			},
-			ExpectedResult: func() (*models.Post, error) {
-				return &models.Post{
+			ExpectedResult: func() (*models.PostDto, error) {
+				return &models.PostDto{
 					Header: models.Header{
 						CommunityID: 1,
 						AuthorID:    0,
@@ -254,18 +276,58 @@ func TestGet(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request userAndPostIDs, m *mocks) {
 				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
-					&models.Post{
+					&models.PostDto{
 						Header: models.Header{
 							CommunityID: 1,
 							AuthorID:    0,
 						},
 					},
-					nil)
-				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{
-					CommunityID: 1,
-					AuthorID:    0,
-					Author:      "community",
-				}, nil)
+					nil,
+				)
+				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(
+					&models.Header{
+						CommunityID: 1,
+						AuthorID:    0,
+						Author:      "community",
+					}, nil,
+				)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), nil)
+				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "7",
+			SetupInput: func() (*userAndPostIDs, error) {
+				return &userAndPostIDs{postId: 1, userID: 1}, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndPostIDs,
+			) (*models.PostDto, error) {
+				return implementation.Get(ctx, request.postId, request.userID)
+			},
+			ExpectedResult: func() (*models.PostDto, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request userAndPostIDs, m *mocks) {
+				m.postRepo.EXPECT().Get(gomock.Any(), gomock.Any()).Return(
+					&models.PostDto{
+						Header: models.Header{
+							CommunityID: 1,
+							AuthorID:    0,
+						},
+					},
+					nil,
+				)
+				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(
+					&models.Header{
+						CommunityID: 1,
+						AuthorID:    0,
+						Author:      "community",
+					}, nil,
+				)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
@@ -273,31 +335,33 @@ func TestGet(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -342,42 +406,44 @@ func TestDelete(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
 func TestUpdate(t *testing.T) {
-	tests := []TableTest[struct{}, models.Post]{
+	tests := []TableTest[struct{}, models.PostDto]{
 		{
 			name: "1",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (struct{}, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (struct{}, error) {
 				err := implementation.Update(ctx, &request)
 				return struct{}{}, err
 			},
@@ -385,16 +451,16 @@ func TestUpdate(t *testing.T) {
 				return struct{}{}, nil
 			},
 			ExpectedErr: errMock,
-			SetupMock: func(request models.Post, m *mocks) {
+			SetupMock: func(request models.PostDto, m *mocks) {
 				m.postRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errMock)
 			},
 		},
 		{
 			name: "2",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{ID: 1, PostContent: models.Content{Text: "New post"}}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{ID: 1, PostContent: models.ContentDto{Text: "New post"}}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (struct{}, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (struct{}, error) {
 				err := implementation.Update(ctx, &request)
 				return struct{}{}, err
 			},
@@ -402,38 +468,40 @@ func TestUpdate(t *testing.T) {
 				return struct{}{}, nil
 			},
 			ExpectedErr: nil,
-			SetupMock: func(request models.Post, m *mocks) {
+			SetupMock: func(request models.PostDto, m *mocks) {
 				m.postRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -443,16 +511,18 @@ type userAndLastIDs struct {
 }
 
 func TestGetBatch(t *testing.T) {
-	tests := []TableTest[[]*models.Post, userAndLastIDs]{
+	tests := []TableTest[[]*models.PostDto, userAndLastIDs]{
 		{
 			name: "1",
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatch(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -465,18 +535,21 @@ func TestGetBatch(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatch(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndLastIDs, m *mocks) {
 				m.postRepo.EXPECT().GetPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{CommunityID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
@@ -485,72 +558,107 @@ func TestGetBatch(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatch(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
-				return []*models.Post{
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return []*models.PostDto{
 					{
-						ID:         1,
-						Header:     models.Header{AuthorID: 1},
-						IsLiked:    true,
-						LikesCount: 1,
+						ID:           1,
+						Header:       models.Header{AuthorID: 1},
+						IsLiked:      true,
+						LikesCount:   1,
+						CommentCount: 1,
 					},
 				}, nil
 			},
 			ExpectedErr: nil,
 			SetupMock: func(request userAndLastIDs, m *mocks) {
 				m.postRepo.EXPECT().GetPosts(gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{AuthorID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*userAndLastIDs, error) {
+				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
+				return implementation.GetBatch(ctx, request.LastId, request.UserID)
+			},
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request userAndLastIDs, m *mocks) {
+				m.postRepo.EXPECT().GetPosts(gomock.Any(), gomock.Any()).Return(
+					[]*models.PostDto{
+						{ID: 1, Header: models.Header{AuthorID: 1}},
+					}, nil,
+				)
+				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
+				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
 func TestGetBatchFromFriend(t *testing.T) {
-	tests := []TableTest[[]*models.Post, userAndLastIDs]{
+	tests := []TableTest[[]*models.PostDto, userAndLastIDs]{
 		{
 			name: "1",
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -563,10 +671,12 @@ func TestGetBatchFromFriend(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: my_err.ErrNoMoreContent,
@@ -579,10 +689,12 @@ func TestGetBatchFromFriend(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -596,19 +708,22 @@ func TestGetBatchFromFriend(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request userAndLastIDs, m *mocks) {
 				m.profileRepo.EXPECT().GetFriendsID(gomock.Any(), gomock.Any()).Return([]uint32{1, 2, 3}, nil)
 				m.postRepo.EXPECT().GetFriendsPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{CommunityID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
@@ -617,11 +732,13 @@ func TestGetBatchFromFriend(t *testing.T) {
 			SetupInput: func() (*userAndLastIDs, error) {
 				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs) ([]*models.Post, error) {
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
 				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
-				return []*models.Post{
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return []*models.PostDto{
 					{
 						ID:         1,
 						Header:     models.Header{AuthorID: 1},
@@ -634,10 +751,39 @@ func TestGetBatchFromFriend(t *testing.T) {
 			SetupMock: func(request userAndLastIDs, m *mocks) {
 				m.profileRepo.EXPECT().GetFriendsID(gomock.Any(), gomock.Any()).Return([]uint32{1, 2, 3}, nil)
 				m.postRepo.EXPECT().GetFriendsPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{AuthorID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), nil)
+				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "6",
+			SetupInput: func() (*userAndLastIDs, error) {
+				return &userAndLastIDs{UserID: 1, LastId: 2}, nil
+			},
+			Run: func(
+				ctx context.Context, implementation *PostServiceImpl, request userAndLastIDs,
+			) ([]*models.PostDto, error) {
+				return implementation.GetBatchFromFriend(ctx, request.LastId, request.UserID)
+			},
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request userAndLastIDs, m *mocks) {
+				m.profileRepo.EXPECT().GetFriendsID(gomock.Any(), gomock.Any()).Return([]uint32{1, 2, 3}, nil)
+				m.postRepo.EXPECT().GetFriendsPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]*models.PostDto{
+						{ID: 1, Header: models.Header{AuthorID: 1}},
+					}, nil,
+				)
+				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
@@ -645,31 +791,33 @@ func TestGetBatchFromFriend(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -712,96 +860,102 @@ func TestGetPostAuthor(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
 func TestCreateCommunityPost(t *testing.T) {
-	tests := []TableTest[uint32, models.Post]{
+	tests := []TableTest[uint32, models.PostDto]{
 		{
 			name: "1",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (uint32, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (uint32, error) {
 				return implementation.CreateCommunityPost(ctx, &request)
 			},
 			ExpectedResult: func() (uint32, error) {
 				return uint32(0), nil
 			},
 			ExpectedErr: errMock,
-			SetupMock: func(request models.Post, m *mocks) {
-				m.postRepo.EXPECT().CreateCommunityPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
+			SetupMock: func(request models.PostDto, m *mocks) {
+				m.postRepo.EXPECT().CreateCommunityPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					uint32(0), errMock,
+				)
 			},
 		},
 		{
 			name: "2",
-			SetupInput: func() (*models.Post, error) {
-				return &models.Post{PostContent: models.Content{Text: "new post"}}, nil
+			SetupInput: func() (*models.PostDto, error) {
+				return &models.PostDto{PostContent: models.ContentDto{Text: "new post"}}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.Post) (uint32, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request models.PostDto) (uint32, error) {
 				return implementation.CreateCommunityPost(ctx, &request)
 			},
 			ExpectedResult: func() (uint32, error) {
 				return uint32(1), nil
 			},
 			ExpectedErr: nil,
-			SetupMock: func(request models.Post, m *mocks) {
+			SetupMock: func(request models.PostDto, m *mocks) {
 				m.postRepo.EXPECT().CreateCommunityPost(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint32(1), nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -812,16 +966,16 @@ type IDs struct {
 }
 
 func TestGetCommunityPost(t *testing.T) {
-	tests := []TableTest[[]*models.Post, IDs]{
+	tests := []TableTest[[]*models.PostDto, IDs]{
 		{
 			name: "1",
 			SetupInput: func() (*IDs, error) {
 				return &IDs{}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.Post, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.PostDto, error) {
 				return implementation.GetCommunityPost(ctx, request.communityID, request.userID, request.lastID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
@@ -834,18 +988,19 @@ func TestGetCommunityPost(t *testing.T) {
 			SetupInput: func() (*IDs, error) {
 				return &IDs{userID: 1, lastID: 2, communityID: 1}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.Post, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.PostDto, error) {
 				return implementation.GetCommunityPost(ctx, request.lastID, request.userID, request.communityID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
+			ExpectedResult: func() ([]*models.PostDto, error) {
 				return nil, nil
 			},
 			ExpectedErr: errMock,
 			SetupMock: func(request IDs, m *mocks) {
 				m.postRepo.EXPECT().GetCommunityPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{CommunityID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.communityRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(nil, errMock)
 			},
 		},
@@ -854,11 +1009,11 @@ func TestGetCommunityPost(t *testing.T) {
 			SetupInput: func() (*IDs, error) {
 				return &IDs{userID: 1, lastID: 2, communityID: 3}, nil
 			},
-			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.Post, error) {
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.PostDto, error) {
 				return implementation.GetCommunityPost(ctx, request.lastID, request.userID, request.communityID)
 			},
-			ExpectedResult: func() ([]*models.Post, error) {
-				return []*models.Post{
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return []*models.PostDto{
 					{
 						ID:         1,
 						Header:     models.Header{AuthorID: 1},
@@ -870,42 +1025,70 @@ func TestGetCommunityPost(t *testing.T) {
 			ExpectedErr: nil,
 			SetupMock: func(request IDs, m *mocks) {
 				m.postRepo.EXPECT().GetCommunityPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					[]*models.Post{
+					[]*models.PostDto{
 						{ID: 1, Header: models.Header{AuthorID: 1}},
-					}, nil)
+					}, nil,
+				)
 				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
 				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), nil)
+				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
+			},
+		},
+		{
+			name: "4",
+			SetupInput: func() (*IDs, error) {
+				return &IDs{userID: 1, lastID: 2, communityID: 3}, nil
+			},
+			Run: func(ctx context.Context, implementation *PostServiceImpl, request IDs) ([]*models.PostDto, error) {
+				return implementation.GetCommunityPost(ctx, request.lastID, request.userID, request.communityID)
+			},
+			ExpectedResult: func() ([]*models.PostDto, error) {
+				return nil, nil
+			},
+			ExpectedErr: errMock,
+			SetupMock: func(request IDs, m *mocks) {
+				m.postRepo.EXPECT().GetCommunityPosts(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					[]*models.PostDto{
+						{ID: 1, Header: models.Header{AuthorID: 1}},
+					}, nil,
+				)
+				m.profileRepo.EXPECT().GetHeader(gomock.Any(), gomock.Any()).Return(&models.Header{AuthorID: 1}, nil)
+				m.postRepo.EXPECT().GetLikesOnPost(gomock.Any(), gomock.Any()).Return(uint32(1), nil)
+				m.postRepo.EXPECT().GetCommentCount(gomock.Any(), gomock.Any()).Return(uint32(0), errMock)
 				m.postRepo.EXPECT().CheckLikes(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, nil)
 			},
 		},
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -953,31 +1136,33 @@ func TestCheckAccessToCommunity(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1020,31 +1205,33 @@ func TestSetLikeOnPost(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1087,31 +1274,33 @@ func TestDeleteLikeFromPost(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
@@ -1152,31 +1341,33 @@ func TestCheckLikes(t *testing.T) {
 	}
 
 	for _, v := range tests {
-		t.Run(v.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+		t.Run(
+			v.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
 
-			serv, mock := getService(ctrl)
-			ctx := context.Background()
+				serv, mock := getService(ctrl)
+				ctx := context.Background()
 
-			input, err := v.SetupInput()
-			if err != nil {
-				t.Error(err)
-			}
+				input, err := v.SetupInput()
+				if err != nil {
+					t.Error(err)
+				}
 
-			v.SetupMock(*input, mock)
+				v.SetupMock(*input, mock)
 
-			res, err := v.ExpectedResult()
-			if err != nil {
-				t.Error(err)
-			}
+				res, err := v.ExpectedResult()
+				if err != nil {
+					t.Error(err)
+				}
 
-			actual, err := v.Run(ctx, serv, *input)
-			assert.Equal(t, res, actual)
-			if !errors.Is(err, v.ExpectedErr) {
-				t.Errorf("expect %v, got %v", v.ExpectedErr, err)
-			}
-		})
+				actual, err := v.Run(ctx, serv, *input)
+				assert.Equal(t, res, actual)
+				if !errors.Is(err, v.ExpectedErr) {
+					t.Errorf("expect %v, got %v", v.ExpectedErr, err)
+				}
+			},
+		)
 	}
 }
 
