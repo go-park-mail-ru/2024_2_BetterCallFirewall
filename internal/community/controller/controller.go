@@ -77,6 +77,10 @@ func (c *Controller) GetOne(w http.ResponseWriter, r *http.Request) {
 
 	community, err := c.service.GetOne(r.Context(), id, sess.UserID)
 	if err != nil {
+		if errors.Is(err, my_err.ErrWrongCommunity) {
+			c.responder.ErrorBadRequest(w, err, reqID)
+			return
+		}
 		c.responder.ErrorInternal(w, err, reqID)
 		return
 	}
