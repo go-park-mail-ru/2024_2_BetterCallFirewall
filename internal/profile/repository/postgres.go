@@ -69,11 +69,20 @@ func (p *ProfileRepo) GetProfileById(ctx context.Context, id uint32) (*models.Fu
 }
 
 func (p *ProfileRepo) GetStatus(ctx context.Context, self uint32, profile uint32) (int, error) {
-	var status int
-	err := p.DB.QueryRowContext(ctx, GetStatus, self, profile).Scan(&status)
+	var (
+		status int
+		sender uint32
+	)
+
+	err := p.DB.QueryRowContext(ctx, GetStatus, self, profile).Scan(&sender, &status)
 	if err != nil {
 		return 0, err
 	}
+
+	if sender != self && status != 0 {
+		status = -status
+	}
+
 	return status, nil
 }
 
