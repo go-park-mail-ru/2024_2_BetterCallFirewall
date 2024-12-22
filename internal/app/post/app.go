@@ -38,14 +38,13 @@ func GetHTTPServer(cfg *config.Config, postMetric *metrics.HttpMetrics) (*http.S
 		ForceColors:     true,
 	}
 
-	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		cfg.POSTDB.Host,
+		cfg.POSTDB.Port,
+		cfg.POSTDB.User,
+		cfg.POSTDB.Pass,
+		cfg.POSTDB.DBName,
+		cfg.POSTDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
@@ -103,14 +102,13 @@ func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.
 		ForceColors:     true,
 	}
 
-	connStr := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Pass,
-		cfg.DB.DBName,
-		cfg.DB.SSLMode,
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		cfg.POSTDB.Host,
+		cfg.POSTDB.Port,
+		cfg.POSTDB.User,
+		cfg.POSTDB.Pass,
+		cfg.POSTDB.DBName,
+		cfg.POSTDB.SSLMode,
 	)
 
 	postgresDB, err := start_postgres.StartPostgres(connStr, logger)
