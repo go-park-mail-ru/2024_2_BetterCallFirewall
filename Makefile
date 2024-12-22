@@ -1,5 +1,8 @@
 test:
-	go test -v ./... -coverprofile=cover.out && go tool cover -html=cover.out -o cover.html
+	go test ./... -coverprofile=cover.out \
+	&& go tool cover -func=cover.out | grep -vE "*mock.go|*easyjson.go|*pb.go|*mock_helper.go" \
+	&& go tool cover -html=cover.out -o cover.html
+
 
 start:
 	docker compose up --build
@@ -17,3 +20,6 @@ gen-proto:
 
 lint:
 	golangci-lint run
+
+gen-easy-json:
+	easyjson -all internal/models/*.go

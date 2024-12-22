@@ -36,12 +36,12 @@ ORDER BY
     last_messages.created_at DESC
 LIMIT 15;`
 
-	getLatestMessagesBatch = `SELECT sender, receiver, content, created_at
+	getLatestMessagesBatch = `SELECT sender, receiver, content, file_path, sticker_path, created_at
 FROM message
 WHERE ((sender = $1 AND receiver = $2) OR (sender = $2 AND receiver = $1)) 
 AND created_at < $3
 ORDER BY created_at DESC
 LIMIT 20;`
 
-	sendNewMessage = `INSERT INTO message(receiver, sender, content) VALUES ($1, $2, $3)`
+	sendNewMessage = `INSERT INTO message(receiver, sender, content, file_path, sticker_path) VALUES ($1, $2, $3, $4, $5)`
 )

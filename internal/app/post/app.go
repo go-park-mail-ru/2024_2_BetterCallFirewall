@@ -73,7 +73,8 @@ func GetHTTPServer(cfg *config.Config, postMetric *metrics.HttpMetrics) (*http.S
 	cp := community.New(communityProvider)
 
 	postService := service.NewPostServiceImpl(repo, pp, cp)
-	postController := controller.NewPostController(postService, responder)
+	commentService := service.NewCommentService(repo, pp)
+	postController := controller.NewPostController(postService, commentService, responder)
 
 	rout := post.NewRouter(postController, sm, logger, postMetric)
 	server := &http.Server{

@@ -2,6 +2,7 @@ package models
 
 type Picture string
 
+//easyjson:json
 type User struct {
 	ID        uint32  `json:"id"`
 	Email     string  `json:"email"`
