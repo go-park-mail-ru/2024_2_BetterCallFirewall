@@ -37,10 +37,7 @@ type GRPCServer struct {
 }
 
 type Config struct {
-	PROFILEDB     DBConnect
-	COMMUNITYDB   DBConnect
-	POSTDB        DBConnect
-	MESSAGEDB     DBConnect
+	DB            DBConnect
 	REDIS         Redis
 	AUTH          Server
 	FILE          Server
@@ -62,35 +59,11 @@ func GetConfig(configFilePath string) (*Config, error) {
 	}
 
 	return &Config{
-			PROFILEDB: DBConnect{
+			DB: DBConnect{
 				Port:    os.Getenv("DB_PORT"),
 				Host:    os.Getenv("DB_HOST"),
-				User:    os.Getenv("DB_PROFILE_USER"),
-				Pass:    os.Getenv("DB_PROFILE_PASSWORD"),
-				DBName:  os.Getenv("DB_NAME"),
-				SSLMode: os.Getenv("DB_SSLMODE"),
-			},
-			COMMUNITYDB: DBConnect{
-				Port:    os.Getenv("DB_PORT"),
-				Host:    os.Getenv("DB_HOST"),
-				User:    os.Getenv("DB_COMMUNITY_USER"),
-				Pass:    os.Getenv("DB_COMMUNITY_PASSWORD"),
-				DBName:  os.Getenv("DB_NAME"),
-				SSLMode: os.Getenv("DB_SSLMODE"),
-			},
-			POSTDB: DBConnect{
-				Port:    os.Getenv("DB_PORT"),
-				Host:    os.Getenv("DB_HOST"),
-				User:    os.Getenv("DB_POST_USER"),
-				Pass:    os.Getenv("DB_POST_PASSWORD"),
-				DBName:  os.Getenv("DB_NAME"),
-				SSLMode: os.Getenv("DB_SSLMODE"),
-			},
-			MESSAGEDB: DBConnect{
-				Port:    os.Getenv("DB_PORT"),
-				Host:    os.Getenv("DB_HOST"),
-				User:    os.Getenv("DB_MESSAGE_USER"),
-				Pass:    os.Getenv("DB_MESSAGE_PASSWORD"),
+				User:    os.Getenv("DB_USER"),
+				Pass:    os.Getenv("DB_PASSWORD"),
 				DBName:  os.Getenv("DB_NAME"),
 				SSLMode: os.Getenv("DB_SSLMODE"),
 			},
