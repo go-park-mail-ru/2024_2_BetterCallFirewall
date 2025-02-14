@@ -86,8 +86,8 @@ func NewRouter(
 
 	router.Handle("/api/v1/metrics", promhttp.Handler())
 
-	//res := middleware.Auth(sm, router)
-	res := middleware.Preflite(router)
+	res := middleware.Auth(sm, router)
+	res = middleware.Preflite(res)
 	res = middleware.AccessLog(logger, res)
 	res = middleware.HttpMetricsMiddleware(httpMetric, res)
 
