@@ -32,10 +32,10 @@ func (sm *SessionManagerImpl) Create(userID uint32) (*models.Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create session: %w", err)
 	}
-	//err = sm.DB.CreateSession(sess)
-	//if err != nil {
-	//	return nil, fmt.Errorf("session creation: %w", err)
-	//}
+	err = sm.DB.CreateSession(sess)
+	if err != nil {
+		return nil, fmt.Errorf("session creation: %w", err)
+	}
 
 	return sess, nil
 }
