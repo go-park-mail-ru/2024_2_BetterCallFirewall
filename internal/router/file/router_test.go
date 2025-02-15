@@ -27,6 +27,8 @@ func (m mockSessionManager) Destroy(sess *models.Session) error {
 
 type mockFileController struct{}
 
+func (m mockFileController) UploadNonImage(w http.ResponseWriter, r *http.Request) {}
+
 func (m mockFileController) Upload(w http.ResponseWriter, r *http.Request) {}
 
 func (m mockFileController) Download(w http.ResponseWriter, r *http.Request) {}

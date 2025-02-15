@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/2024_2_BetterCallFirewall/internal/chat"
+	"github.com/2024_2_BetterCallFirewall/internal/middleware"
 	"github.com/2024_2_BetterCallFirewall/internal/models"
 	"github.com/2024_2_BetterCallFirewall/pkg/my_err"
 )
@@ -55,7 +56,7 @@ var (
 )
 
 func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) {
-	reqID, ok := r.Context().Value("requestID").(string)
+	reqID, ok := r.Context().Value(middleware.RequestKey).(string)
 	if !ok {
 		cc.responder.LogError(my_err.ErrInvalidContext, "")
 		return
@@ -86,29 +87,49 @@ func (cc *ChatController) SetConnection(w http.ResponseWriter, r *http.Request) 
 	}()
 	go client.Write()
 	go client.Read(sess.UserID)
-	cc.SendChatMsg(ctx, reqID)
+	cc.SendChatMsg(ctx, reqID, w)
 }
 
-func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string) {
+func validate(content models.MessageContent) bool {
+	if len(content.FilePath) > 10 || len([]rune(content.StickerPath)) > 100 || len([]rune(content.Text)) > 500 {
+		return false
+	}
+	if content.StickerPath != "" && (len(content.FilePath) > 0 || content.Text != "") {
+		return false
+	}
+	if content.Text == "" && content.StickerPath == "" && len(content.FilePath) == 0 {
+		return false
+	}
+
+	return true
+}
+
+func (cc *ChatController) SendChatMsg(ctx context.Context, reqID string, w http.ResponseWriter) {
 	for msg := range cc.Messages {
-		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, msg.Content)
+		if !validate(msg.Content) {
+			cc.responder.ErrorBadRequest(w, my_err.ErrBadMessageContent, reqID)
+			return
+		}
+		msg := msg.ToDto()
+		err := cc.chatService.SendNewMessage(ctx, msg.Receiver, msg.Sender, &msg.Content)
 		if err != nil {
-			cc.responder.LogError(err, reqID)
+			cc.responder.ErrorInternal(w, err, reqID)
 			return
 		}
 
 		resConn, ok := mapUserConn[msg.Receiver]
 		if ok {
 			//resConn.Socket.ReadMessage()
-			resConn.Receive <- msg
+			m := msg.FromDto()
+			resConn.Receive <- &m
 		}
 	}
 }
 
 func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok     = r.Context().Value("requestID").(string)
-		lastTimeQuery = r.URL.Query().Get("lastTime")
+		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
+		lastTimeQuery = sanitize(r.URL.Query().Get("lastTime"))
 		lastTime      time.Time
 		err           error
 	)
@@ -149,7 +170,7 @@ func (cc *ChatController) GetAllChats(w http.ResponseWriter, r *http.Request) {
 
 func GetIdFromURL(r *http.Request) (uint32, error) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := sanitize(vars["id"])
 	if id == "" {
 		return 0, my_err.ErrEmptyId
 	}
@@ -166,8 +187,8 @@ func GetIdFromURL(r *http.Request) (uint32, error) {
 
 func (cc *ChatController) GetChat(w http.ResponseWriter, r *http.Request) {
 	var (
-		reqID, ok     = r.Context().Value("requestID").(string)
-		lastTimeQuery = r.URL.Query().Get("lastTime")
+		reqID, ok     = r.Context().Value(middleware.RequestKey).(string)
+		lastTimeQuery = sanitize(r.URL.Query().Get("lastTime"))
 		lastTime      time.Time
 		err           error
 	)

@@ -45,8 +45,13 @@ func (c CommunityRepository) GetBatch(ctx context.Context, lastID uint32) ([]*mo
 
 func (c CommunityRepository) GetOne(ctx context.Context, id uint32) (*models.Community, error) {
 	res := &models.Community{}
-	err := c.db.QueryRowContext(ctx, GetOne, id).Scan(&res.ID, &res.Name, &res.Avatar, &res.About, &res.CountSubscribers)
+	err := c.db.QueryRowContext(ctx, GetOne, id).Scan(
+		&res.ID, &res.Name, &res.Avatar, &res.About, &res.CountSubscribers,
+	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, my_err.ErrWrongCommunity
+		}
 		return nil, fmt.Errorf("get community db: %w", err)
 	}
 
@@ -59,7 +64,9 @@ func (c CommunityRepository) Create(ctx context.Context, community *models.Commu
 	if community.Avatar == "" {
 		res = c.db.QueryRowContext(ctx, CreateNewCommunity, community.Name, community.About, author)
 	} else {
-		res = c.db.QueryRowContext(ctx, CreateNewCommunityWithAvatar, community.Name, community.About, community.Avatar, author)
+		res = c.db.QueryRowContext(
+			ctx, CreateNewCommunityWithAvatar, community.Name, community.About, community.Avatar, author,
+		)
 	}
 
 	err := res.Err()
@@ -80,9 +87,14 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 	if community.Avatar == "" {
 		_, err = c.db.ExecContext(ctx, UpdateWithoutAvatar, community.Name, community.About, community.ID)
 	} else {
-		_, err = c.db.ExecContext(ctx, UpdateWithAvatar, community.Name, community.Avatar, community.About, community.ID)
+		_, err = c.db.ExecContext(
+			ctx, UpdateWithAvatar, community.Name, community.Avatar, community.About, community.ID,
+		)
 	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("update community: %w", err)
 	}
 
@@ -92,6 +104,9 @@ func (c CommunityRepository) Update(ctx context.Context, community *models.Commu
 func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 	_, err := c.db.ExecContext(ctx, Delete, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("delete community: %w", err)
 	}
 
@@ -101,6 +116,9 @@ func (c CommunityRepository) Delete(ctx context.Context, id uint32) error {
 func (c CommunityRepository) JoinCommunity(ctx context.Context, communityId, author uint32) error {
 	_, err := c.db.ExecContext(ctx, JoinCommunity, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("join community: %w", err)
 	}
 
@@ -110,6 +128,9 @@ func (c CommunityRepository) JoinCommunity(ctx context.Context, communityId, aut
 func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, author uint32) error {
 	_, err := c.db.ExecContext(ctx, LeaveCommunity, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("leave community: %w", err)
 	}
 	access := c.CheckAccess(ctx, communityId, author)
@@ -117,6 +138,9 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 	if access {
 		_, err := c.db.ExecContext(ctx, DeleteAdmin, communityId, author)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return my_err.ErrWrongCommunity
+			}
 			return fmt.Errorf("delete admin: %w", err)
 		}
 	}
@@ -127,6 +151,9 @@ func (c CommunityRepository) LeaveCommunity(ctx context.Context, communityId, au
 func (c CommunityRepository) NewAdmin(ctx context.Context, communityId uint32, author uint32) error {
 	_, err := c.db.ExecContext(ctx, InsertNewAdmin, communityId, author)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return my_err.ErrWrongCommunity
+		}
 		return fmt.Errorf("insert new admin: %w", err)
 	}
 	return nil

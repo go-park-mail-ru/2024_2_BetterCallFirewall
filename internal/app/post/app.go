@@ -38,7 +38,8 @@ func GetHTTPServer(cfg *config.Config, postMetric *metrics.HttpMetrics) (*http.S
 		ForceColors:     true,
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DB.Host,
 		cfg.DB.Port,
 		cfg.DB.User,
@@ -73,7 +74,8 @@ func GetHTTPServer(cfg *config.Config, postMetric *metrics.HttpMetrics) (*http.S
 	cp := community.New(communityProvider)
 
 	postService := service.NewPostServiceImpl(repo, pp, cp)
-	postController := controller.NewPostController(postService, responder)
+	commentService := service.NewCommentService(repo, pp)
+	postController := controller.NewPostController(postService, commentService, responder)
 
 	rout := post.NewRouter(postController, sm, logger, postMetric)
 	server := &http.Server{
@@ -101,7 +103,8 @@ func GetGRPCServer(cfg *config.Config, grpcMetrics *metrics.GrpcMetrics) (*grpc.
 		ForceColors:     true,
 	}
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DB.Host,
 		cfg.DB.Port,
 		cfg.DB.User,
